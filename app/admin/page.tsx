@@ -1,0 +1,3242 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
+import { ShoppingBag, Users, CheckSquare, ClipboardList, TrendingUp, DollarSign, Clock, AlertCircle, Trash2, Save, Copy, X, CalendarClock, Printer, Plus, Search, Download, ChevronDown, ChevronUp, Edit2, Gift, Tag, Receipt, UserCheck, CheckCircle2 } from 'lucide-react';
+import html2canvas from 'html2canvas-pro';
+import { jsPDF } from 'jspdf';
+import { isOfferActive, getOfferBonusQuantity, getOrderBoxSummary } from '@/lib/offerHelpers';
+
+interface OrderItem {
+  id: string;
+  order_id: string;
+  product_id: string | null;
+  quantity: number;
+  price_at_purchase: number;
+  product_name?: string | null;
+  product_image?: string | null;
+  applied_offer?: string | null;
+  products?: {
+    name: string;
+    image_url?: string | null;
+    inventory_stock?: number | null;
+    has_offer?: boolean;
+    offer_title?: string | null;
+    offer_type?: 'unlimited' | 'date_limited' | 'stock_limited';
+    offer_end_date?: string | null;
+    offer_max_quantity?: number | null;
+    offer_used_quantity?: number;
+  } | null;
+}
+
+
+interface Order {
+  id: string;
+  customer_name: string;
+  total_price: number;
+  status: 'pending' | 'delivered' | 'postponed';
+  created_at: string;
+  order_items: OrderItem[];
+}
+
+interface AggregatedItem {
+  productName: string;
+  totalQty: number;
+  imageUrl?: string | null;
+  inventoryStock?: number | null;
+}
+
+interface Customer {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
+const formatTime = (dateStr: string) => {
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true });
+  } catch {
+    return '';
+  }
+};
+
+export default function AdminDashboard() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [usingMockData, setUsingMockData] = useState(false);
+
+  // Stats
+  const [totalRevenueToday, setTotalRevenueToday] = useState(0);
+  const [aggregatedItems, setAggregatedItems] = useState<AggregatedItem[]>([]);
+  const [editedPrices, setEditedPrices] = useState<{[itemId: string]: string}>({});
+  const [activePreviewImage, setActivePreviewImage] = useState<string | null>(null);
+
+  // States for adding products, searching and printing invoices
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [showAddForm, setShowAddForm] = useState<{[orderId: string]: boolean}>({});
+  const [selectedProdForOrder, setSelectedProdForOrder] = useState<{[orderId: string]: string}>({});
+  const [addQtyForOrder, setAddQtyForOrder] = useState<{[orderId: string]: number}>({});
+  const [addPriceForOrder, setAddPriceForOrder] = useState<{[orderId: string]: string}>({});
+  const [prodSearchQuery, setProdSearchQuery] = useState<{[orderId: string]: string}>({});
+  const [printType, setPrintType] = useState<'aggregation' | 'invoice' | 'receipt' | 'aggregation_receipt'>('aggregation');
+  const [activePrintOrder, setActivePrintOrder] = useState<Order | null>(null);
+  const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
+  const [excludedAggregatedItems, setExcludedAggregatedItems] = useState<Record<string, boolean>>({});
+  const [aggregationExpanded, setAggregationExpanded] = useState(true);
+
+  // States for adding custom products not in the store
+  const [showCustomAddForm, setShowCustomAddForm] = useState<{[orderId: string]: boolean}>({});
+  const [customProductName, setCustomProductName] = useState<{[orderId: string]: string}>({});
+  const [customProductQty, setCustomProductQty] = useState<{[orderId: string]: number}>({});
+  const [customProductPrice, setCustomProductPrice] = useState<{[orderId: string]: string}>({});
+  const [editedQuantities, setEditedQuantities] = useState<{[itemId: string]: number}>({});
+  const [editingCustomerId, setEditingCustomerId] = useState<string | null>(null);
+  const [tempCustomerName, setTempCustomerName] = useState<string>('');
+  const [customerSearchQuery, setCustomerSearchQuery] = useState<string>('');
+  const [customerDropdownOpen, setCustomerDropdownOpen] = useState<string | null>(null);
+  const [approvedCustomers, setApprovedCustomers] = useState<Customer[]>([]);
+  const [lastSoldPrices, setLastSoldPrices] = useState<Record<string, number>>({});
+  const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
+
+  // Assign Customer Modal State
+  const [assignModalOrder, setAssignModalOrder] = useState<Order | null>(null);
+  const [selectedCustomerForAssign, setSelectedCustomerForAssign] = useState<string>('');
+  const [assignSearchQuery, setAssignSearchQuery] = useState<string>('');
+
+  const handleAssignOrderToCustomer = async () => {
+    if (!assignModalOrder || !selectedCustomerForAssign) return;
+    const selectedCust = approvedCustomers.find(c => c.id === selectedCustomerForAssign);
+    if (!selectedCust) return;
+
+    setIsUpdating(true);
+    try {
+      const isUrlConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
+      if (isUrlConfigured) {
+        const res = await fetch('/api/admin/orders/assign-customer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId: assignModalOrder.id,
+            customerId: selectedCust.id
+          })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'فشل ربط الفاتورة');
+        }
+      }
+
+      // Update local state
+      setOrders(prev => prev.map(o => {
+        if (o.id === assignModalOrder.id) {
+          return {
+            ...o,
+            customer_name: selectedCust.name
+          };
+        }
+        return o;
+      }));
+
+      setAssignModalOrder(null);
+      setSelectedCustomerForAssign('');
+      alert(`تم ربط الفاتورة بالزبون "${selectedCust.name}" بنجاح!`);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'حدث خطأ أثناء ربط الفاتورة');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const allProductsMap = React.useMemo(() => {
+    const map: Record<string, any> = {};
+    (allProducts || []).forEach(p => {
+      map[p.id] = p;
+    });
+    return map;
+  }, [allProducts]);
+
+  const toggleOrderExpand = (orderId: string) => {
+
+    setExpandedOrders(prev => ({
+      ...prev,
+      [orderId]: !prev[orderId]
+    }));
+  };
+
+  const toggleAggregatedItem = (productName: string) => {
+    setExcludedAggregatedItems(prev => ({
+      ...prev,
+      [productName]: !prev[productName]
+    }));
+  };
+
+  const printedAggregatedItems = aggregatedItems.filter(item => !excludedAggregatedItems[item.productName]);
+  const allSelected = aggregatedItems.length > 0 && aggregatedItems.every(item => !excludedAggregatedItems[item.productName]);
+
+  const toggleSelectAllAggregatedItems = () => {
+    if (allSelected) {
+      const newExcluded: Record<string, boolean> = {};
+      aggregatedItems.forEach(item => {
+        newExcluded[item.productName] = true;
+      });
+      setExcludedAggregatedItems(newExcluded);
+    } else {
+      setExcludedAggregatedItems({});
+    }
+  };
+
+
+  // Seed data for admin preview
+  const getMockOrders = (): Order[] => [
+    {
+      id: 'm-ord1',
+      customer_name: 'سوبر ماركت الياسمين',
+      total_price: 475.00,
+      status: 'pending',
+      created_at: new Date().toISOString(),
+      order_items: [
+        { id: 'mi-1', order_id: 'm-ord1', product_id: 'p4', quantity: 10, price_at_purchase: 25.00, products: { name: 'كوكا كولا علب 330 مل', image_url: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=120&auto=format&fit=crop&q=60' } },
+        { id: 'mi-2', order_id: 'm-ord1', product_id: 'p1', quantity: 5, price_at_purchase: 45.00, products: { name: 'بسكويت شوكولاتة أولكر 12 قطعة', image_url: 'https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?w=120&auto=format&fit=crop&q=60' } }
+      ]
+    },
+    {
+      id: 'm-ord2',
+      customer_name: 'بقالة النور',
+      total_price: 620.00,
+      status: 'pending',
+      created_at: new Date(Date.now() - 3600000).toISOString(),
+      order_items: [
+        { id: 'mi-3', order_id: 'm-ord2', product_id: 'p1', quantity: 10, price_at_purchase: 45.00, products: { name: 'بسكويت شوكولاتة أولكر 12 قطعة', image_url: 'https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?w=120&auto=format&fit=crop&q=60' } },
+        { id: 'mi-4', order_id: 'm-ord2', product_id: 'p3', quantity: 2, price_at_purchase: 85.00, products: { name: 'شاي تركي غوكسو 100 ظرف', image_url: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=120&auto=format&fit=crop&q=60' } }
+      ]
+    },
+    {
+      id: 'm-ord3',
+      customer_name: 'محلات الأمل (مؤجلة)',
+      total_price: 340.00,
+      status: 'postponed',
+      created_at: new Date(Date.now() - 7200000).toISOString(),
+      order_items: [
+        { id: 'mi-5', order_id: 'm-ord3', product_id: 'p3', quantity: 4, price_at_purchase: 85.00, products: { name: 'شاي تركي غوكسو 100 ظرف', image_url: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=120&auto=format&fit=crop&q=60' } }
+      ]
+    }
+  ];
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const isUrlConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
+      
+      if (!isUrlConfigured) {
+        throw new Error('Supabase environment variables not configured');
+      }
+
+      // Fetch pending and postponed orders
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (
+            *,
+            product_name,
+            product_image,
+            products (
+              name,
+              image_url,
+              inventory_stock,
+              has_offer,
+              offer_title,
+              offer_type,
+              offer_end_date,
+              offer_max_quantity,
+              offer_used_quantity
+            )
+          )
+        `)
+        .in('status', ['pending', 'postponed'])
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Make sure order_items and products nested object satisfies our type structure
+      const typedOrders: Order[] = (data || []).map((order: any) => ({
+        ...order,
+        order_items: (order.order_items || []).map((item: any) => {
+          const effectiveOffer = item.applied_offer || (item.products && isOfferActive(item.products) ? item.products.offer_title : null);
+          return {
+            ...item,
+            applied_offer: effectiveOffer,
+            product_name: item.product_name,
+            product_image: item.product_image,
+            products: item.products ? { 
+              name: item.products.name, 
+              image_url: item.products.image_url,
+              inventory_stock: item.products.inventory_stock,
+              has_offer: item.products.has_offer,
+              offer_title: item.products.offer_title,
+              offer_type: item.products.offer_type,
+              offer_end_date: item.products.offer_end_date,
+              offer_max_quantity: item.products.offer_max_quantity,
+              offer_used_quantity: item.products.offer_used_quantity
+            } : null
+          };
+        })
+      }));
+
+
+      // Fetch all products for adding products dropdown
+      const { data: prodData, error: prodError } = await supabase
+        .from('products')
+        .select('*')
+        .order('name', { ascending: true });
+      if (!prodError) {
+        setAllProducts(prodData || []);
+      }
+
+      // Fetch all historical sold prices to build suggestions mapping
+      const { data: recentItemsData, error: recentItemsError } = await supabase
+        .from('order_items')
+        .select(`
+          product_id,
+          product_name,
+          price_at_purchase,
+          orders (
+            created_at
+          )
+        `)
+        .not('price_at_purchase', 'is', null)
+        .gt('price_at_purchase', 0);
+
+      if (!recentItemsError && recentItemsData) {
+        const validItems = recentItemsData.filter((item: any) => item.orders?.created_at);
+        validItems.sort((a: any, b: any) => new Date(a.orders.created_at).getTime() - new Date(b.orders.created_at).getTime());
+        
+        const pricesMap: Record<string, number> = {};
+        validItems.forEach((item: any) => {
+          const key = item.product_id || item.product_name;
+          if (key && Number(item.price_at_purchase) > 0) {
+            pricesMap[key] = Number(item.price_at_purchase);
+          }
+        });
+        setLastSoldPrices(pricesMap);
+      }
+
+      // Fetch approved customers
+      const { data: custData, error: custError } = await supabase
+        .from('customers')
+        .select('*')
+        .order('name', { ascending: true });
+      if (!custError) {
+        setApprovedCustomers(custData || []);
+      } else {
+        console.warn('DB customers error, loading local storage', custError);
+        const localCustomers = JSON.parse(localStorage.getItem('idlebi_customers') || '[]');
+        setApprovedCustomers(localCustomers);
+      }
+
+      setOrders(typedOrders);
+      calculateStats(typedOrders);
+      setUsingMockData(false);
+    } catch (err) {
+      console.warn('Could not fetch active orders from database. Loading preview mode.', err);
+      
+      let localProducts = [];
+      const savedProducts = localStorage.getItem('demo_inventory_products');
+      if (savedProducts) {
+        try {
+          localProducts = JSON.parse(savedProducts);
+        } catch {
+          // ignore
+        }
+      }
+      if (localProducts.length === 0) {
+        localProducts = [
+          { id: 'p1', name: 'بسكويت شوكولاتة أولكر 12 قطعة', price: 45.00, image_url: 'https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?w=120&auto=format&fit=crop&q=60', inventory_stock: 50 },
+          { id: 'p2', name: 'شوكولاتة داماك بالفستق', price: 65.00, image_url: null, inventory_stock: null },
+          { id: 'p3', name: 'شاي تركي غوكسو 100 ظرف', price: 85.00, image_url: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=120&auto=format&fit=crop&q=60', inventory_stock: 120 },
+          { id: 'p4', name: 'كوكا كولا علب 330 مل', price: 25.00, image_url: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=120&auto=format&fit=crop&q=60', inventory_stock: null },
+          { id: 'p5', name: 'صلصة طماطم تات 800 غ', price: 55.00, image_url: null, inventory_stock: null },
+          { id: 'p6', name: 'أرز تركي بالدو 1 كغ', price: 70.00, image_url: null, inventory_stock: null },
+          { id: 'p7', name: 'جبنة بيضاء بينار 500 غ', price: 110.00, image_url: null, inventory_stock: null },
+          { id: 'p8', name: 'لبن زبادي سوتاس 1.5 كغ', price: 75.00, image_url: null, inventory_stock: null }
+        ];
+        localStorage.setItem('demo_inventory_products', JSON.stringify(localProducts));
+      }
+      setAllProducts(localProducts);
+
+      const mockOrders = getMockOrders();
+      setOrders(mockOrders);
+      calculateStats(mockOrders, localProducts);
+
+      const localCustomers = JSON.parse(localStorage.getItem('idlebi_customers') || '[]');
+      if (localCustomers.length === 0) {
+        const seed = [
+          { id: 'c1', name: 'سوبر ماركت الياسمين', created_at: new Date().toISOString() },
+          { id: 'c2', name: 'بقالة النور', created_at: new Date().toISOString() },
+          { id: 'c3', name: 'أسواق أورفا الغذائية', created_at: new Date().toISOString() },
+          { id: 'c4', name: 'مطعم السلام الدمشقي', created_at: new Date().toISOString() }
+        ];
+        localStorage.setItem('idlebi_customers', JSON.stringify(seed));
+        setApprovedCustomers(seed);
+      } else {
+        setApprovedCustomers(localCustomers);
+      }
+
+      setUsingMockData(true);
+      // Build mock last sold prices for preview mode
+      const mockPricesMap: Record<string, number> = {
+        'p1': 45.00,
+        'p3': 85.00,
+        'p4': 25.00,
+        'p5': 55.00,
+      };
+      setLastSoldPrices(mockPricesMap);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const calculateStats = (activeOrders: Order[], currentProducts?: any[]) => {
+    // Only calculate stats for active/pending orders (excluding postponed ones)
+    const pendingOrders = activeOrders.filter(o => o.status === 'pending');
+
+    // 1. Revenue
+    const revenue = pendingOrders.reduce((sum, order) => sum + Number(order.total_price), 0);
+    setTotalRevenueToday(revenue);
+
+    // 2. Aggregate quantities needed for fulfillment (Layer 1)
+    const productAggregation: { 
+      [productIdOrName: string]: { 
+        productName: string, 
+        qty: number, 
+        imageUrl?: string | null,
+        inventoryStock?: number | null 
+      } 
+    } = {};
+    
+    pendingOrders.forEach((order) => {
+      order.order_items.forEach((item) => {
+        const productName = item.product_name || item.products?.name || 'منتج غير معروف';
+        const imgUrl = item.product_image || item.products?.image_url || null;
+        const groupKey = item.product_id || productName;
+
+        let stock = item.products && item.products.inventory_stock !== undefined ? item.products.inventory_stock : null;
+        if (stock === null && item.product_id) {
+          const matchedProd = (currentProducts || allProducts).find(p => p.id === item.product_id);
+          if (matchedProd && matchedProd.inventory_stock !== undefined) {
+            stock = matchedProd.inventory_stock;
+          }
+        }
+
+        if (!productAggregation[groupKey]) {
+          productAggregation[groupKey] = { 
+            productName, 
+            qty: 0, 
+            imageUrl: imgUrl,
+            inventoryStock: stock 
+          };
+        }
+        productAggregation[groupKey].qty += item.quantity;
+      });
+    });
+
+    const aggregatedList: AggregatedItem[] = Object.keys(productAggregation).map((key) => ({
+      productName: productAggregation[key].productName,
+      totalQty: productAggregation[key].qty,
+      imageUrl: productAggregation[key].imageUrl,
+      inventoryStock: productAggregation[key].inventoryStock,
+    }));
+
+    setAggregatedItems(aggregatedList);
+  };
+
+  // Fulfillment Action: Mark all pending as delivered (Purchase renaming)
+  const handleFulfillAll = async () => {
+    const pendingOrders = orders.filter(o => o.status === 'pending');
+    if (pendingOrders.length === 0) return;
+    const confirmAction = window.confirm('هل أنت متأكد من شراء كافة الطلبيات المعلقة وأرشفتها؟');
+    if (!confirmAction) return;
+
+    setIsUpdating(true);
+    try {
+      const isUrlConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
+      
+      if (isUrlConfigured) {
+        // Fetch all pending ids
+        const pendingIds = pendingOrders.map(o => o.id);
+        const { error } = await supabase
+          .from('orders')
+          .update({ status: 'delivered' })
+          .in('id', pendingIds);
+
+        if (error) throw error;
+      } else {
+        console.log('Database not connected. Bypassing state update in demo mode.');
+      }
+
+      // Success, clear active pending view, keeping postponed orders untouched
+      const updatedOrders = orders.filter(o => o.status !== 'pending');
+      setOrders(updatedOrders);
+      calculateStats(updatedOrders);
+      alert('تم تحديث حالة الطلبات إلى تم الشراء بنجاح!');
+    } catch (err: any) {
+      console.error(err);
+      alert('حدث خطأ أثناء تحديث حالة الطلبات.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Individual Fulfillment: Mark single order as delivered
+  const handleFulfillOrder = async (orderId: string, customerName: string) => {
+    const confirmAction = window.confirm(`هل أنت متأكد من تسليم طلبية "${customerName}"؟`);
+    if (!confirmAction) return;
+
+    setIsUpdating(true);
+    try {
+      const isUrlConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
+      
+      if (isUrlConfigured) {
+        const { error } = await supabase
+          .from('orders')
+          .update({ status: 'delivered' })
+          .eq('id', orderId);
+
+        if (error) throw error;
+      } else {
+        console.log('Database not connected. Bypassing state update in demo mode.');
+      }
+
+      // Remove order from active view state
+      const updatedOrders = orders.filter(o => o.id !== orderId);
+      setOrders(updatedOrders);
+      calculateStats(updatedOrders);
+      alert('تم تسليم الطلبية ونقلها للأرشيف بنجاح!');
+    } catch (err: any) {
+      console.error(err);
+      alert('حدث خطأ أثناء تحديث حالة الطلبية.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Cancel/Delete active order
+  const handleCancelOrder = async (orderId: string, customerName: string) => {
+    const confirmAction = window.confirm(`هل أنت متأكد من إلغاء وحذف طلبية "${customerName}"؟`);
+    if (!confirmAction) return;
+
+    setIsUpdating(true);
+    try {
+      const isUrlConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
+      
+      if (isUrlConfigured) {
+        const { error } = await supabase
+          .from('orders')
+          .delete()
+          .eq('id', orderId);
+
+        if (error) throw error;
+      } else {
+        console.log('Database not connected. Bypassing state update in demo mode.');
+      }
+
+      // Remove order from active view state
+      const updatedOrders = orders.filter(o => o.id !== orderId);
+      setOrders(updatedOrders);
+      calculateStats(updatedOrders);
+      alert('تم إلغاء وحذف الطلبية بنجاح!');
+    } catch (err: any) {
+      console.error(err);
+      alert('حدث خطأ أثناء إلغاء الطلبية.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleSaveCustomerName = async (orderId: string) => {
+    const newName = tempCustomerName.trim();
+    if (!newName) {
+      alert('لا يمكن أن يكون اسم الزبون فارغاً.');
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      const isUrlConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
+      
+      if (isUrlConfigured) {
+        const { error } = await supabase
+          .from('orders')
+          .update({ customer_name: newName })
+          .eq('id', orderId);
+
+        if (error) throw error;
+      }
+
+      // Update local state
+      const updatedOrders = orders.map(o => {
+        if (o.id === orderId) {
+          return {
+            ...o,
+            customer_name: newName
+          };
+        }
+        return o;
+      });
+
+      setOrders(updatedOrders);
+      setEditingCustomerId(null);
+      alert('تم تحديث اسم الزبون بنجاح!');
+    } catch (err: any) {
+      console.error(err);
+      alert('حدث خطأ أثناء تعديل اسم الزبون.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleSavePrices = async (orderId: string) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    setIsUpdating(true);
+    try {
+      const isUrlConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
+      
+      const itemsToUpdate = order.order_items.map(item => {
+        const newPriceStr = editedPrices[item.id];
+        const newPrice = newPriceStr !== undefined && newPriceStr !== '' ? parseFloat(newPriceStr) : (item.price_at_purchase || 0);
+        const newQty = editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity;
+        return {
+          id: item.id,
+          order_id: orderId,
+          product_id: item.product_id,
+          quantity: newQty,
+          price_at_purchase: newPrice
+        };
+      });
+
+      const newTotalPrice = itemsToUpdate.reduce((sum, item) => sum + (item.quantity * item.price_at_purchase), 0);
+
+      if (isUrlConfigured) {
+        // 1. Update items
+        const { error: itemsError } = await supabase
+          .from('order_items')
+          .upsert(itemsToUpdate);
+
+        if (itemsError) throw itemsError;
+
+        // 2. Update order total
+        const { error: orderError } = await supabase
+          .from('orders')
+          .update({ total_price: newTotalPrice })
+          .eq('id', orderId);
+
+        if (orderError) throw orderError;
+      }
+
+      // Update local state
+      const updatedOrders = orders.map(o => {
+        if (o.id === orderId) {
+          return {
+            ...o,
+            total_price: newTotalPrice,
+            order_items: o.order_items.map(item => {
+              const newPriceStr = editedPrices[item.id];
+              const newPrice = newPriceStr !== undefined && newPriceStr !== '' ? parseFloat(newPriceStr) : item.price_at_purchase;
+              const newQty = editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity;
+              return {
+                ...item,
+                price_at_purchase: newPrice,
+                quantity: newQty
+              };
+            })
+          };
+        }
+        return o;
+      });
+
+      // Update in-memory last sold prices
+      const updatedLastPrices = { ...lastSoldPrices };
+      itemsToUpdate.forEach(item => {
+        const productName = order.order_items.find(oi => oi.id === item.id)?.product_name || '';
+        const key = item.product_id || productName;
+        if (key && item.price_at_purchase > 0) {
+          updatedLastPrices[key] = item.price_at_purchase;
+        }
+      });
+      setLastSoldPrices(updatedLastPrices);
+
+      setOrders(updatedOrders);
+      calculateStats(updatedOrders);
+      alert('تم حفظ التعديلات وتحديث إجمالي الفاتورة بنجاح!');
+    } catch (err: any) {
+      console.error(err);
+      alert('حدث خطأ أثناء حفظ الفاتورة.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+
+
+  // DB Mutation: Add item to order
+  const handleAddOrderItem = async (orderId: string) => {
+    const prodId = selectedProdForOrder[orderId];
+    if (!prodId) {
+      alert('يرجى اختيار منتج أولاً.');
+      return;
+    }
+    const qty = addQtyForOrder[orderId] || 1;
+    const priceStr = addPriceForOrder[orderId];
+    const price = priceStr ? parseFloat(priceStr) : 0;
+    if (qty <= 0) {
+      alert('الكمية يجب أن تكون أكبر من الصفر.');
+      return;
+    }
+
+    const selectedProduct = allProducts.find(p => p.id === prodId);
+    if (!selectedProduct) return;
+
+    setIsUpdating(true);
+    try {
+      const isUrlConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
+      
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+
+      // Check if product is already in the order
+      const existingItem = order.order_items.find(item => item.product_id === prodId);
+      
+      let newTotalPrice = 0;
+      if (existingItem) {
+        newTotalPrice = order.order_items.reduce((sum, item) => {
+          const itemPrice = item.id === existingItem.id ? price : (item.price_at_purchase || 0);
+          const itemQty = item.id === existingItem.id ? (item.quantity + qty) : item.quantity;
+          return sum + (itemQty * itemPrice);
+        }, 0);
+      } else {
+        newTotalPrice = order.order_items.reduce((sum, item) => sum + (item.quantity * (item.price_at_purchase || 0)), 0) + (qty * price);
+      }
+
+      let insertedId = 'temp-' + Date.now();
+
+      const activeOffer = isOfferActive(selectedProduct) ? selectedProduct.offer_title : null;
+
+      if (isUrlConfigured) {
+        if (existingItem) {
+          const { error: updateError } = await supabase
+            .from('order_items')
+            .update({ 
+              quantity: existingItem.quantity + qty,
+              price_at_purchase: price,
+              applied_offer: existingItem.applied_offer || activeOffer
+            })
+            .eq('id', existingItem.id);
+
+          if (updateError) throw updateError;
+        } else {
+          const { data: insertData, error: insertError } = await supabase
+            .from('order_items')
+            .insert({
+              order_id: orderId,
+              product_id: prodId,
+              quantity: qty,
+              price_at_purchase: price,
+              product_name: selectedProduct.name,
+              product_image: selectedProduct.image_url,
+              applied_offer: activeOffer
+            })
+            .select();
+
+          if (insertError) throw insertError;
+          if (insertData && insertData[0]) {
+            insertedId = insertData[0].id;
+          }
+        }
+
+        // Update orders.total_price
+        const { error: orderError } = await supabase
+          .from('orders')
+          .update({ total_price: newTotalPrice })
+          .eq('id', orderId);
+        if (orderError) throw orderError;
+      }
+
+      // Local state update
+      const updatedOrders = orders.map(o => {
+        if (o.id === orderId) {
+          let newItems = [...o.order_items];
+          if (existingItem) {
+            newItems = newItems.map(item => {
+              if (item.id === existingItem.id) {
+                return {
+                  ...item,
+                  quantity: item.quantity + qty,
+                  price_at_purchase: price,
+                  applied_offer: item.applied_offer || activeOffer
+                };
+              }
+              return item;
+            });
+          } else {
+            newItems.push({
+              id: insertedId,
+              order_id: orderId,
+              product_id: prodId,
+              quantity: qty,
+              price_at_purchase: price,
+              product_name: selectedProduct.name,
+              product_image: selectedProduct.image_url,
+              applied_offer: activeOffer,
+              products: { ...selectedProduct }
+            });
+          }
+          return {
+            ...o,
+            total_price: newTotalPrice,
+            order_items: newItems
+          };
+
+        }
+        return o;
+      });
+
+      setOrders(updatedOrders);
+      calculateStats(updatedOrders);
+
+      // Clear add form states for this order
+      setShowAddForm(prev => ({ ...prev, [orderId]: false }));
+      setSelectedProdForOrder(prev => ({ ...prev, [orderId]: '' }));
+      setAddQtyForOrder(prev => ({ ...prev, [orderId]: 1 }));
+      setAddPriceForOrder(prev => ({ ...prev, [orderId]: '' }));
+      setProdSearchQuery(prev => ({ ...prev, [orderId]: '' }));
+
+      alert('تم إضافة المنتج بنجاح وتحديث إجمالي الفاتورة!');
+    } catch (err: any) {
+      console.error(err);
+      alert('حدث خطأ أثناء إضافة المنتج.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // DB Mutation: Add custom item to order (not in database products store)
+  const handleAddCustomOrderItem = async (orderId: string) => {
+    const name = (customProductName[orderId] || '').trim();
+    if (!name) {
+      alert('يرجى إدخال اسم المنتج.');
+      return;
+    }
+    const qty = customProductQty[orderId] || 1;
+    const priceStr = customProductPrice[orderId];
+    const price = priceStr ? parseFloat(priceStr) : 0;
+    if (qty <= 0) {
+      alert('الكمية يجب أن تكون أكبر من الصفر.');
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      const isUrlConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
+      
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+
+      const newTotalPrice = order.order_items.reduce((sum, item) => sum + (item.quantity * (item.price_at_purchase || 0)), 0) + (qty * price);
+
+      let insertedId = 'temp-' + Date.now();
+
+      if (isUrlConfigured) {
+        const { data: insertData, error: insertError } = await supabase
+          .from('order_items')
+          .insert({
+            order_id: orderId,
+            product_id: null,
+            quantity: qty,
+            price_at_purchase: price,
+            product_name: name,
+            product_image: null
+          })
+          .select();
+
+        if (insertError) throw insertError;
+        if (insertData && insertData[0]) {
+          insertedId = insertData[0].id;
+        }
+
+        // Update orders.total_price
+        const { error: orderError } = await supabase
+          .from('orders')
+          .update({ total_price: newTotalPrice })
+          .eq('id', orderId);
+        if (orderError) throw orderError;
+      }
+
+      // Local state update
+      const updatedOrders = orders.map(o => {
+        if (o.id === orderId) {
+          const newItems = [...o.order_items];
+          newItems.push({
+            id: insertedId,
+            order_id: orderId,
+            product_id: null,
+            quantity: qty,
+            price_at_purchase: price,
+            product_name: name,
+            product_image: null,
+            products: null
+          });
+          return {
+            ...o,
+            total_price: newTotalPrice,
+            order_items: newItems
+          };
+        }
+        return o;
+      });
+
+      setOrders(updatedOrders);
+      calculateStats(updatedOrders);
+
+      // Clear add form states for this order
+      setShowCustomAddForm(prev => ({ ...prev, [orderId]: false }));
+      setCustomProductName(prev => ({ ...prev, [orderId]: '' }));
+      setCustomProductQty(prev => ({ ...prev, [orderId]: 1 }));
+      setCustomProductPrice(prev => ({ ...prev, [orderId]: '' }));
+
+      alert('تم إضافة المنتج المخصص بنجاح وتحديث إجمالي الفاتورة!');
+    } catch (err: any) {
+      console.error(err);
+      alert('حدث خطأ أثناء إضافة المنتج المخصص.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // DB Mutation: Delete item from order
+  const handleDeleteOrderItem = async (orderId: string, itemId: string) => {
+    const confirmAction = window.confirm('هل أنت متأكد من حذف هذا البند من الفاتورة؟');
+    if (!confirmAction) return;
+
+    setIsUpdating(true);
+    try {
+      const isUrlConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
+      
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+
+      const remainingItems = order.order_items.filter(item => item.id !== itemId);
+      const newTotalPrice = remainingItems.reduce((sum, item) => sum + (item.quantity * (item.price_at_purchase || 0)), 0);
+
+      if (isUrlConfigured) {
+        // Delete the item
+        const { error: deleteError } = await supabase
+          .from('order_items')
+          .delete()
+          .eq('id', itemId);
+
+        if (deleteError) throw deleteError;
+
+        // Update orders.total_price
+        const { error: orderError } = await supabase
+          .from('orders')
+          .update({ total_price: newTotalPrice })
+          .eq('id', orderId);
+        if (orderError) throw orderError;
+      }
+
+      // Local state update
+      const updatedOrders = orders.map(o => {
+        if (o.id === orderId) {
+          return {
+            ...o,
+            total_price: newTotalPrice,
+            order_items: remainingItems
+          };
+        }
+        return o;
+      });
+
+      setOrders(updatedOrders);
+      calculateStats(updatedOrders);
+      alert('تم حذف البند وتحديث إجمالي الفاتورة بنجاح!');
+    } catch (err: any) {
+      console.error(err);
+      alert('حدث خطأ أثناء حذف البند.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Helper to generate and download client-side PDF for WhatsApp sharing
+  const handleDownloadPDF = async (order: Order) => {
+    setIsUpdating(true);
+    try {
+      // Set the active print order so the print sheet is rendered in the DOM
+      setPrintType('invoice');
+      setActivePrintOrder(order);
+
+      // Wait for DOM to render/update the invoice print container
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      const input = document.getElementById('customer-invoice-print-sheet');
+      if (!input) {
+        alert('لم يتم العثور على هيكل الفاتورة للتحويل.');
+        return;
+      }
+
+      const canvas = await html2canvas(input, {
+        scale: 1.5, // optimal resolution (great text quality, much smaller memory footprint)
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+
+      // Compress canvas to JPEG with 75% quality (massively smaller than lossless PNG)
+      const imgData = canvas.toDataURL('image/jpeg', 0.75);
+      
+      // Calculate A4 dimensions (210mm x 297mm)
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // Unique alias to cache the image in PDF resources and avoid duplicate binary bloat on multi-page exports
+      const imageAlias = `invoice-${order.id}`;
+
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, imageAlias, 'FAST');
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, imageAlias, 'FAST');
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`فاتورة_${order.customer_name.replace(/\s+/g, '_')}_${order.id.substring(0, 8)}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('حدث خطأ أثناء تصدير ملف PDF.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Helper functions for print triggers
+  const handlePrintInvoice = (order: Order) => {
+    setPrintType('invoice');
+    setActivePrintOrder(order);
+    setTimeout(() => {
+      window.print();
+    }, 150);
+  };
+
+  const handlePrintReceipt = (order: Order) => {
+    setPrintType('receipt');
+    setActivePrintOrder(order);
+    setTimeout(() => {
+      window.print();
+    }, 150);
+  };
+
+  const handlePrintAggregation = () => {
+    setPrintType('aggregation');
+    setActivePrintOrder(null);
+    setTimeout(() => {
+      window.print();
+    }, 150);
+  };
+
+  const handlePrintAggregationReceipt = () => {
+    setPrintType('aggregation_receipt');
+    setActivePrintOrder(null);
+    setTimeout(() => {
+      window.print();
+    }, 150);
+  };
+
+  const getFilteredProducts = (orderId: string) => {
+    const query = (prodSearchQuery[orderId] || '').trim().toLowerCase();
+    if (!query) return allProducts;
+    return allProducts.filter(p => p.name.toLowerCase().includes(query));
+  };
+
+  const handlePostponeOrder = async (orderId: string, currentStatus: 'pending' | 'postponed') => {
+    const newStatus: 'pending' | 'postponed' = currentStatus === 'pending' ? 'postponed' : 'pending';
+    const actionText = newStatus === 'postponed' ? 'تأجيل' : 'تنشيط';
+    const confirmAction = window.confirm(`هل أنت متأكد من ${actionText} هذه الطلبية؟`);
+    if (!confirmAction) return;
+
+    setIsUpdating(true);
+    try {
+      const isUrlConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
+      
+      if (isUrlConfigured) {
+        const { error } = await supabase
+          .from('orders')
+          .update({ status: newStatus })
+          .eq('id', orderId);
+
+        if (error) throw error;
+      } else {
+        console.log('Database not connected. Bypassing state update in demo mode.');
+      }
+
+      // Update local state
+      const updatedOrders = orders.map(o => {
+        if (o.id === orderId) {
+          return { ...o, status: newStatus };
+        }
+        return o;
+      });
+
+      setOrders(updatedOrders);
+      calculateStats(updatedOrders);
+      alert(`تم ${actionText} الطلبية بنجاح!`);
+    } catch (err: any) {
+      console.error(err);
+      alert(`حدث خطأ أثناء ${actionText} الطلبية.`);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleCopyInvoiceLink = (orderId: string, totalPrice: number) => {
+    if (totalPrice <= 0) {
+      alert('يرجى حفظ وتسعير الفاتورة أولاً قبل نسخ الرابط.');
+      return;
+    }
+    const invoiceUrl = `${window.location.origin}/invoice/${orderId}`;
+    navigator.clipboard.writeText(invoiceUrl);
+    alert('تم نسخ رابط الفاتورة المباشر إلى الحافظة بنجاح!');
+  };
+
+  const activeOrdersList = orders.filter(o => o.status === 'pending');
+  const postponedOrdersList = orders.filter(o => o.status === 'postponed');
+
+  return (
+    <>
+      <div className="space-y-6 print:hidden">
+      {/* Top Warning for offline test mode */}
+      {usingMockData && (
+        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-800 px-4 py-3 rounded-2xl text-xs flex items-center gap-2.5 shadow-sm">
+          <AlertCircle className="w-5 h-5 shrink-0 text-amber-600" />
+          <span>وضع معاينة لوحة التحكم نشط. لتفعيل لوحة التحكم الحية، يرجى إدخال إعدادات Supabase في ملف .env.local</span>
+        </div>
+      )}
+
+      {/* Overview Analytics Header */}
+      <div className="max-w-xs">
+        <div 
+          className="bg-white border border-slate-200 rounded-2xl p-5 flex items-center gap-4 shadow-sm"
+          style={{ transform: 'translate3d(0, 0, 0)', backfaceVisibility: 'hidden' }}
+        >
+          <div className="bg-emerald-500/10 p-4 rounded-2xl text-emerald-600 border border-emerald-500/20">
+            <Users className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 font-bold">زبائن اليوم المعلقين</p>
+            <h3 className="text-2xl font-black text-slate-850 mt-1">{orders.filter(o => o.status === 'pending').length} زبائن</h3>
+          </div>
+        </div>
+      </div>
+
+      {/* Layer 2: Customer Order Breakdown */}
+      <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-5 shadow-sm">
+        <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+          <div className="bg-purple-500/10 p-2.5 rounded-xl text-purple-600 border border-purple-500/20">
+            <ClipboardList className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-md font-bold text-slate-800">كشف الفواتير والزبائن بالتفصيل</h2>
+            <p className="text-[11px] text-slate-500">قائمة بالفواتير الفردية المستلمة وتفاصيل طلب كل زبون</p>
+          </div>
+        </div>
+
+        {activeOrdersList.length > 0 ? (
+          <div className="space-y-4">
+            {activeOrdersList.map((order) => (
+              <div 
+                key={order.id}
+                className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4 hover:border-slate-300 transition-all"
+              >
+                {/* Order Header Info */}
+                <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${expandedOrders[order.id] ? 'pb-3 border-b border-slate-200' : ''}`}>
+                  <div className="flex justify-between items-start w-full sm:w-auto">
+                    <div className="flex items-center gap-2.5">
+                      {/* Collapse/Expand Arrow Button */}
+                      <button
+                        onClick={() => toggleOrderExpand(order.id)}
+                        className="p-1 rounded-lg text-slate-500 hover:bg-slate-200 active:scale-95 transition-all cursor-pointer flex items-center justify-center shrink-0 border border-slate-200"
+                        title={expandedOrders[order.id] ? "إغلاق التفاصيل" : "عرض التفاصيل"}
+                      >
+                        {expandedOrders[order.id] ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                      </button>
+                      <div className="space-y-1">
+                        {editingCustomerId === order.id ? (
+                          <div className="flex items-center gap-1.5 relative" onClick={(e) => e.stopPropagation()}>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={tempCustomerName}
+                                onChange={(e) => {
+                                  setTempCustomerName(e.target.value);
+                                  setCustomerSearchQuery(e.target.value);
+                                  setCustomerDropdownOpen(order.id);
+                                }}
+                                onFocus={() => {
+                                  setCustomerSearchQuery(tempCustomerName);
+                                  setCustomerDropdownOpen(order.id);
+                                }}
+                                placeholder="ابحث أو اكتب اسم زبون..."
+                                className="bg-white border border-slate-350 outline-none rounded-xl px-2.5 py-1 text-[11px] text-slate-800 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] font-bold w-[180px] text-right"
+                                autoFocus
+                              />
+                              
+                              {customerDropdownOpen === order.id && (
+                                <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg w-[240px] max-h-48 overflow-y-auto z-50 p-1 text-right divide-y divide-slate-100">
+                                  {customerSearchQuery.trim() && !approvedCustomers.some(c => c.name === customerSearchQuery.trim()) && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setTempCustomerName(customerSearchQuery.trim());
+                                        setCustomerDropdownOpen(null);
+                                      }}
+                                      className="w-full text-right px-3 py-1.5 rounded-lg text-[10px] text-[#128C7E] font-bold hover:bg-slate-50 transition-colors"
+                                    >
+                                      استخدام "{customerSearchQuery.trim()}" (زبون جديد)
+                                    </button>
+                                  )}
+                                  
+                                  {approvedCustomers
+                                    .filter(c => c.name.toLowerCase().includes(customerSearchQuery.toLowerCase()))
+                                    .map((cust) => (
+                                      <button
+                                        key={cust.id}
+                                        type="button"
+                                        onClick={() => {
+                                          setTempCustomerName(cust.name);
+                                          setCustomerDropdownOpen(null);
+                                        }}
+                                        className={`w-full text-right px-3 py-1.5 rounded-lg text-[11px] transition-colors hover:bg-slate-50 ${
+                                          tempCustomerName === cust.name ? 'bg-emerald-50 text-[#128C7E] font-bold' : 'text-slate-700'
+                                        }`}
+                                      >
+                                        {cust.name}
+                                      </button>
+                                    ))
+                                  }
+
+                                  {approvedCustomers.filter(c => c.name.toLowerCase().includes(customerSearchQuery.toLowerCase())).length === 0 && !customerSearchQuery.trim() && (
+                                    <div className="p-2 text-center text-slate-400 text-[10px]">
+                                      اكتب اسماً للبحث...
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleSaveCustomerName(order.id);
+                                setCustomerDropdownOpen(null);
+                              }}
+                              className="p-1.5 text-emerald-600 hover:bg-emerald-50 border border-emerald-100 rounded-lg transition-colors cursor-pointer"
+                              title="حفظ الاسم"
+                            >
+                              <CheckSquare className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingCustomerId(null);
+                                setCustomerDropdownOpen(null);
+                              }}
+                              className="p-1.5 text-slate-450 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+                              title="إلغاء"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 
+                              className="text-sm font-bold text-slate-800 cursor-pointer hover:text-[#128C7E] transition-colors"
+                              onClick={() => toggleOrderExpand(order.id)}
+                            >
+                              {order.customer_name}
+                            </h3>
+
+                            {/* Assigning status badge button */}
+                            {(() => {
+                              const orderTotal = Number(order.total_price || 0);
+                              if (orderTotal <= 0) return null;
+
+                              const isMatched = approvedCustomers.some(
+                                c => c.name.trim().toLowerCase() === order.customer_name.trim().toLowerCase()
+                              );
+
+                              if (!isMatched) {
+                                return (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setAssignModalOrder(order);
+                                      setSelectedCustomerForAssign('');
+                                      setAssignSearchQuery('');
+                                    }}
+                                    className="inline-flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-2.5 py-0.5 rounded-lg text-xs cursor-pointer shadow-2xs transition-all active:scale-95"
+                                    title="هذا الاسم غير مسجل في قائمة الزبائن المعتمدين - اضغط لربطه بزَبون"
+                                  >
+                                    <UserCheck className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                    <span>غير مربوط بزَبون • اضغط للربط</span>
+                                  </button>
+                                );
+                              }
+
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setAssignModalOrder(order);
+                                    const matched = approvedCustomers.find(c => c.name.trim().toLowerCase() === order.customer_name.trim().toLowerCase());
+                                    setSelectedCustomerForAssign(matched ? matched.id : '');
+                                    setAssignSearchQuery('');
+                                  }}
+                                  className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 font-bold px-2 py-0.5 rounded-md text-[10.5px] cursor-pointer transition-all"
+                                  title="زبون معتمد - اضغط لتعديل الربط إذا رغبت"
+                                >
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                                  <span>مربوط ✓</span>
+                                </button>
+                              );
+                            })()}
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingCustomerId(order.id);
+                                setTempCustomerName(order.customer_name);
+                                setCustomerSearchQuery(order.customer_name);
+                              }}
+                              className="p-1 text-slate-400 hover:text-[#128C7E] hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer shrink-0"
+                              title="تعديل اسم الزبون يدوياً"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          <span>ساعة الاستلام: {formatTime(order.created_at)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* On mobile, show the price badge here to save space on the button group */}
+                    <span className="sm:hidden bg-white border border-slate-200 text-emerald-600 font-extrabold px-2.5 py-1.5 rounded-xl text-xs self-center ml-2">
+                      {Number(order.total_price).toFixed(2)} TL
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap w-full sm:w-auto justify-end">
+                    {/* On desktop, show the price badge in the group */}
+                    <span className="hidden sm:inline-block bg-white border border-slate-200 text-emerald-600 font-extrabold px-3 py-1.5 rounded-xl text-xs">
+                      {Number(order.total_price).toFixed(2)} TL
+                    </span>
+                    <button
+                      onClick={() => handlePostponeOrder(order.id, 'pending')}
+                      disabled={isUpdating}
+                      className="bg-amber-50 hover:bg-amber-100 border border-amber-250 text-amber-700 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                      title="تأجيل الطلبية لوقت لاحق"
+                    >
+                      <CalendarClock className="w-3.5 h-3.5" />
+                      <span>تأجيل</span>
+                    </button>
+                    <button
+                      onClick={() => handleFulfillOrder(order.id, order.customer_name)}
+                      disabled={isUpdating}
+                      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-450 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                      title="تحديد كـ تم التسليم ونقل للأرشيف"
+                    >
+                      <CheckSquare className="w-3.5 h-3.5" />
+                      <span>تم التسليم</span>
+                    </button>
+                    <button
+                      onClick={() => handleCancelOrder(order.id, order.customer_name)}
+                      disabled={isUpdating}
+                      className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 hover:text-rose-700 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                      title="إلغاء وحذف الطلبية"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>إلغاء</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Collapsible Order Details */}
+                {!!expandedOrders[order.id] && (
+                  <>
+                    {/* Item Details */}
+                <div className="space-y-2">
+                  {order.order_items.map((item) => (
+                    <div key={item.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 py-2.5 border-b border-slate-100 last:border-b-0 text-xs text-slate-600">
+                      {/* Product Image & Name */}
+                      <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
+                        <div className="flex items-center gap-2">
+                          {item.product_image || item.products?.image_url ? (
+                            <img 
+                              src={item.product_image || item.products?.image_url || undefined} 
+                              onClick={() => setActivePreviewImage(item.product_image || item.products?.image_url || null)}
+                              className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover shrink-0 border border-slate-200 cursor-zoom-in hover:brightness-95 transition-all" 
+                              alt={item.product_name || item.products?.name || ''} 
+                            />
+                          ) : (
+                            <ShoppingBag className="w-12 h-12 sm:w-14 sm:h-14 p-2 sm:p-2.5 bg-white text-slate-400 border border-slate-200 rounded-lg shrink-0" />
+                          )}
+                          <div className="flex flex-col text-right">
+                            <span className="font-bold text-slate-800 text-right">{item.product_name || item.products?.name || 'منتج غير متوفر'}</span>
+                            {(() => {
+                              const offer = item.applied_offer || (item.product_id && allProductsMap[item.product_id] && isOfferActive(allProductsMap[item.product_id]) ? allProductsMap[item.product_id].offer_title : null);
+                              if (!offer) return null;
+                              const currentQty = editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity;
+                              const bonusQty = getOfferBonusQuantity(offer, currentQty);
+                              return (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 rounded-md mt-0.5 w-fit">
+                                  <Gift className="w-3 h-3 text-amber-600 shrink-0" />
+                                  <span>{offer}</span>
+                                  {bonusQty > 0 && <span className="text-amber-950 font-extrabold mr-0.5">(+ {bonusQty} صندوق مجاناً)</span>}
+                                </span>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                        {/* Mobile Delete Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteOrderItem(order.id, item.id)}
+                          disabled={isUpdating}
+                          className="sm:hidden p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0"
+                          title="حذف هذا البند"
+                        >
+                          <Trash2 className="w-4.5 h-4.5" />
+                        </button>
+                      </div>
+
+                      {/* Controls Group */}
+                      <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto bg-slate-50/50 sm:bg-transparent p-2 sm:p-0 rounded-xl border border-slate-100 sm:border-none">
+                        <div className="flex items-center gap-2">
+                          {/* Quantity Counter */}
+                          <div className="flex items-center border border-slate-250 rounded-lg overflow-hidden bg-white" dir="ltr">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const currentQty = editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity;
+                                if (currentQty > 1) {
+                                  setEditedQuantities(prev => ({ ...prev, [item.id]: currentQty - 1 }));
+                                }
+                              }}
+                              className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-slate-600 font-extrabold cursor-pointer border-r border-slate-200 transition-colors"
+                              disabled={isUpdating}
+                            >
+                              -
+                            </button>
+                            <input
+                              type="number"
+                              min="1"
+                              value={editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value) || 1;
+                                setEditedQuantities(prev => ({ ...prev, [item.id]: val }));
+                              }}
+                              className="w-8 text-center text-xs font-bold font-mono outline-none border-none py-1 text-slate-800"
+                              disabled={isUpdating}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const currentQty = editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity;
+                                setEditedQuantities(prev => ({ ...prev, [item.id]: currentQty + 1 }));
+                              }}
+                              className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-slate-600 font-extrabold cursor-pointer border-l border-slate-200 transition-colors"
+                              disabled={isUpdating}
+                            >
+                              +
+                            </button>
+                          </div>
+                          <span className="text-xs font-bold text-slate-500">صندوق ×</span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <div className="relative">
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder="السعر (TL)"
+                              value={editedPrices[item.id] !== undefined ? editedPrices[item.id] : (item.price_at_purchase !== null && item.price_at_purchase !== undefined && Number(item.price_at_purchase) > 0 ? item.price_at_purchase.toString() : '')}
+                              onFocus={() => setFocusedItemId(item.id)}
+                              onBlur={() => {
+                                setTimeout(() => setFocusedItemId(null), 200);
+                              }}
+                              onChange={(e) => {
+                                setEditedPrices(prev => ({
+                                  ...prev,
+                                  [item.id]: e.target.value
+                                }));
+                              }}
+                              className="w-16 bg-white border border-slate-250 outline-none rounded-lg px-1.5 py-1 text-xs text-slate-800 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-center font-bold font-mono"
+                              disabled={isUpdating}
+                            />
+                            {focusedItemId === item.id && lastSoldPrices[item.product_id || item.product_name || ''] !== undefined && (
+                              <button
+                                type="button"
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  const suggestedPrice = lastSoldPrices[item.product_id || item.product_name || ''];
+                                  setEditedPrices(prev => ({
+                                    ...prev,
+                                    [item.id]: suggestedPrice.toString()
+                                  }));
+                                  setFocusedItemId(null);
+                                }}
+                                className="absolute z-10 bottom-full mb-1.5 right-0 bg-[#128C7E] text-white hover:bg-[#128C7E]/95 text-[10px] font-bold py-1 px-2 rounded-lg shadow-md cursor-pointer flex items-center gap-1 whitespace-nowrap border border-emerald-500"
+                              >
+                                <span>السعر الأخير:</span>
+                                <span className="font-mono">{lastSoldPrices[item.product_id || item.product_name || '']} TL</span>
+                              </button>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-slate-450 font-bold">TL</span>
+                          
+                          {/* Desktop Delete Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteOrderItem(order.id, item.id)}
+                            disabled={isUpdating}
+                            className="hidden sm:block p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0 ml-1"
+                            title="حذف هذا البند"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* إحصائية عدد الصناديق الإجمالي للفاتورة */}
+                  {(() => {
+                    const summary = getOrderBoxSummary(
+                      order.order_items.map(item => ({
+                        ...item,
+                        quantity: editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity
+                      })),
+                      allProductsMap
+                    );
+                    return (
+                      <div className="flex justify-between items-center text-xs font-extrabold text-[#128C7E] bg-emerald-50/30 border border-emerald-100/80 rounded-xl px-3.5 py-2 mt-2 shadow-2xs">
+                        <span>إجمالي عدد الصناديق المطلوبة:</span>
+                        <span className="font-mono text-sm bg-[#128C7E]/10 px-2 py-0.5 rounded-lg">
+                          {summary.bonusBoxes > 0 ? (
+                            `${summary.totalBoxes} صندوق (${summary.paidBoxes} أصلية + ${summary.bonusBoxes} مجاناً بالعروض)`
+                          ) : (
+                            `${summary.paidBoxes} صندوق`
+                          )}
+                        </span>
+                      </div>
+                    );
+                  })()}
+
+
+                  {/* زر ونموذج إضافة منتج للفاتورة */}
+                  <div className="mt-3 pt-2 border-t border-dashed border-slate-200">
+                    {!showAddForm[order.id] && !showCustomAddForm[order.id] ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowAddForm(prev => ({ ...prev, [order.id]: true }))}
+                          className="w-full py-2 border border-dashed border-slate-350 hover:border-[#128C7E] rounded-xl text-xs text-slate-600 hover:text-[#128C7E] bg-white transition-all flex items-center justify-center gap-1 cursor-pointer font-bold"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>إضافة منتج للفاتورة</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowCustomAddForm(prev => ({ ...prev, [order.id]: true }))}
+                          className="w-full py-2 border border-dashed border-slate-350 hover:border-amber-500 rounded-xl text-xs text-slate-600 hover:text-amber-600 bg-white transition-all flex items-center justify-center gap-1 cursor-pointer font-bold"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>اضافة منتج غير موجود بالمتجر</span>
+                        </button>
+                      </div>
+                    ) : showAddForm[order.id] ? (
+                      <div className="bg-slate-100 border border-slate-200 rounded-xl p-3.5 space-y-3.5 shadow-2xs relative">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-extrabold text-slate-700">إضافة بند جديد للفاتورة</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAddForm(prev => ({ ...prev, [order.id]: false }));
+                              setSelectedProdForOrder(prev => ({ ...prev, [order.id]: '' }));
+                              setAddQtyForOrder(prev => ({ ...prev, [order.id]: 1 }));
+                              setAddPriceForOrder(prev => ({ ...prev, [order.id]: '' }));
+                              setProdSearchQuery(prev => ({ ...prev, [order.id]: '' }));
+                            }}
+                            className="p-1 hover:bg-slate-250 rounded-lg transition-colors cursor-pointer text-slate-400 hover:text-slate-600"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* البحث عن المنتج */}
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-slate-500 font-bold block">بحث عن المنتج في المتجر</label>
+                          <div className="relative">
+                            <Search className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="text"
+                              placeholder="اكتب اسم المنتج للتصفية..."
+                              value={prodSearchQuery[order.id] || ''}
+                              onChange={(e) => {
+                                setProdSearchQuery(prev => ({ ...prev, [order.id]: e.target.value }));
+                              }}
+                              className="w-full bg-white border border-slate-250 outline-none rounded-xl pr-8 pl-3 py-1.5 text-xs text-slate-850 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all font-bold"
+                            />
+                          </div>
+                        </div>
+
+                        {/* اختيار المنتج من المنسدلة */}
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-slate-500 font-bold block">اختر المنتج من القائمة</label>
+                          <select
+                            value={selectedProdForOrder[order.id] || ''}
+                            onChange={(e) => {
+                              const pId = e.target.value;
+                              setSelectedProdForOrder(prev => ({ ...prev, [order.id]: pId }));
+                              const prod = allProducts.find(p => p.id === pId);
+                              if (prod) {
+                                setAddPriceForOrder(prev => ({ ...prev, [order.id]: (prod.price || 0).toString() }));
+                              }
+                            }}
+                            className="w-full bg-white border border-slate-250 outline-none rounded-xl px-2.5 py-1.5 text-xs text-slate-850 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all font-bold"
+                          >
+                            <option value="">-- اختر المنتج --</option>
+                            {getFilteredProducts(order.id).map(p => (
+                              <option key={p.id} value={p.id}>
+                                {p.name} {p.price ? `(${p.price} TL)` : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* الكمية والسعر */}
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-slate-500 font-bold block">الكمية (صناديق)</label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={addQtyForOrder[order.id] || 1}
+                              onChange={(e) => {
+                                setAddQtyForOrder(prev => ({ ...prev, [order.id]: parseInt(e.target.value) || 1 }));
+                              }}
+                              className="w-full bg-white border border-slate-250 outline-none rounded-xl px-2.5 py-1.5 text-xs text-slate-850 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-center font-bold font-mono"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-slate-500 font-bold block">السعر للصندوق (TL)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={addPriceForOrder[order.id] || ''}
+                              placeholder="مثال: 45.00"
+                              onChange={(e) => {
+                                setAddPriceForOrder(prev => ({ ...prev, [order.id]: e.target.value }));
+                              }}
+                              className="w-full bg-white border border-slate-250 outline-none rounded-xl px-2.5 py-1.5 text-xs text-slate-850 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-center font-bold font-mono"
+                            />
+                          </div>
+                        </div>
+
+                        {/* زري الإضافة والإلغاء */}
+                        <div className="flex gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => handleAddOrderItem(order.id)}
+                            disabled={isUpdating || !selectedProdForOrder[order.id]}
+                            className="flex-1 bg-[#128C7E] hover:bg-[#128C7E]/95 disabled:bg-slate-300 disabled:text-slate-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition-all cursor-pointer"
+                          >
+                            إضافة البند
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAddForm(prev => ({ ...prev, [order.id]: false }));
+                              setSelectedProdForOrder(prev => ({ ...prev, [order.id]: '' }));
+                              setAddQtyForOrder(prev => ({ ...prev, [order.id]: 1 }));
+                              setAddPriceForOrder(prev => ({ ...prev, [order.id]: '' }));
+                              setProdSearchQuery(prev => ({ ...prev, [order.id]: '' }));
+                            }}
+                            className="flex-1 bg-white hover:bg-slate-200 border border-slate-350 text-slate-655 font-bold px-3 py-1.5 rounded-xl text-xs transition-all cursor-pointer"
+                          >
+                            إلغاء
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-amber-50/40 border border-amber-200 rounded-xl p-3.5 space-y-3.5 shadow-2xs relative">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-extrabold text-amber-800">إضافة منتج غير موجود بالمتجر</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowCustomAddForm(prev => ({ ...prev, [order.id]: false }));
+                              setCustomProductName(prev => ({ ...prev, [order.id]: '' }));
+                              setCustomProductQty(prev => ({ ...prev, [order.id]: 1 }));
+                              setCustomProductPrice(prev => ({ ...prev, [order.id]: '' }));
+                            }}
+                            className="p-1 hover:bg-amber-100/50 rounded-lg transition-colors cursor-pointer text-amber-500 hover:text-amber-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* اسم المنتج المخصص */}
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-amber-700 font-bold block">اسم المنتج المخصص</label>
+                          <input
+                            type="text"
+                            placeholder="مثال: منتج مخصص للزبون..."
+                            value={customProductName[order.id] || ''}
+                            onChange={(e) => {
+                              setCustomProductName(prev => ({ ...prev, [order.id]: e.target.value }));
+                            }}
+                            className="w-full bg-white border border-amber-200 outline-none rounded-xl px-3 py-1.5 text-xs text-slate-855 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all font-bold"
+                          />
+                        </div>
+
+                        {/* الكمية والسعر */}
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-amber-700 font-bold block">الكمية (صناديق)</label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={customProductQty[order.id] || 1}
+                              onChange={(e) => {
+                                setCustomProductQty(prev => ({ ...prev, [order.id]: parseInt(e.target.value) || 1 }));
+                              }}
+                              className="w-full bg-white border border-amber-200 outline-none rounded-xl px-2.5 py-1.5 text-xs text-slate-855 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all text-center font-bold font-mono"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-amber-700 font-bold block">السعر للصندوق (TL)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={customProductPrice[order.id] || ''}
+                              placeholder="مثال: 45.00"
+                              onChange={(e) => {
+                                setCustomProductPrice(prev => ({ ...prev, [order.id]: e.target.value }));
+                              }}
+                              className="w-full bg-white border border-amber-200 outline-none rounded-xl px-2.5 py-1.5 text-xs text-slate-855 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all text-center font-bold font-mono"
+                            />
+                          </div>
+                        </div>
+
+                        {/* زري الإضافة والإلغاء */}
+                        <div className="flex gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => handleAddCustomOrderItem(order.id)}
+                            disabled={isUpdating || !(customProductName[order.id] || '').trim()}
+                            className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:bg-slate-300 disabled:text-slate-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition-all cursor-pointer"
+                          >
+                            إضافة البند
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowCustomAddForm(prev => ({ ...prev, [order.id]: false }));
+                              setCustomProductName(prev => ({ ...prev, [order.id]: '' }));
+                              setCustomProductQty(prev => ({ ...prev, [order.id]: 1 }));
+                              setCustomProductPrice(prev => ({ ...prev, [order.id]: '' }));
+                            }}
+                            className="flex-1 bg-white hover:bg-slate-100 border border-slate-205 text-slate-500 hover:text-slate-700 font-bold px-3 py-1.5 rounded-xl text-xs transition-all cursor-pointer"
+                          >
+                            إلغاء
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions Footer */}
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-200 mt-1">
+                  <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:flex-wrap sm:items-center sm:gap-2 sm:w-auto">
+                    <button
+                      onClick={() => handleSavePrices(order.id)}
+                      disabled={isUpdating}
+                      className="col-span-2 sm:col-auto bg-emerald-50 hover:bg-emerald-100 border border-emerald-250 text-emerald-700 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
+                      title="حفظ التعديلات المدخلة وتحديث الفاتورة"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      <span>حفظ التعديلات</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => handleCopyInvoiceLink(order.id, order.total_price)}
+                      className="col-span-1 sm:col-auto bg-slate-50 hover:bg-slate-100 border border-slate-250 text-slate-600 hover:text-slate-800 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
+                      title="نسخ رابط الفاتورة لمشاركته بأي طريقة أخرى"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>نسخ الرابط</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleDownloadPDF(order)}
+                      disabled={isUpdating}
+                      className="col-span-1 sm:col-auto bg-teal-50 hover:bg-teal-100 border border-teal-250 text-teal-700 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm disabled:opacity-50 w-full sm:w-auto"
+                      title="تحميل الفاتورة كـ PDF لمشاركتها على واتساب"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>تصدير PDF<span className="hidden sm:inline"> للواتساب</span></span>
+                    </button>
+
+                    <button
+                      onClick={() => handlePrintInvoice(order)}
+                      className="col-span-1 sm:col-auto bg-blue-50 hover:bg-blue-100 border border-blue-250 text-blue-700 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
+                      title="طباعة الفاتورة A4"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>طباعة A4</span>
+                    </button>
+
+                    <button
+                      onClick={() => handlePrintReceipt(order)}
+                      className="col-span-1 sm:col-auto bg-amber-50 hover:bg-amber-100 border border-amber-250 text-amber-700 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
+                      title="طباعة إيصال حراري 80 مم"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>إيصال 80 مم</span>
+                    </button>
+
+                    <Link
+                      href="/admin"
+                      className="col-span-1 sm:col-auto bg-purple-50 hover:bg-purple-100 border border-purple-250 text-purple-700 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
+                      title="دفتر الدين وكشف حسابات الزبائن"
+                    >
+                      <Receipt className="w-3.5 h-3.5 text-purple-600" />
+                      <span>دفتر الدين</span>
+                    </Link>
+                  </div>
+
+                  <span className="text-[10px] text-slate-400 font-medium">
+                    * قم بحفظ الأسعار أولاً لتفعيل المشاركة والطباعة.
+                  </span>
+                </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-10 space-y-2">
+            <ClipboardList className="w-10 h-10 text-slate-400 mx-auto" />
+            <h3 className="text-sm font-bold text-slate-700">لا يوجد فواتير فردية نشطة</h3>
+            <p className="text-xs text-slate-500">سيتم سرد الفواتير فور إرسالها من الزبائن في المتجر العام.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Layer 1: Global Daily Fulfillment Stats */}
+      <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-5 shadow-sm">
+        <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${aggregationExpanded ? 'pb-4 border-b border-slate-100' : ''}`}>
+          <div className="flex items-center gap-3">
+            {/* Collapse/Expand Arrow Button */}
+            <button
+              onClick={() => setAggregationExpanded(!aggregationExpanded)}
+              className="p-1 rounded-lg text-slate-500 hover:bg-slate-200 active:scale-95 transition-all cursor-pointer flex items-center justify-center shrink-0 border border-slate-200"
+              title={aggregationExpanded ? "إغلاق التفاصيل" : "عرض التفاصيل"}
+            >
+              {aggregationExpanded ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
+            <div className="bg-blue-500/10 p-2.5 rounded-xl text-blue-600 border border-blue-500/20">
+              <ClipboardList className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-md font-bold text-slate-800">تجميع الطلبيات الإجمالي لليوم</h2>
+              <p className="text-[11px] text-slate-500">إجمالي الكميات والسلع اللازم تجهيزها من المستودع لتلبية كافة الزبائن</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
+            {aggregatedItems.length > 0 && (
+              <>
+                <button
+                  onClick={toggleSelectAllAggregatedItems}
+                  className="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-2xs"
+                >
+                  <span>{allSelected ? 'إلغاء تحديد الكل' : 'تحديد الكل'}</span>
+                </button>
+
+                <button
+                  onClick={handlePrintAggregation}
+                  className="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-bold px-3.5 py-2.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-2xs"
+                  title="طباعة ورقة تجميع السلع للمستودع A4"
+                >
+                  <Printer className="w-4 h-4 text-slate-500" />
+                  <span>طباعة A4</span>
+                </button>
+
+                <button
+                  onClick={handlePrintAggregationReceipt}
+                  className="bg-amber-50 hover:bg-amber-100 border border-amber-250 text-amber-700 font-bold px-3.5 py-2.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-2xs"
+                  title="طباعة ورقة التجميع للمستودع على ورق حراري 80 مم"
+                >
+                  <Printer className="w-4 h-4 text-amber-600" />
+                  <span>تجميع 80 مم</span>
+                </button>
+              </>
+            )}
+
+            {activeOrdersList.length > 0 && (
+              <button
+                onClick={handleFulfillAll}
+                disabled={isUpdating}
+                className="bg-[#128C7E] hover:bg-[#128C7E]/90 disabled:bg-slate-100 disabled:text-slate-400 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer"
+              >
+                <CheckSquare className="w-4 h-4" />
+                <span>{isUpdating ? 'جاري التحديث...' : 'تم الشراء'}</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {aggregationExpanded && (
+          aggregatedItems.length > 0 ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {aggregatedItems.map((item, idx) => {
+                  const isChecked = !excludedAggregatedItems[item.productName];
+                  return (
+                    <div 
+                      key={idx}
+                      className="bg-slate-50 p-4 rounded-2xl border border-slate-200/60 flex items-center justify-between hover:border-slate-300 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleAggregatedItem(item.productName)}
+                          className="w-4 h-4 rounded text-[#128C7E] focus:ring-[#128C7E] border-slate-350 cursor-pointer"
+                        />
+                        {item.imageUrl ? (
+                          <img 
+                            src={item.imageUrl} 
+                            onClick={() => setActivePreviewImage(item.imageUrl || null)}
+                            className="w-14 h-14 rounded-xl object-cover shrink-0 border border-slate-205 cursor-zoom-in hover:brightness-95 transition-all" 
+                            alt={item.productName} 
+                          />
+                        ) : (
+                          <ShoppingBag className="w-14 h-14 p-2.5 bg-white text-slate-400 border border-slate-200 rounded-xl shrink-0" />
+                        )}
+                        <div className="flex flex-col">
+                          <span className="text-sm font-semibold text-slate-700">{item.productName}</span>
+                          {item.inventoryStock !== null && item.inventoryStock !== undefined && (
+                            <span className="text-[10px] font-bold mt-0.5 text-slate-450">
+                              باقي في المخزون:{' '}
+                              <span className={item.inventoryStock <= 0 ? 'text-rose-600 font-black' : 'text-[#128C7E] font-black'}>
+                                {item.inventoryStock} صندوق
+                              </span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span className="bg-white text-emerald-600 font-extrabold px-3 py-1.5 rounded-xl text-sm border border-slate-200 shrink-0">
+                        {item.totalQty} علبة / صندوق
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* إجمالي عدد الصناديق لتجميع الطلبيات الإجمالي */}
+              <div className="flex justify-between items-center text-xs font-extrabold text-[#128C7E] bg-emerald-50/30 border border-emerald-100/80 rounded-xl px-4 py-3 shadow-2xs">
+                <span>إجمالي عدد الصناديق للمنتجات المحددة:</span>
+                <span className="font-mono text-sm bg-[#128C7E]/10 px-2.5 py-0.5 rounded-lg text-emerald-700">
+                  {printedAggregatedItems.reduce((sum, item) => sum + item.totalQty, 0)} صندوق
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-10 space-y-2">
+              <CheckSquare className="w-10 h-10 text-slate-400 mx-auto" />
+              <h3 className="text-sm font-bold text-slate-700">كل السلع مجهزة وسُلمت للزبائن</h3>
+              <p className="text-xs text-slate-500">لا يوجد منتجات معلقة تحتاج للتجهيز من المستودع حالياً.</p>
+            </div>
+          )
+        )}
+      </div>
+
+      {/* Postponed Orders Section */}
+      <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-5 shadow-sm">
+        <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+          <div className="bg-amber-500/10 p-2.5 rounded-xl text-amber-600 border border-amber-500/20">
+            <CalendarClock className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-md font-bold text-slate-800">الطلبيات المؤجلة</h2>
+            <p className="text-[11px] text-slate-500">قائمة بالفواتير التي تم تأجيلها لوقت لاحق لتسليمها يدوياً</p>
+          </div>
+        </div>
+
+        {postponedOrdersList.length > 0 ? (
+          <div className="space-y-4">
+            {postponedOrdersList.map((order) => (
+              <div 
+                key={order.id}
+                className="bg-amber-50/10 border border-amber-200/50 rounded-2xl p-5 space-y-4 hover:border-amber-300/60 transition-all"
+              >
+                {/* Order Header Info */}
+                <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${expandedOrders[order.id] ? 'pb-3 border-b border-amber-100/50' : ''}`}>
+                  <div className="flex justify-between items-start w-full sm:w-auto">
+                    <div className="flex items-center gap-2.5">
+                      {/* Collapse/Expand Arrow Button */}
+                      <button
+                        onClick={() => toggleOrderExpand(order.id)}
+                        className="p-1 rounded-lg text-slate-500 hover:bg-amber-100/30 active:scale-95 transition-all cursor-pointer flex items-center justify-center shrink-0 border border-amber-200/50"
+                        title={expandedOrders[order.id] ? "إغلاق التفاصيل" : "عرض التفاصيل"}
+                      >
+                        {expandedOrders[order.id] ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                      </button>
+                      <div className="space-y-1">
+                        {editingCustomerId === order.id ? (
+                          <div className="flex items-center gap-1.5 relative" onClick={(e) => e.stopPropagation()}>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={tempCustomerName}
+                                onChange={(e) => {
+                                  setTempCustomerName(e.target.value);
+                                  setCustomerSearchQuery(e.target.value);
+                                  setCustomerDropdownOpen(order.id);
+                                }}
+                                onFocus={() => {
+                                  setCustomerSearchQuery(tempCustomerName);
+                                  setCustomerDropdownOpen(order.id);
+                                }}
+                                placeholder="ابحث أو اكتب اسم زبون..."
+                                className="bg-white border border-slate-350 outline-none rounded-xl px-2.5 py-1 text-[11px] text-slate-800 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] font-bold w-[180px] text-right"
+                                autoFocus
+                              />
+                              
+                              {customerDropdownOpen === order.id && (
+                                <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg w-[240px] max-h-48 overflow-y-auto z-50 p-1 text-right divide-y divide-slate-100">
+                                  {customerSearchQuery.trim() && !approvedCustomers.some(c => c.name === customerSearchQuery.trim()) && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setTempCustomerName(customerSearchQuery.trim());
+                                        setCustomerDropdownOpen(null);
+                                      }}
+                                      className="w-full text-right px-3 py-1.5 rounded-lg text-[10px] text-[#128C7E] font-bold hover:bg-slate-50 transition-colors"
+                                    >
+                                      استخدام "{customerSearchQuery.trim()}" (زبون جديد)
+                                    </button>
+                                  )}
+                                  
+                                  {approvedCustomers
+                                    .filter(c => c.name.toLowerCase().includes(customerSearchQuery.toLowerCase()))
+                                    .map((cust) => (
+                                      <button
+                                        key={cust.id}
+                                        type="button"
+                                        onClick={() => {
+                                          setTempCustomerName(cust.name);
+                                          setCustomerDropdownOpen(null);
+                                        }}
+                                        className={`w-full text-right px-3 py-1.5 rounded-lg text-[11px] transition-colors hover:bg-slate-50 ${
+                                          tempCustomerName === cust.name ? 'bg-emerald-50 text-[#128C7E] font-bold' : 'text-slate-700'
+                                        }`}
+                                      >
+                                        {cust.name}
+                                      </button>
+                                    ))
+                                  }
+
+                                  {approvedCustomers.filter(c => c.name.toLowerCase().includes(customerSearchQuery.toLowerCase())).length === 0 && !customerSearchQuery.trim() && (
+                                    <div className="p-2 text-center text-slate-400 text-[10px]">
+                                      اكتب اسماً للبحث...
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleSaveCustomerName(order.id);
+                                setCustomerDropdownOpen(null);
+                              }}
+                              className="p-1.5 text-emerald-600 hover:bg-emerald-50 border border-emerald-100 rounded-lg transition-colors cursor-pointer"
+                              title="حفظ الاسم"
+                            >
+                              <CheckSquare className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingCustomerId(null);
+                                setCustomerDropdownOpen(null);
+                              }}
+                              className="p-1.5 text-slate-450 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+                              title="إلغاء"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 
+                              className="text-sm font-bold text-slate-800 cursor-pointer hover:text-[#128C7E] transition-colors"
+                              onClick={() => toggleOrderExpand(order.id)}
+                            >
+                              {order.customer_name}
+                            </h3>
+
+                            {/* Assigning status badge button */}
+                            {(() => {
+                              const orderTotal = Number(order.total_price || 0);
+                              if (orderTotal <= 0) return null;
+
+                              const isMatched = approvedCustomers.some(
+                                c => c.name.trim().toLowerCase() === order.customer_name.trim().toLowerCase()
+                              );
+
+                              if (!isMatched) {
+                                return (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setAssignModalOrder(order);
+                                      setSelectedCustomerForAssign('');
+                                      setAssignSearchQuery('');
+                                    }}
+                                    className="inline-flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-2.5 py-0.5 rounded-lg text-xs cursor-pointer shadow-2xs transition-all active:scale-95"
+                                    title="هذا الاسم غير مسجل في قائمة الزبائن المعتمدين - اضغط لربطه بزَبون"
+                                  >
+                                    <UserCheck className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                    <span>غير مربوط بزَبون • اضغط للربط</span>
+                                  </button>
+                                );
+                              }
+
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setAssignModalOrder(order);
+                                    const matched = approvedCustomers.find(c => c.name.trim().toLowerCase() === order.customer_name.trim().toLowerCase());
+                                    setSelectedCustomerForAssign(matched ? matched.id : '');
+                                    setAssignSearchQuery('');
+                                  }}
+                                  className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 font-bold px-2 py-0.5 rounded-md text-[10.5px] cursor-pointer transition-all"
+                                  title="زبون معتمد - اضغط لتعديل الربط إذا رغبت"
+                                >
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                                  <span>مربوط ✓</span>
+                                </button>
+                              );
+                            })()}
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingCustomerId(order.id);
+                                setTempCustomerName(order.customer_name);
+                                setCustomerSearchQuery(order.customer_name);
+                              }}
+                              className="p-1 text-slate-400 hover:text-[#128C7E] hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer shrink-0"
+                              title="تعديل اسم الزبون يدوياً"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          <span>ساعة الاستلام: {formatTime(order.created_at)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* On mobile, show the price badge here to save space on the button group */}
+                    <span className="sm:hidden bg-white border border-slate-200 text-emerald-600 font-extrabold px-2.5 py-1.5 rounded-xl text-xs self-center ml-2">
+                      {Number(order.total_price).toFixed(2)} TL
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap w-full sm:w-auto justify-end">
+                    {/* On desktop, show the price badge in the group */}
+                    <span className="hidden sm:inline-block bg-white border border-slate-200 text-emerald-600 font-extrabold px-3 py-1.5 rounded-xl text-xs">
+                      {Number(order.total_price).toFixed(2)} TL
+                    </span>
+                    <button
+                      onClick={() => handlePostponeOrder(order.id, 'postponed')}
+                      disabled={isUpdating}
+                      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-450 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                      title="إعادة تنشيط الطلبية ونقلها للنشطة"
+                    >
+                      <CalendarClock className="w-3.5 h-3.5" />
+                      <span>تنشيط</span>
+                    </button>
+                    <button
+                      onClick={() => handleFulfillOrder(order.id, order.customer_name)}
+                      disabled={isUpdating}
+                      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-450 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                      title="تحديد كـ تم التسليم ونقل للأرشيف"
+                    >
+                      <CheckSquare className="w-3.5 h-3.5" />
+                      <span>تم التسليم</span>
+                    </button>
+                    <button
+                      onClick={() => handleCancelOrder(order.id, order.customer_name)}
+                      disabled={isUpdating}
+                      className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 hover:text-rose-700 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                      title="إلغاء وحذف الطلبية"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>إلغاء</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Collapsible Order Details */}
+                {!!expandedOrders[order.id] && (
+                  <>
+                    {/* Item Details */}
+                <div className="space-y-2">
+                  {order.order_items.map((item) => (
+                    <div key={item.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 py-2.5 border-b border-slate-100 last:border-b-0 text-xs text-slate-600">
+                      {/* Product Image & Name */}
+                      <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
+                        <div className="flex items-center gap-2">
+                          {item.product_image || item.products?.image_url ? (
+                            <img 
+                              src={item.product_image || item.products?.image_url || undefined} 
+                              onClick={() => setActivePreviewImage(item.product_image || item.products?.image_url || null)}
+                              className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover shrink-0 border border-slate-200 cursor-zoom-in hover:brightness-95 transition-all" 
+                              alt={item.product_name || item.products?.name || ''} 
+                            />
+                          ) : (
+                            <ShoppingBag className="w-12 h-12 sm:w-14 sm:h-14 p-2 sm:p-2.5 bg-white text-slate-400 border border-slate-200 rounded-lg shrink-0" />
+                          )}
+                          <div className="flex flex-col text-right">
+                            <span className="font-bold text-slate-800 text-right">{item.product_name || item.products?.name || 'منتج غير متوفر'}</span>
+                            {(() => {
+                              const offer = item.applied_offer || (item.product_id && allProductsMap[item.product_id] && isOfferActive(allProductsMap[item.product_id]) ? allProductsMap[item.product_id].offer_title : null);
+                              if (!offer) return null;
+                              const currentQty = editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity;
+                              const bonusQty = getOfferBonusQuantity(offer, currentQty);
+                              return (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 rounded-md mt-0.5 w-fit">
+                                  <Gift className="w-3 h-3 text-amber-600 shrink-0" />
+                                  <span>{offer}</span>
+                                  {bonusQty > 0 && <span className="text-amber-950 font-extrabold mr-0.5">(+ {bonusQty} صندوق مجاناً)</span>}
+                                </span>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                        {/* Mobile Delete Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteOrderItem(order.id, item.id)}
+                          disabled={isUpdating}
+                          className="sm:hidden p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0"
+                          title="حذف هذا البند"
+                        >
+                          <Trash2 className="w-4.5 h-4.5" />
+                        </button>
+                      </div>
+
+                      {/* Controls Group */}
+                      <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto bg-slate-50/50 sm:bg-transparent p-2 sm:p-0 rounded-xl border border-slate-100 sm:border-none">
+                        <div className="flex items-center gap-2">
+                          {/* Quantity Counter */}
+                          <div className="flex items-center border border-slate-250 rounded-lg overflow-hidden bg-white" dir="ltr">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const currentQty = editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity;
+                                if (currentQty > 1) {
+                                  setEditedQuantities(prev => ({ ...prev, [item.id]: currentQty - 1 }));
+                                }
+                              }}
+                              className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-slate-600 font-extrabold cursor-pointer border-r border-slate-200 transition-colors"
+                              disabled={isUpdating}
+                            >
+                              -
+                            </button>
+                            <input
+                              type="number"
+                              min="1"
+                              value={editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value) || 1;
+                                setEditedQuantities(prev => ({ ...prev, [item.id]: val }));
+                              }}
+                              className="w-8 text-center text-xs font-bold font-mono outline-none border-none py-1 text-slate-800"
+                              disabled={isUpdating}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const currentQty = editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity;
+                                setEditedQuantities(prev => ({ ...prev, [item.id]: currentQty + 1 }));
+                              }}
+                              className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-slate-600 font-extrabold cursor-pointer border-l border-slate-200 transition-colors"
+                              disabled={isUpdating}
+                            >
+                              +
+                            </button>
+                          </div>
+                          <span className="text-xs font-bold text-slate-500">صندوق ×</span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <div className="relative">
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder="السعر (TL)"
+                              value={editedPrices[item.id] !== undefined ? editedPrices[item.id] : (item.price_at_purchase !== null && item.price_at_purchase !== undefined && Number(item.price_at_purchase) > 0 ? item.price_at_purchase.toString() : '')}
+                              onFocus={() => setFocusedItemId(item.id)}
+                              onBlur={() => {
+                                setTimeout(() => setFocusedItemId(null), 200);
+                              }}
+                              onChange={(e) => {
+                                setEditedPrices(prev => ({
+                                  ...prev,
+                                  [item.id]: e.target.value
+                                }));
+                              }}
+                              className="w-16 bg-white border border-slate-250 outline-none rounded-lg px-1.5 py-1 text-xs text-slate-800 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-center font-bold font-mono"
+                              disabled={isUpdating}
+                            />
+                            {focusedItemId === item.id && lastSoldPrices[item.product_id || item.product_name || ''] !== undefined && (
+                              <button
+                                type="button"
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  const suggestedPrice = lastSoldPrices[item.product_id || item.product_name || ''];
+                                  setEditedPrices(prev => ({
+                                    ...prev,
+                                    [item.id]: suggestedPrice.toString()
+                                  }));
+                                  setFocusedItemId(null);
+                                }}
+                                className="absolute z-10 bottom-full mb-1.5 right-0 bg-[#128C7E] text-white hover:bg-[#128C7E]/95 text-[10px] font-bold py-1 px-2 rounded-lg shadow-md cursor-pointer flex items-center gap-1 whitespace-nowrap border border-emerald-500"
+                              >
+                                <span>السعر الأخير:</span>
+                                <span className="font-mono">{lastSoldPrices[item.product_id || item.product_name || '']} TL</span>
+                              </button>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-slate-450 font-bold">TL</span>
+                          
+                          {/* Desktop Delete Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteOrderItem(order.id, item.id)}
+                            disabled={isUpdating}
+                            className="hidden sm:block p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0 ml-1"
+                            title="حذف هذا البند"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* إحصائية عدد الصناديق الإجمالي للفاتورة */}
+                  {(() => {
+                    const summary = getOrderBoxSummary(
+                      order.order_items.map(item => ({
+                        ...item,
+                        quantity: editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity
+                      })),
+                      allProductsMap
+                    );
+                    return (
+                      <div className="flex justify-between items-center text-xs font-extrabold text-[#128C7E] bg-emerald-50/30 border border-emerald-100/80 rounded-xl px-3.5 py-2 mt-2 shadow-2xs">
+                        <span>إجمالي عدد الصناديق المطلوبة:</span>
+                        <span className="font-mono text-sm bg-[#128C7E]/10 px-2 py-0.5 rounded-lg">
+                          {summary.bonusBoxes > 0 ? (
+                            `${summary.totalBoxes} صندوق (${summary.paidBoxes} أصلية + ${summary.bonusBoxes} مجاناً بالعروض)`
+                          ) : (
+                            `${summary.paidBoxes} صندوق`
+                          )}
+                        </span>
+                      </div>
+                    );
+                  })()}
+
+
+                  {/* زر ونموذج إضافة منتج للفاتورة */}
+                  <div className="mt-3 pt-2 border-t border-dashed border-slate-200">
+                    {!showAddForm[order.id] && !showCustomAddForm[order.id] ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowAddForm(prev => ({ ...prev, [order.id]: true }))}
+                          className="w-full py-2 border border-dashed border-slate-350 hover:border-[#128C7E] rounded-xl text-xs text-slate-600 hover:text-[#128C7E] bg-white transition-all flex items-center justify-center gap-1 cursor-pointer font-bold"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>إضافة منتج للفاتورة</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowCustomAddForm(prev => ({ ...prev, [order.id]: true }))}
+                          className="w-full py-2 border border-dashed border-slate-350 hover:border-amber-500 rounded-xl text-xs text-slate-600 hover:text-amber-600 bg-white transition-all flex items-center justify-center gap-1 cursor-pointer font-bold"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>اضافة منتج غير موجود بالمتجر</span>
+                        </button>
+                      </div>
+                    ) : showAddForm[order.id] ? (
+                      <div className="bg-slate-100 border border-slate-200 rounded-xl p-3.5 space-y-3.5 shadow-2xs relative">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-extrabold text-slate-700">إضافة بند جديد للفاتورة</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAddForm(prev => ({ ...prev, [order.id]: false }));
+                              setSelectedProdForOrder(prev => ({ ...prev, [order.id]: '' }));
+                              setAddQtyForOrder(prev => ({ ...prev, [order.id]: 1 }));
+                              setAddPriceForOrder(prev => ({ ...prev, [order.id]: '' }));
+                              setProdSearchQuery(prev => ({ ...prev, [order.id]: '' }));
+                            }}
+                            className="p-1 hover:bg-slate-250 rounded-lg transition-colors cursor-pointer text-slate-400 hover:text-slate-600"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* البحث عن المنتج */}
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-slate-500 font-bold block">بحث عن المنتج في المتجر</label>
+                          <div className="relative">
+                            <Search className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="text"
+                              placeholder="اكتب اسم المنتج للتصفية..."
+                              value={prodSearchQuery[order.id] || ''}
+                              onChange={(e) => {
+                                setProdSearchQuery(prev => ({ ...prev, [order.id]: e.target.value }));
+                              }}
+                              className="w-full bg-white border border-slate-250 outline-none rounded-xl pr-8 pl-3 py-1.5 text-xs text-slate-850 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all font-bold"
+                            />
+                          </div>
+                        </div>
+
+                        {/* اختيار المنتج من المنسدلة */}
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-slate-500 font-bold block">اختر المنتج من القائمة</label>
+                          <select
+                            value={selectedProdForOrder[order.id] || ''}
+                            onChange={(e) => {
+                              const pId = e.target.value;
+                              setSelectedProdForOrder(prev => ({ ...prev, [order.id]: pId }));
+                              const prod = allProducts.find(p => p.id === pId);
+                              if (prod) {
+                                setAddPriceForOrder(prev => ({ ...prev, [order.id]: (prod.price || 0).toString() }));
+                              }
+                            }}
+                            className="w-full bg-white border border-slate-250 outline-none rounded-xl px-2.5 py-1.5 text-xs text-slate-850 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all font-bold"
+                          >
+                            <option value="">-- اختر المنتج --</option>
+                            {getFilteredProducts(order.id).map(p => (
+                              <option key={p.id} value={p.id}>
+                                {p.name} {p.price ? `(${p.price} TL)` : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* الكمية والسعر */}
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-slate-500 font-bold block">الكمية (صناديق)</label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={addQtyForOrder[order.id] || 1}
+                              onChange={(e) => {
+                                setAddQtyForOrder(prev => ({ ...prev, [order.id]: parseInt(e.target.value) || 1 }));
+                              }}
+                              className="w-full bg-white border border-slate-250 outline-none rounded-xl px-2.5 py-1.5 text-xs text-slate-850 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-center font-bold font-mono"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-slate-500 font-bold block">السعر للصندوق (TL)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={addPriceForOrder[order.id] || ''}
+                              placeholder="مثال: 45.00"
+                              onChange={(e) => {
+                                setAddPriceForOrder(prev => ({ ...prev, [order.id]: e.target.value }));
+                              }}
+                              className="w-full bg-white border border-slate-250 outline-none rounded-xl px-2.5 py-1.5 text-xs text-slate-850 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-center font-bold font-mono"
+                            />
+                          </div>
+                        </div>
+
+                        {/* زري الإضافة والإلغاء */}
+                        <div className="flex gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => handleAddOrderItem(order.id)}
+                            disabled={isUpdating || !selectedProdForOrder[order.id]}
+                            className="flex-1 bg-[#128C7E] hover:bg-[#128C7E]/95 disabled:bg-slate-300 disabled:text-slate-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition-all cursor-pointer"
+                          >
+                            إضافة البند
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAddForm(prev => ({ ...prev, [order.id]: false }));
+                              setSelectedProdForOrder(prev => ({ ...prev, [order.id]: '' }));
+                              setAddQtyForOrder(prev => ({ ...prev, [order.id]: 1 }));
+                              setAddPriceForOrder(prev => ({ ...prev, [order.id]: '' }));
+                              setProdSearchQuery(prev => ({ ...prev, [order.id]: '' }));
+                            }}
+                            className="flex-1 bg-white hover:bg-slate-200 border border-slate-350 text-slate-655 font-bold px-3 py-1.5 rounded-xl text-xs transition-all cursor-pointer"
+                          >
+                            إلغاء
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-amber-50/40 border border-amber-200 rounded-xl p-3.5 space-y-3.5 shadow-2xs relative">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-extrabold text-amber-800">إضافة منتج غير موجود بالمتجر</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowCustomAddForm(prev => ({ ...prev, [order.id]: false }));
+                              setCustomProductName(prev => ({ ...prev, [order.id]: '' }));
+                              setCustomProductQty(prev => ({ ...prev, [order.id]: 1 }));
+                              setCustomProductPrice(prev => ({ ...prev, [order.id]: '' }));
+                            }}
+                            className="p-1 hover:bg-amber-100/50 rounded-lg transition-colors cursor-pointer text-amber-500 hover:text-amber-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* اسم المنتج المخصص */}
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-amber-700 font-bold block">اسم المنتج المخصص</label>
+                          <input
+                            type="text"
+                            placeholder="مثال: منتج مخصص للزبون..."
+                            value={customProductName[order.id] || ''}
+                            onChange={(e) => {
+                              setCustomProductName(prev => ({ ...prev, [order.id]: e.target.value }));
+                            }}
+                            className="w-full bg-white border border-amber-200 outline-none rounded-xl px-3 py-1.5 text-xs text-slate-855 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all font-bold"
+                          />
+                        </div>
+
+                        {/* الكمية والسعر */}
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-amber-700 font-bold block">الكمية (صناديق)</label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={customProductQty[order.id] || 1}
+                              onChange={(e) => {
+                                setCustomProductQty(prev => ({ ...prev, [order.id]: parseInt(e.target.value) || 1 }));
+                              }}
+                              className="w-full bg-white border border-amber-200 outline-none rounded-xl px-2.5 py-1.5 text-xs text-slate-855 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all text-center font-bold font-mono"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-amber-700 font-bold block">السعر للصندوق (TL)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={customProductPrice[order.id] || ''}
+                              placeholder="مثال: 45.00"
+                              onChange={(e) => {
+                                setCustomProductPrice(prev => ({ ...prev, [order.id]: e.target.value }));
+                              }}
+                              className="w-full bg-white border border-amber-200 outline-none rounded-xl px-2.5 py-1.5 text-xs text-slate-855 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all text-center font-bold font-mono"
+                            />
+                          </div>
+                        </div>
+
+                        {/* زري الإضافة والإلغاء */}
+                        <div className="flex gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => handleAddCustomOrderItem(order.id)}
+                            disabled={isUpdating || !(customProductName[order.id] || '').trim()}
+                            className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:bg-slate-300 disabled:text-slate-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition-all cursor-pointer"
+                          >
+                            إضافة البند
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowCustomAddForm(prev => ({ ...prev, [order.id]: false }));
+                              setCustomProductName(prev => ({ ...prev, [order.id]: '' }));
+                              setCustomProductQty(prev => ({ ...prev, [order.id]: 1 }));
+                              setCustomProductPrice(prev => ({ ...prev, [order.id]: '' }));
+                            }}
+                            className="flex-1 bg-white hover:bg-slate-100 border border-slate-205 text-slate-500 hover:text-slate-700 font-bold px-3 py-1.5 rounded-xl text-xs transition-all cursor-pointer"
+                          >
+                            إلغاء
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions Footer */}
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-200 mt-1">
+                  <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:flex-wrap sm:items-center sm:gap-2 sm:w-auto">
+                    <button
+                      onClick={() => handleSavePrices(order.id)}
+                      disabled={isUpdating}
+                      className="col-span-2 sm:col-auto bg-emerald-50 hover:bg-emerald-100 border border-emerald-250 text-emerald-700 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
+                      title="حفظ التعديلات المدخلة وتحديث الفاتورة"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      <span>حفظ التعديلات</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => handleCopyInvoiceLink(order.id, order.total_price)}
+                      className="col-span-1 sm:col-auto bg-slate-50 hover:bg-slate-100 border border-slate-250 text-slate-600 hover:text-slate-800 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
+                      title="نسخ رابط الفاتورة لمشاركته بأي طريقة أخرى"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>نسخ الرابط</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleDownloadPDF(order)}
+                      disabled={isUpdating}
+                      className="col-span-1 sm:col-auto bg-teal-50 hover:bg-teal-100 border border-teal-250 text-teal-700 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm disabled:opacity-50 w-full sm:w-auto"
+                      title="تحميل الفاتورة كـ PDF لمشاركتها على واتساب"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>تصدير PDF<span className="hidden sm:inline"> للواتساب</span></span>
+                    </button>
+
+                    <button
+                      onClick={() => handlePrintInvoice(order)}
+                      className="col-span-1 sm:col-auto bg-blue-50 hover:bg-blue-100 border border-blue-250 text-blue-700 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
+                      title="طباعة الفاتورة A4"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>طباعة A4</span>
+                    </button>
+
+                    <button
+                      onClick={() => handlePrintReceipt(order)}
+                      className="col-span-1 sm:col-auto bg-amber-50 hover:bg-amber-100 border border-amber-250 text-amber-700 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
+                      title="طباعة إيصال حراري 80 مم"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>إيصال 80 مم</span>
+                    </button>
+
+                    <Link
+                      href="/admin"
+                      className="col-span-1 sm:col-auto bg-purple-50 hover:bg-purple-100 border border-purple-250 text-purple-700 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
+                      title="دفتر الدين وكشف حسابات الزبائن"
+                    >
+                      <Receipt className="w-3.5 h-3.5 text-purple-600" />
+                      <span>دفتر الدين</span>
+                    </Link>
+                  </div>
+
+                  <span className="text-[10px] text-slate-400 font-medium">
+                    * يمكنك تنشيط الطلبية لتعود لقائمة التوزيع الفعالة.
+                  </span>
+                </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-10 space-y-2">
+            <CalendarClock className="w-10 h-10 text-slate-400 mx-auto" />
+            <h3 className="text-sm font-bold text-slate-700">لا يوجد طلبات مؤجلة حالياً</h3>
+            <p className="text-xs text-slate-500">الطلبيات المؤجلة تظهر هنا لتنظيم العمل اليومي.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Full-Screen Image Preview Modal */}
+      {activePreviewImage && (
+        <div 
+          onClick={() => setActivePreviewImage(null)}
+          className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 cursor-zoom-out transition-opacity duration-300"
+        >
+          {/* Close Button */}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setActivePreviewImage(null);
+            }}
+            className="absolute top-6 left-6 bg-white/10 hover:bg-white/20 active:scale-95 text-white p-2.5 rounded-full border border-white/20 transition-all cursor-pointer shadow-lg z-50 flex items-center justify-center"
+            title="إغلاق الصورة"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          
+          {/* Centered Image */}
+          <div className="relative max-w-full max-h-[85vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <img 
+              src={activePreviewImage} 
+              alt="Preview" 
+              className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl border border-white/5 select-none"
+            />
+          </div>
+        </div>
+      )}
+      </div>
+
+      {/* 2. Print-only Layout: Daily Aggregation Print Sheet */}
+      {printType === 'aggregation' && (
+        <div className="hidden print:block font-sans text-right" dir="rtl">
+          {/* Brand & Sheet Header */}
+          <div className="border-b-2 border-slate-900 pb-4 mb-6 text-center sm:text-right">
+            <h1 className="text-2xl font-black text-slate-800">ماركت طيبة</h1>
+            <p className="text-xs text-slate-500 font-bold mt-1">جدول تجميع الطلبيات الإجمالي اليومي للمستودع (المنتجات المحددة)</p>
+            <p className="text-[10px] text-slate-400 font-bold mt-1">تاريخ الطباعة: {new Date().toLocaleString('ar-EG', { dateStyle: 'long', timeStyle: 'short' })}</p>
+          </div>
+
+          {/* Aggregated Table */}
+          <table className="w-full border-collapse border border-slate-300 text-sm">
+            <thead>
+              <tr className="bg-slate-150">
+                <th className="border border-slate-300 px-4 py-2 text-right font-black">م</th>
+                <th className="border border-slate-300 px-4 py-2 text-right font-black">اسم المنتج</th>
+                <th className="border border-slate-300 px-4 py-2 text-center font-black">الكمية المطلوبة</th>
+              </tr>
+            </thead>
+            <tbody>
+              {printedAggregatedItems.map((item, idx) => (
+                <tr key={idx} className="hover:bg-slate-50/50">
+                  <td className="border border-slate-300 px-4 py-2.5 font-bold font-mono">{idx + 1}</td>
+                  <td className="border border-slate-300 px-4 py-2.5 font-bold">{item.productName}</td>
+                  <td className="border border-slate-300 px-4 py-2.5 text-center font-black text-slate-800 text-base">{item.totalQty} علبة / صندوق</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Aggregate Boxes Total */}
+          <div className="mt-6 border-t-2 border-slate-900 pt-4 flex justify-between items-center font-black text-lg">
+            <span>إجمالي عدد الصناديق المطلوب تجهيزها:</span>
+            <span>{printedAggregatedItems.reduce((sum, item) => sum + item.totalQty, 0)} صندوق</span>
+          </div>
+
+          <div className="mt-12 text-center text-[10px] text-slate-400 border-t border-slate-200 pt-4 font-bold">
+            * تم توليد هذه الصفحة تلقائياً لتسهيل تجميع البضائع من الرفوف • ماركت طيبة
+          </div>
+        </div>
+      )}
+
+      {/* 3. Print-only Layout: Customer Invoice Print Sheet */}
+      {activePrintOrder && (
+        <div 
+          id="customer-invoice-print-sheet" 
+          className={`absolute left-[-9999px] top-[-9999px] w-[790px] bg-white font-sans text-right p-8 ${printType === 'invoice' ? 'print:static print:block print:w-full print:p-0' : 'print:hidden'}`} 
+          dir="rtl"
+        >
+          {/* Header */}
+          <div className="border-b-2 border-slate-900 pb-4 mb-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-xl font-black text-slate-850">ماركت طيبة - TAYBA MARKET</h1>
+                <p className="text-xs text-slate-500 font-bold mt-1">مواد غذائية واستهلاكية وتوصيل مباشر</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">الماركت المركزي</p>
+              </div>
+              <div className="text-left font-mono text-xs text-slate-500">
+                <p>تاريخ الفاتورة: {new Date(activePrintOrder.created_at).toLocaleDateString('ar-EG', { dateStyle: 'long' })}</p>
+                <p>رقم الفاتورة: #{activePrintOrder.id.substring(0, 8).toUpperCase()}</p>
+              </div>
+            </div>
+            <div className="text-center mt-4">
+              <span className="text-2xl font-black border-2 border-slate-900 px-6 py-1.5 inline-block bg-slate-50 rounded-lg">فـاتـورة مـبـيـعـات</span>
+            </div>
+          </div>
+
+          {/* Customer Metadata */}
+          <div className="grid grid-cols-2 gap-4 bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-sm">
+            <div>
+              <span className="text-slate-500 font-bold">السيد / السادة: </span>
+              <span className="font-extrabold text-slate-800">{activePrintOrder.customer_name}</span>
+            </div>
+            <div className="text-left">
+              <span className="text-slate-550 font-bold">حالة الدفع: </span>
+              <span className="font-extrabold text-[#128C7E]">معلق / عند التسليم</span>
+            </div>
+          </div>
+
+          {/* Pricing Grid */}
+          <table className="w-full border-collapse border border-slate-350 text-sm">
+            <thead>
+              <tr className="bg-slate-100 border-b border-slate-350">
+                <th className="border border-slate-350 px-3 py-2 text-center font-black w-12">م</th>
+                <th className="border border-slate-350 px-3 py-2 text-right font-black">الصنف (اسم المادة)</th>
+                <th className="border border-slate-350 px-3 py-2 text-center font-black w-24">الكمية</th>
+                <th className="border border-slate-350 px-3 py-2 text-center font-black w-32">السعر الإفرادي</th>
+                <th className="border border-slate-350 px-3 py-2 text-center font-black w-32">الإجمالي</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activePrintOrder.order_items.map((item, idx) => {
+                const price = Number(item.price_at_purchase || 0);
+                const qty = item.quantity;
+                const total = price * qty;
+                const offer = item.applied_offer || (item.product_id && allProductsMap[item.product_id] && isOfferActive(allProductsMap[item.product_id]) ? allProductsMap[item.product_id].offer_title : null);
+                const bonusQty = offer ? getOfferBonusQuantity(offer, qty) : 0;
+                return (
+                  <tr key={item.id} className="border-b border-slate-300">
+                    <td className="border border-slate-355 px-3 py-2.5 text-center font-bold font-mono">{idx + 1}</td>
+                    <td className="border border-slate-355 px-3 py-2.5 font-bold text-slate-800">
+                      <div>{item.product_name || item.products?.name || 'منتج غير معروف'}</div>
+                      {offer && (
+                        <div className="text-[11px] text-amber-900 font-extrabold mt-1 bg-amber-50 border border-amber-200/80 rounded-md px-2 py-0.5 inline-flex items-center gap-1">
+                          <span>🎁 عرض خاص: {offer}</span>
+                          {bonusQty > 0 && <span className="text-amber-950 font-black">(+ {bonusQty} صندوق مجاناً)</span>}
+                        </div>
+                      )}
+                    </td>
+                    <td className="border border-slate-355 px-3 py-2.5 text-center font-black font-mono">{qty} صندوق</td>
+                    <td className="border border-slate-355 px-3 py-2.5 text-center font-extrabold font-mono">{price.toFixed(2)} TL</td>
+                    <td className="border border-slate-355 px-3 py-2.5 text-center font-black font-mono">{total.toFixed(2)} TL</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {/* Summary / Total section */}
+          <div className="mt-6 border border-slate-350 rounded-xl p-4 bg-slate-50 flex justify-between items-center">
+            <div className="text-xs text-slate-550 font-bold">
+              <span>إجمالي الصناديق: </span>
+              <span className="font-extrabold text-slate-800 text-sm font-mono mr-1">
+                {(() => {
+                  const summary = getOrderBoxSummary(activePrintOrder.order_items, allProductsMap);
+                  return summary.bonusBoxes > 0 ? (
+                    `${summary.totalBoxes} صندوق (${summary.paidBoxes} أصلية + ${summary.bonusBoxes} مجاناً بالعروض)`
+                  ) : (
+                    `${summary.paidBoxes} صندوق`
+                  );
+                })()}
+              </span>
+            </div>
+
+            <div className="text-right">
+              <span className="text-slate-700 font-black text-md">المجموع الكلي النهائي:</span>
+              <span className="text-xl font-black text-[#128C7E] font-mono mr-2 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg">
+                {Number(activePrintOrder.total_price).toFixed(2)} TL
+              </span>
+            </div>
+          </div>
+
+          {/* Signature / Notes */}
+          <div className="grid grid-cols-2 gap-4 mt-16 text-center text-xs">
+            <div>
+              <p className="text-slate-400 font-bold mb-8">توقيع المستلم</p>
+              <div className="border-b border-slate-300 w-40 mx-auto"></div>
+            </div>
+            <div>
+              <p className="text-slate-400 font-bold mb-8">خاتم وتوقيع الشركة</p>
+              <div className="border-b border-slate-300 w-40 mx-auto"></div>
+            </div>
+          </div>
+
+          <div className="mt-16 text-center text-[10px] text-slate-400 border-t border-slate-200 pt-4 font-bold">
+            * شكراً لتعاملكم معنا • تمنياتنا لكم بالرزق والتوفيق • ماركت طيبة
+          </div>
+        </div>
+      )}
+
+      {/* Dynamic Style for 80mm Thermal Printing */}
+      {(printType === 'receipt' || printType === 'aggregation_receipt') && (
+        <style dangerouslySetInnerHTML={{ __html: `
+          @media print {
+            @page {
+              size: 80mm auto;
+              margin: 0mm !important;
+            }
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 80mm !important;
+              max-width: 80mm !important;
+              min-width: 80mm !important;
+              background-color: #fff !important;
+              color: #000 !important;
+              overflow: visible !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            /* Hide EVERYTHING by default */
+            body > * {
+              display: none !important;
+            }
+            body > #__next,
+            body > div[id] {
+              display: block !important;
+            }
+            /* Reset ALL layout wrappers aggressively */
+            aside, nav, header, footer,
+            [class*="sidebar"], [class*="Sidebar"],
+            [class*="nav-"], [class*="navigation"] {
+              display: none !important;
+              width: 0 !important;
+              height: 0 !important;
+              overflow: hidden !important;
+            }
+            .min-h-screen, div.min-h-screen {
+              display: block !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              min-height: 0 !important;
+              background: transparent !important;
+              width: 80mm !important;
+              max-width: 80mm !important;
+              flex-direction: column !important;
+            }
+            main {
+              padding: 0 !important;
+              margin: 0 !important;
+              overflow: visible !important;
+              display: block !important;
+              width: 80mm !important;
+              max-width: 80mm !important;
+              min-width: 80mm !important;
+              flex: none !important;
+            }
+            main > div, main > div > div {
+              max-width: 80mm !important;
+              width: 80mm !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              box-sizing: border-box !important;
+            }
+            /* Force thermal container to fill full 80mm width */
+            .thermal-container {
+              display: block !important;
+              width: 80mm !important;
+              max-width: 80mm !important;
+              min-width: 80mm !important;
+              padding: 2mm !important;
+              margin: 0 !important;
+              box-sizing: border-box !important;
+              font-size: 13px !important;
+              line-height: 1.5 !important;
+              overflow: visible !important;
+            }
+            .thermal-container table {
+              width: 100% !important;
+              table-layout: fixed !important;
+            }
+            /* Ensure all flex/grid parents flatten */
+            div[class*="flex"], div[class*="grid"] {
+              display: block !important;
+            }
+            .thermal-container div[class*="flex"] {
+              display: flex !important;
+            }
+          }
+        `}} />
+      )}
+
+      {/* 4. Print-only Layout: 80mm Thermal Receipt Print Sheet */}
+      {printType === 'receipt' && activePrintOrder && (
+        <div className="hidden print:block thermal-container font-sans text-right text-[13px] bg-white text-black p-3.5 w-full max-w-[80mm] mx-auto leading-relaxed" dir="rtl">
+          {/* Header */}
+          <div className="text-center border-b border-dashed border-black pb-2 mb-3">
+            <h1 className="text-lg font-black uppercase tracking-wide">ماركت طيبة</h1>
+            <p className="text-sm mt-0.5 font-bold">ماركت طيبة TİCARET L.Ş.</p>
+            <p className="text-xs text-black">الماركت المركزي</p>
+            <p className="text-xs font-black mt-2 border border-black py-0.5 px-3 inline-block rounded">إيصال مبيعات</p>
+          </div>
+
+          {/* Metadata */}
+          <div className="text-xs space-y-1 mb-3 pb-2 border-b border-dashed border-black">
+            <p><strong>العميل:</strong> {activePrintOrder.customer_name}</p>
+            <p><strong>التاريخ:</strong> <span className="font-mono">{new Date(activePrintOrder.created_at).toLocaleDateString('ar-EG', { dateStyle: 'short' })}</span></p>
+            <p><strong>رقم الفاتورة:</strong> <span className="font-mono">#{activePrintOrder.id.substring(0, 8).toUpperCase()}</span></p>
+          </div>
+
+          {/* Items Table */}
+          <table className="w-full text-[13px] mb-3 border-collapse">
+            <thead>
+              <tr className="border-b-2 border-black text-right font-bold">
+                <th className="pb-1.5 w-[55%]">الصنف</th>
+                <th className="pb-1.5 text-center w-[20%]">الكمية</th>
+                <th className="pb-1.5 text-left w-[25%]">الإجمالي</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activePrintOrder.order_items.map((item) => {
+                const price = Number(item.price_at_purchase || 0);
+                const qty = item.quantity;
+                const total = price * qty;
+                const offer = item.applied_offer || (item.product_id && allProductsMap[item.product_id] && isOfferActive(allProductsMap[item.product_id]) ? allProductsMap[item.product_id].offer_title : null);
+                const bonusQty = offer ? getOfferBonusQuantity(offer, qty) : 0;
+                return (
+                  <tr key={item.id} className="border-b border-dashed border-black/30">
+                    <td className="py-2 pr-0.5">
+                      <div className="font-bold text-[13px]">{item.product_name || item.products?.name || 'مادة'}</div>
+                      {offer && (
+                        <div className="text-[11px] text-black font-extrabold mt-0.5">
+                          * عرض: {offer} {bonusQty > 0 ? `(+${bonusQty} مجانا)` : ''}
+                        </div>
+                      )}
+                      <div className="text-[11px] text-black/70 font-mono mt-0.5">{price.toFixed(2)} TL</div>
+                    </td>
+                    <td className="py-2 text-center font-bold font-mono text-[13px]">{qty}</td>
+                    <td className="py-2 text-left font-bold font-mono text-[13px]">{total.toFixed(2)} TL</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {/* Summary */}
+          <div className="border-t-2 border-black pt-2.5 space-y-2 text-[13px] font-bold">
+            <div className="flex justify-between">
+              <span>إجمالي الصناديق:</span>
+              <span className="font-mono">
+                {(() => {
+                  const summary = getOrderBoxSummary(activePrintOrder.order_items, allProductsMap);
+                  return summary.bonusBoxes > 0 ? (
+                    `${summary.totalBoxes} صندوق (${summary.paidBoxes}+${summary.bonusBoxes}مجانا)`
+                  ) : (
+                    `${summary.paidBoxes} صندوق`
+                  );
+                })()}
+              </span>
+            </div>
+
+            <div className="flex justify-between text-sm border-t border-dashed border-black pt-2 font-black">
+              <span>المجموع الكلي:</span>
+              <span className="font-mono text-lg">{Number(activePrintOrder.total_price).toFixed(2)} TL</span>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="text-center mt-8 pt-2.5 border-t border-dashed border-black text-[11px] text-black/85">
+            <p className="font-bold">شكراً لتعاملكم معنا</p>
+            <p className="mt-1 font-mono text-[10px] text-black/60">ماركت طيبة • 80mm Thermal</p>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Print-only Layout: 80mm Thermal Daily Aggregation Print Sheet */}
+      {printType === 'aggregation_receipt' && (
+        <div className="hidden print:block thermal-container font-sans text-right text-[13px] bg-white text-black p-3.5 w-full max-w-[80mm] mx-auto leading-relaxed" dir="rtl">
+          {/* Header */}
+          <div className="text-center border-b border-dashed border-black pb-2 mb-3">
+            <h1 className="text-lg font-black uppercase tracking-wide">ماركت طيبة</h1>
+            <p className="text-sm mt-0.5 font-bold">تجميع المستودع اليومي</p>
+            <p className="text-xs text-black">تاريخ الطباعة: <span className="font-mono">{new Date().toLocaleDateString('ar-EG', { dateStyle: 'short' })}</span></p>
+            <p className="text-xs font-black mt-2 border border-black py-0.5 px-3 inline-block rounded">ورقة التجميع 80 مم</p>
+          </div>
+
+          {/* Table */}
+          <table className="w-full text-[13px] mb-3 border-collapse">
+            <thead>
+              <tr className="border-b-2 border-black text-right font-bold">
+                <th className="pb-1.5 w-[12%]">#</th>
+                <th className="pb-1.5 w-[63%]">اسم المنتج</th>
+                <th className="pb-1.5 text-center w-[25%]">الكمية</th>
+              </tr>
+            </thead>
+            <tbody>
+              {printedAggregatedItems.map((item, idx) => (
+                <tr key={idx} className="border-b border-dashed border-black/30">
+                  <td className="py-2 font-bold font-mono text-[13px]">{idx + 1}</td>
+                  <td className="py-2 font-bold text-[13px]">{item.productName}</td>
+                  <td className="py-2 text-center font-black text-sm font-mono whitespace-nowrap">{item.totalQty} علبة</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Summary */}
+          <div className="border-t-2 border-black pt-2.5 text-[13px] font-bold">
+            <div className="flex justify-between items-center text-sm font-black">
+              <span>إجمالي الصناديق المطلوبة:</span>
+              <span className="font-mono text-lg">{printedAggregatedItems.reduce((sum, item) => sum + item.totalQty, 0)} صندوق</span>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="text-center mt-8 pt-2.5 border-t border-dashed border-black text-[11px] text-black/85">
+            <p className="font-bold">تم توليد الورقة للتعبئة السريعة</p>
+            <p className="mt-1 font-mono text-[10px] text-black/60">ماركت طيبة • 80mm Thermal</p>
+          </div>
+        </div>
+      )}
+
+      {/* 6. Assign Customer Modal */}
+      {assignModalOrder && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 space-y-4 text-right">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <UserCheck className="w-5 h-5 text-[#128C7E]" />
+                <h3 className="text-sm font-bold text-slate-800">
+                  ربط الفاتورة بزَبون معتمد
+                </h3>
+              </div>
+              <button 
+                onClick={() => {
+                  setAssignModalOrder(null);
+                  setSelectedCustomerForAssign('');
+                }}
+                className="p-1 text-slate-400 hover:bg-slate-100 rounded-lg cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl text-xs space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-slate-500">الاسم الحالي في الطلب:</span>
+                <b className="text-slate-900 font-extrabold">{assignModalOrder.customer_name}</b>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">رقم الفاتورة:</span>
+                <span className="font-mono font-bold text-slate-700">#{assignModalOrder.id.slice(0, 8).toUpperCase()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">إجمالي الفاتورة:</span>
+                <b className="text-emerald-700 font-black">{Number(assignModalOrder.total_price).toFixed(2)} TL</b>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-700">
+                اختر الزبون من قائمة الزبائن المعتمدين لربطها بكشف حسابه:
+              </label>
+
+              {/* Search bar inside modal */}
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="ابحث عن اسم الزبون..."
+                  value={assignSearchQuery}
+                  onChange={(e) => setAssignSearchQuery(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-250 outline-none rounded-xl pr-9 pl-3 py-1.5 text-xs text-slate-800 focus:bg-white focus:border-[#128C7E] font-medium"
+                />
+              </div>
+
+              {/* Customer selection list */}
+              <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100 bg-white">
+                {approvedCustomers
+                  .filter(c => c.name.toLowerCase().includes(assignSearchQuery.toLowerCase()))
+                  .map(c => {
+                    const isSelected = selectedCustomerForAssign === c.id;
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setSelectedCustomerForAssign(c.id)}
+                        className={`w-full p-2.5 text-right text-xs font-bold flex items-center justify-between cursor-pointer transition-colors ${
+                          isSelected ? 'bg-emerald-50 text-emerald-800' : 'hover:bg-slate-50 text-slate-700'
+                        }`}
+                      >
+                        <span>{c.name}</span>
+                        {isSelected && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+                      </button>
+                    );
+                  })}
+                {approvedCustomers.filter(c => c.name.toLowerCase().includes(assignSearchQuery.toLowerCase())).length === 0 && (
+                  <div className="p-4 text-center text-xs text-slate-400">
+                    لا يوجد زبون مطابق للبحث
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => {
+                  setAssignModalOrder(null);
+                  setSelectedCustomerForAssign('');
+                }}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs cursor-pointer transition-all"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                onClick={handleAssignOrderToCustomer}
+                disabled={!selectedCustomerForAssign || isUpdating}
+                className="px-5 py-2 bg-[#128C7E] hover:bg-[#128C7E]/90 disabled:bg-slate-300 text-white font-bold rounded-xl text-xs cursor-pointer shadow-xs transition-all flex items-center gap-1.5"
+              >
+                <UserCheck className="w-4 h-4" />
+                <span>{isUpdating ? 'جاري الربط...' : 'تأكيد ربط الفاتورة'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
