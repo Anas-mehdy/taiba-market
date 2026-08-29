@@ -288,7 +288,7 @@ export default function HomePage() {
                   >
                     <img
                       src={banner.image_url}
-                      alt={banner.title}
+                      alt={banner.title || 'عرض ترويجي'}
                       className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
                       loading="lazy"
                     />
