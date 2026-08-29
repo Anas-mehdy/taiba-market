@@ -298,7 +298,7 @@ export default function AdminBanners() {
     }
   };
 
-  const handleDeleteBanner = async (id: string, bannerTitle?: string) => {
+  const handleDeleteBanner = async (id: string) => {
     const confirmDelete = window.confirm('هل أنت متأكد من حذف هذا البوستر الإعلاني؟');
     if (!confirmDelete) return;
 
@@ -466,7 +466,7 @@ export default function AdminBanners() {
                     </span>
 
                     <button
-                      onClick={() => handleDeleteBanner(banner.id, banner.title)}
+                      onClick={() => handleDeleteBanner(banner.id)}
                       disabled={deletingId === banner.id}
                       className="p-1.5 px-3 text-rose-500 hover:text-white hover:bg-rose-600 rounded-xl transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
                       title="حذف العرض"
