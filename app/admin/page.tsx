@@ -462,7 +462,7 @@ export default function AdminDashboard() {
   const handleFulfillAll = async () => {
     const pendingOrders = orders.filter(o => o.status === 'pending');
     if (pendingOrders.length === 0) return;
-    const confirmAction = window.confirm('هل أنت متأكد من شراء كافة الطلبيات المعلقة وأرشفتها؟');
+    const confirmAction = window.confirm('هل أنت متأكد من تسليم كافة الطلبيات المعلقة وأرشفتها؟');
     if (!confirmAction) return;
 
     setIsUpdating(true);
@@ -486,7 +486,7 @@ export default function AdminDashboard() {
       const updatedOrders = orders.filter(o => o.status !== 'pending');
       setOrders(updatedOrders);
       calculateStats(updatedOrders);
-      alert('تم تحديث حالة الطلبات إلى تم الشراء بنجاح!');
+      alert('تم تحديث حالة الطلبات إلى تم التسليم بنجاح!');
     } catch (err: any) {
       console.error(err);
       alert('حدث خطأ أثناء تحديث حالة الطلبات.');
@@ -1931,7 +1931,7 @@ export default function AdminDashboard() {
                 className="bg-[#128C7E] hover:bg-[#128C7E]/90 disabled:bg-slate-100 disabled:text-slate-400 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer"
               >
                 <CheckSquare className="w-4 h-4" />
-                <span>{isUpdating ? 'جاري التحديث...' : 'تم الشراء'}</span>
+                <span>{isUpdating ? 'جاري التحديث...' : 'تم التسليم'}</span>
               </button>
             )}
           </div>
