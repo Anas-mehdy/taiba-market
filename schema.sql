@@ -243,8 +243,60 @@ END;
 $$;
 
 -- ----------------------------------------------------
--- Storage Buckets Setup Note:
--- Create two public buckets in Supabase Storage:
+-- Storage Buckets Setup:
 -- 1. 'product-images' (for catalog product photos)
 -- 2. 'banner-images' (for daily offers & promotional banners)
 -- ----------------------------------------------------
+
+-- Insert buckets if not exists
+INSERT INTO storage.buckets (id, name, public)
+VALUES 
+    ('product-images', 'product-images', true),
+    ('banner-images', 'banner-images', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+-- Drop existing policies if any
+DROP POLICY IF EXISTS "Public Access for banner-images" ON storage.objects;
+DROP POLICY IF EXISTS "Allow Upload for banner-images" ON storage.objects;
+DROP POLICY IF EXISTS "Allow Update for banner-images" ON storage.objects;
+DROP POLICY IF EXISTS "Allow Delete for banner-images" ON storage.objects;
+
+DROP POLICY IF EXISTS "Public Access for product-images" ON storage.objects;
+DROP POLICY IF EXISTS "Allow Upload for product-images" ON storage.objects;
+DROP POLICY IF EXISTS "Allow Update for product-images" ON storage.objects;
+DROP POLICY IF EXISTS "Allow Delete for product-images" ON storage.objects;
+
+-- Storage Policies for banner-images (Public read + Any user can upload/manage)
+CREATE POLICY "Public Access for banner-images"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'banner-images');
+
+CREATE POLICY "Allow Upload for banner-images"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'banner-images');
+
+CREATE POLICY "Allow Update for banner-images"
+ON storage.objects FOR UPDATE
+USING (bucket_id = 'banner-images');
+
+CREATE POLICY "Allow Delete for banner-images"
+ON storage.objects FOR DELETE
+USING (bucket_id = 'banner-images');
+
+-- Storage Policies for product-images (Public read + Any user can upload/manage)
+CREATE POLICY "Public Access for product-images"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'product-images');
+
+CREATE POLICY "Allow Upload for product-images"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'product-images');
+
+CREATE POLICY "Allow Update for product-images"
+ON storage.objects FOR UPDATE
+USING (bucket_id = 'product-images');
+
+CREATE POLICY "Allow Delete for product-images"
+ON storage.objects FOR DELETE
+USING (bucket_id = 'product-images');
+

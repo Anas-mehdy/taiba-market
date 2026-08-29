@@ -9,7 +9,7 @@ import {
 
 interface DailyOffer {
   id: string;
-  title: string;
+  title?: string | null;
   image_url: string;
   sort_order: number;
   is_active: boolean;
@@ -96,8 +96,6 @@ const compressImage = (file: File, maxWidth = 1200): Promise<Blob | File> => {
 
 export default function AdminBanners() {
   const [banners, setBanners] = useState<DailyOffer[]>([]);
-  const [title, setTitle] = useState('');
-  const [linkUrl, setLinkUrl] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -181,8 +179,8 @@ export default function AdminBanners() {
 
   const handleAddBanner = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || (!imageFile && !imagePreview)) {
-      alert('يرجى كتابة عنوان العرض واختيار صورة البوستر.');
+    if (!imageFile && !imagePreview) {
+      alert('يرجى اختيار صورة البوستر.');
       return;
     }
 
@@ -215,7 +213,15 @@ export default function AdminBanners() {
               upsert: true
             });
 
-          if (fallbackUploadError) throw fallbackUploadError;
+          if (fallbackUploadError) {
+            const errStr = (uploadError.message || '') + ' ' + (fallbackUploadError.message || '');
+            if (errStr.toLowerCase().includes('bucket not found') || (fallbackUploadError as any)?.statusCode === '404' || (fallbackUploadError as any)?.statusCode === 404) {
+              throw new Error(
+                "لم يتم العثور على حاوية التخزين (Bucket not found) في Supabase. يرجى إنشاء Bucket باسم 'banner-images' أو 'product-images' في قسم Storage داخل Supabase وجعلها عامة (Public)."
+              );
+            }
+            throw new Error(`فشل رفع صورة البانر: ${fallbackUploadError.message || uploadError.message}`);
+          }
 
           const { data } = supabase.storage
             .from('product-images')
@@ -231,11 +237,11 @@ export default function AdminBanners() {
         const { data: newBanner, error: insertError } = await supabase
           .from('daily_offers')
           .insert({
-            title: title.trim(),
+            title: 'عرض اليوم',
             image_url: finalImageUrl,
             sort_order: banners.length,
             is_active: true,
-            link_url: linkUrl.trim() || null
+            link_url: null
           })
           .select()
           .single();
@@ -245,17 +251,15 @@ export default function AdminBanners() {
       } else {
         const mockNewBanner: DailyOffer = {
           id: 'local-' + Date.now(),
-          title: title.trim(),
+          title: 'عرض اليوم',
           image_url: imagePreview || 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=900&auto=format&fit=crop&q=80',
           sort_order: banners.length,
           is_active: true,
-          link_url: linkUrl.trim() || null
+          link_url: null
         };
         saveLocalBanners([mockNewBanner, ...banners]);
       }
 
-      setTitle('');
-      setLinkUrl('');
       setImageFile(null);
       setImagePreview(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -294,8 +298,8 @@ export default function AdminBanners() {
     }
   };
 
-  const handleDeleteBanner = async (id: string, bannerTitle: string) => {
-    const confirmDelete = window.confirm(`هل أنت متأكد من حذف بوستر "${bannerTitle}"؟`);
+  const handleDeleteBanner = async (id: string, bannerTitle?: string) => {
+    const confirmDelete = window.confirm('هل أنت متأكد من حذف هذا البوستر الإعلاني؟');
     if (!confirmDelete) return;
 
     setDeletingId(id);
@@ -335,7 +339,7 @@ export default function AdminBanners() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-black text-slate-800">إدارة عروض وبانرات المتجر</h1>
-          <p className="text-xs text-slate-500 mt-1">رفع بوسترات العروض الترويجية اليومية التي تظهر في الصفحة الرئيسية للماركت (نمط روزانا)</p>
+          <p className="text-xs text-slate-500 mt-1">رفع بوسترات العروض الترويجية اليومية التي تظهر في الصفحة الرئيسية للماركت</p>
         </div>
         <button
           onClick={fetchBanners}
@@ -357,20 +361,6 @@ export default function AdminBanners() {
 
           <form onSubmit={handleAddBanner} className="space-y-4">
             
-            {/* Title */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-700">عنوان أو وصف العرض</label>
-              <input
-                type="text"
-                required
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="مثال: اشتري 5 طرود عصير واحصل على 1 مجاناً..."
-                className="w-full bg-slate-50 border border-slate-250 outline-none rounded-xl px-4 py-2.5 text-xs text-slate-850 placeholder-slate-400 focus:bg-white focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-right font-medium"
-                disabled={submitting}
-              />
-            </div>
-
             {/* Poster Image File Upload */}
             <div className="space-y-1.5">
               <label className="block text-xs font-bold text-slate-700">صورة البوستر / الإعلان</label>
@@ -385,7 +375,7 @@ export default function AdminBanners() {
               />
               <label
                 htmlFor="banner-file-input"
-                className="w-full border-2 border-dashed border-slate-250 hover:border-[#128C7E] bg-slate-50 hover:bg-emerald-50/30 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all text-slate-500"
+                className="w-full border-2 border-dashed border-slate-250 hover:border-[#128C7E] bg-slate-50 hover:bg-emerald-50/30 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all text-slate-500 min-h-[160px]"
               >
                 {imagePreview ? (
                   <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border border-slate-200">
@@ -396,7 +386,7 @@ export default function AdminBanners() {
                   </div>
                 ) : (
                   <>
-                    <Upload className="w-6 h-6 text-[#128C7E]" />
+                    <Upload className="w-8 h-8 text-[#128C7E]" />
                     <span className="text-xs font-bold text-slate-700">اضغط لرفع صورة العرض</span>
                     <span className="text-[10px] text-slate-400">JPG, PNG, WEBP (بنسبة عرض 16:9 مستحسن)</span>
                   </>
@@ -418,8 +408,8 @@ export default function AdminBanners() {
 
             <button
               type="submit"
-              disabled={submitting || !title.trim()}
-              className="w-full bg-[#075E54] hover:bg-[#128C7E] disabled:bg-slate-200 text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
+              disabled={submitting || (!imageFile && !imagePreview)}
+              className="w-full bg-[#075E54] hover:bg-[#128C7E] disabled:bg-slate-200 text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer disabled:cursor-not-allowed"
             >
               {submitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -455,11 +445,11 @@ export default function AdminBanners() {
                   }`}
                 >
                   <div className="relative aspect-[16/9] bg-slate-100 border-b border-slate-100">
-                    <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover" />
+                    <img src={banner.image_url} alt="بوستر العرض" className="w-full h-full object-cover" />
                     <button
                       onClick={() => handleToggleActive(banner)}
                       disabled={togglingId === banner.id}
-                      className={`absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-md transition-all cursor-pointer ${
+                      className={`absolute top-2 right-2 px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-md transition-all cursor-pointer ${
                         banner.is_active
                           ? 'bg-emerald-600 text-white'
                           : 'bg-slate-700 text-slate-200'
@@ -470,26 +460,24 @@ export default function AdminBanners() {
                     </button>
                   </div>
 
-                  <div className="p-3 space-y-2">
-                    <h3 className="text-xs font-bold text-slate-800 line-clamp-2 leading-relaxed">
-                      {banner.title}
-                    </h3>
+                  <div className="p-3 flex items-center justify-between bg-white">
+                    <span className="text-[11px] font-semibold text-slate-400">
+                      {banner.is_active ? 'معروض للزبائن' : 'غير معروض'}
+                    </span>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                      <button
-                        onClick={() => handleDeleteBanner(banner.id, banner.title)}
-                        disabled={deletingId === banner.id}
-                        className="p-1.5 text-rose-500 hover:text-white hover:bg-rose-600 rounded-lg transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
-                        title="حذف العرض"
-                      >
-                        {deletingId === banner.id ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <Trash2 className="w-3.5 h-3.5" />
-                        )}
-                        <span>حذف</span>
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => handleDeleteBanner(banner.id, banner.title)}
+                      disabled={deletingId === banner.id}
+                      className="p-1.5 px-3 text-rose-500 hover:text-white hover:bg-rose-600 rounded-xl transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      title="حذف العرض"
+                    >
+                      {deletingId === banner.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-3.5 h-3.5" />
+                      )}
+                      <span>حذف</span>
+                    </button>
                   </div>
                 </div>
               ))}
