@@ -72,8 +72,9 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md bg-white rounded-3xl p-6 border border-slate-200 shadow-xl space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex bg-emerald-50 p-4 rounded-2xl text-[#075E54] border border-emerald-200/50 shadow-xs">
-            <Lock className="w-8 h-8" />
+          <div className="inline-flex w-20 h-20 rounded-full overflow-hidden border-3 border-emerald-500/30 shadow-md">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.jpg" alt="ماركت طيبة" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-2xl font-black text-slate-800">لوحة الإدارة - ماركت طيبة</h1>
           <p className="text-xs text-slate-500 font-medium">سجل الدخول لإدارة العروض اليومية، المنتجات، والطلبيات</p>

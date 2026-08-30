@@ -13,6 +13,10 @@ const cairo = Cairo({
 export const metadata: Metadata = {
   title: "ماركت طيبة - عروض اليوم والكتالوج الإلكتروني",
   description: "ماركت طيبة - تسوق أجود المواد الغذائية والخضار والمنتجات اليومية مع عروض حصرية وطلب مباشر عبر واتساب.",
+  icons: {
+    icon: "/logo.jpg",
+    apple: "/logo.jpg",
+  },
 };
 
 export default function RootLayout({

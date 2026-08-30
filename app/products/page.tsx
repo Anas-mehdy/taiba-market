@@ -186,8 +186,9 @@ function ProductsContent() {
       <header className="sticky top-0 bg-[#075E54] text-white px-4 py-3.5 shadow-md z-40 shrink-0">
         <div className="max-w-md mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
-            <Link href="/" className="bg-[#128C7E] hover:bg-[#128C7E]/80 p-2 rounded-2xl text-white shadow-inner flex items-center justify-center shrink-0">
-              <Store className="w-5 h-5" />
+            <Link href="/" className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-amber-300/60 shadow-sm shrink-0 bg-white hover:scale-105 transition-transform block">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.jpg" alt="ماركت طيبة" className="w-full h-full object-cover" />
             </Link>
             <div className="min-w-0">
               <h1 className="text-base font-black tracking-tight truncate leading-tight">ماركت طيبة</h1>

@@ -177,8 +177,9 @@ export default function HomePage() {
           
           {/* Logo & Title */}
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="bg-[#128C7E] p-2 rounded-2xl text-white shadow-inner flex items-center justify-center shrink-0">
-              <Store className="w-5 h-5" />
+            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-amber-300/60 shadow-sm shrink-0 bg-white">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.jpg" alt="ماركت طيبة" className="w-full h-full object-cover" />
             </div>
             <div className="min-w-0">
               <h1 className="text-base font-black tracking-tight truncate leading-tight">{storeName}</h1>

@@ -353,8 +353,9 @@ export default function TrackOrderPage({ params }: { params: Promise<{ id: strin
       <header className="bg-gradient-to-r from-[#075E54] to-[#128C7E] text-white px-4 py-4 shadow-md sticky top-0 z-40">
         <div className="max-w-xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-white/10 p-2 rounded-2xl backdrop-blur-xs border border-white/20">
-              <Store className="w-5 h-5 text-teal-100" />
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-300/50 shadow-sm shrink-0 bg-white">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.jpg" alt="ماركت طيبة" className="w-full h-full object-cover" />
             </div>
             <div>
               <h1 className="text-base font-black tracking-tight">{storeName}</h1>

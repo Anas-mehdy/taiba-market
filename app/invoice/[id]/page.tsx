@@ -220,8 +220,9 @@ export default function PublicInvoicePage({ params }: { params: Promise<{ id: st
         {/* Brand Header */}
         <div className="flex items-center justify-between pb-5 border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="bg-[#128C7E] p-2.5 rounded-2xl text-white shadow-inner flex items-center justify-center">
-              <Store className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-emerald-600/30 shadow-xs shrink-0 bg-white">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.jpg" alt="ماركت طيبة" className="w-full h-full object-cover" />
             </div>
             <div>
               <h1 className="text-lg font-black text-slate-800">ماركت طيبة</h1>

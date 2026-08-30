@@ -109,8 +109,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Brand header */}
         <div className="p-5 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-emerald-500/10 p-2 rounded-xl text-emerald-600 border border-emerald-500/20">
-              <Store className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-emerald-500/30 shadow-xs shrink-0 bg-white">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.jpg" alt="ماركت طيبة" className="w-full h-full object-cover" />
             </div>
             <div>
               <h2 className="text-base font-black text-slate-900 leading-none">ماركت طيبة</h2>
