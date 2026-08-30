@@ -17,9 +17,13 @@ interface OrderItem {
   product_name?: string | null;
   product_image?: string | null;
   applied_offer?: string | null;
+  unit_label?: string | null;
   products?: {
     name: string;
     image_url?: string | null;
+    unit_label?: string | null;
+    unit_type?: string | null;
+    pricing_unit_step?: number | null;
     has_offer?: boolean;
     offer_title?: string | null;
     offer_type?: 'unlimited' | 'date_limited' | 'stock_limited';
@@ -267,7 +271,9 @@ export default function PublicInvoicePage({ params }: { params: Promise<{ id: st
           <h3 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2">تفاصيل المواد والأسعار</h3>
           <div className="divide-y divide-slate-100">
             {order.order_items.map((item) => {
-              const itemTotalPrice = (item.price_at_purchase || 0) * item.quantity;
+              const pricingStep = item.products?.pricing_unit_step && Number(item.products.pricing_unit_step) > 0 ? Number(item.products.pricing_unit_step) : 1;
+              const itemTotalPrice = ((item.price_at_purchase || 0) * item.quantity) / pricingStep;
+              const unitLabel = item.unit_label || item.products?.unit_label || (item.products?.unit_type === 'kg' ? 'كغ' : item.products?.unit_type === 'gram' ? 'غرام' : 'قطعة');
               return (
                 <div key={item.id} className="py-3 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -288,9 +294,9 @@ export default function PublicInvoicePage({ params }: { params: Promise<{ id: st
                       <p className="text-sm font-bold text-slate-800 truncate">{item.product_name || item.products?.name || 'منتج غير متوفر'}</p>
                       <p className="text-[10px] text-slate-450 font-semibold mt-0.5">
                         {item.price_at_purchase > 0 ? (
-                          `${item.quantity} صندوق × ${Number(item.price_at_purchase).toFixed(2)} TL`
+                          `${Number(item.quantity.toFixed(3))} ${unitLabel} × ${Number(item.price_at_purchase).toFixed(2)} TL`
                         ) : (
-                          `${item.quantity} صندوق × يحدد لاحقاً`
+                          `${Number(item.quantity.toFixed(3))} ${unitLabel} × يحدد لاحقاً`
                         )}
                       </p>
                       {(() => {

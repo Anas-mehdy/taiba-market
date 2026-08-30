@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Plus, Trash2, ShoppingBag, Loader2, Image as ImageIcon, Upload, AlertCircle, RefreshCw, GripVertical, Eye, EyeOff, X, Pencil, Search, Tag, Gift, Clock, PackageCheck, AlertTriangle, FileText } from 'lucide-react';
+import { Plus, Trash2, ShoppingBag, Loader2, Image as ImageIcon, Upload, AlertCircle, RefreshCw, GripVertical, Eye, EyeOff, X, Pencil, Search, Tag, Gift, Clock, PackageCheck, AlertTriangle, FileText, Scale } from 'lucide-react';
 
 interface Category {
   id: string;
@@ -18,6 +18,11 @@ interface Product {
   image_url: string | null;
   sort_order?: number;
   is_hidden?: boolean;
+  unit_type?: 'piece' | 'kg' | 'gram' | 'liter' | 'custom' | string;
+  unit_label?: string;
+  min_quantity?: number;
+  step_quantity?: number;
+  pricing_unit_step?: number;
   has_offer?: boolean;
   offer_title?: string | null;
   offer_type?: 'unlimited' | 'date_limited' | 'stock_limited';
@@ -52,16 +57,20 @@ const isOfferActive = (product: Product): boolean => {
 
 
 const MOCK_CATEGORIES: Category[] = [
-  { id: '1', name: 'بسكويت وحلويات', sort_order: 0 },
-  { id: '2', name: 'مشروبات وغازيات', sort_order: 1 },
-  { id: '3', name: 'معلبات وأغذية مجففة', sort_order: 2 },
-  { id: '4', name: 'البان وأجبان', sort_order: 3 }
+  { id: '1', name: 'خضار وفواكه طازجة', sort_order: 0 },
+  { id: '2', name: 'بهارات ومكسرات', sort_order: 1 },
+  { id: '3', name: 'بسكويت وحلويات', sort_order: 2 },
+  { id: '4', name: 'مشروبات وغازيات', sort_order: 3 },
+  { id: '5', name: 'معلبات وأغذية مجففة', sort_order: 4 }
 ];
 
 const MOCK_PRODUCTS: Product[] = [
-  { id: 'p1', name: 'بسكويت شوكولاتة أولكر 12 قطعة', price: 45.00, category_id: '1', image_url: null, categories: { name: 'بسكويت وحلويات' } },
-  { id: 'p2', name: 'شوكولاتة داماك بالفستق', price: 65.00, category_id: '1', image_url: null, categories: { name: 'بسكويت وحلويات' } },
-  { id: 'p3', name: 'شاي تركي غوكسو 100 ظرف', price: 85.00, category_id: '2', image_url: null, categories: { name: 'مشروبات وغازيات' } }
+  { id: 'p1', name: 'طماطم بلدية طازجة', price: 25.00, category_id: '1', image_url: null, unit_type: 'kg', unit_label: 'كغ', min_quantity: 0.5, step_quantity: 0.5, pricing_unit_step: 1, categories: { name: 'خضار وفواكه طازجة' } },
+  { id: 'p2', name: 'خيار بلدي نخب أول', price: 30.00, category_id: '1', image_url: null, unit_type: 'kg', unit_label: 'كغ', min_quantity: 0.5, step_quantity: 0.5, pricing_unit_step: 1, categories: { name: 'خضار وفواكه طازجة' } },
+  { id: 'p3', name: 'فلفل أسود حب فاخر', price: 20.00, category_id: '2', image_url: null, unit_type: 'gram', unit_label: 'غرام', min_quantity: 50, step_quantity: 50, pricing_unit_step: 50, categories: { name: 'بهارات ومكسرات' } },
+  { id: 'p4', name: 'كمون مطحون نقي', price: 15.00, category_id: '2', image_url: null, unit_type: 'gram', unit_label: 'غرام', min_quantity: 100, step_quantity: 100, pricing_unit_step: 100, categories: { name: 'بهارات ومكسرات' } },
+  { id: 'p5', name: 'بسكويت شوكولاتة أولكر 12 قطعة', price: 45.00, category_id: '3', image_url: null, unit_type: 'piece', unit_label: 'صندوق', min_quantity: 1, step_quantity: 1, pricing_unit_step: 1, categories: { name: 'بسكويت وحلويات' } },
+  { id: 'p6', name: 'شاي تركي غوكسو 100 ظرف', price: 85.00, category_id: '4', image_url: null, unit_type: 'piece', unit_label: 'علبة', min_quantity: 1, step_quantity: 1, pricing_unit_step: 1, categories: { name: 'مشروبات وغازيات' } }
 ];
 
 const compressImage = (file: File, maxWidth = 800): Promise<Blob | File> => {
@@ -157,6 +166,13 @@ export default function AdminProducts() {
   const [offerEndDate, setOfferEndDate] = useState('');
   const [offerMaxQuantity, setOfferMaxQuantity] = useState('');
 
+  // Form fields - Unit & Weight
+  const [unitType, setUnitType] = useState<'piece' | 'kg' | 'gram' | 'liter' | 'custom'>('piece');
+  const [unitLabel, setUnitLabel] = useState('قطعة');
+  const [minQuantity, setMinQuantity] = useState('1');
+  const [stepQuantity, setStepQuantity] = useState('1');
+  const [pricingUnitStep, setPricingUnitStep] = useState('1');
+
   // Form fields - Product Note
   const [hasNote, setHasNote] = useState(false);
   const [note, setNote] = useState('');
@@ -178,6 +194,86 @@ export default function AdminProducts() {
   const [editOfferEndDate, setEditOfferEndDate] = useState('');
   const [editOfferMaxQuantity, setEditOfferMaxQuantity] = useState('');
   const [editOfferUsedQuantity, setEditOfferUsedQuantity] = useState(0);
+
+  // Edit product states - Unit & Weight
+  const [editUnitType, setEditUnitType] = useState<'piece' | 'kg' | 'gram' | 'liter' | 'custom'>('piece');
+  const [editUnitLabel, setEditUnitLabel] = useState('قطعة');
+  const [editMinQuantity, setEditMinQuantity] = useState('1');
+  const [editStepQuantity, setEditStepQuantity] = useState('1');
+  const [editPricingUnitStep, setEditPricingUnitStep] = useState('1');
+
+  // Preset Handlers
+  const applyAddUnitPreset = (presetKey: string) => {
+    if (presetKey === 'piece') {
+      setUnitType('piece');
+      setUnitLabel('قطعة');
+      setMinQuantity('1');
+      setStepQuantity('1');
+      setPricingUnitStep('1');
+    } else if (presetKey === 'kg_half') {
+      setUnitType('kg');
+      setUnitLabel('كغ');
+      setMinQuantity('0.5');
+      setStepQuantity('0.5');
+      setPricingUnitStep('1');
+    } else if (presetKey === 'kg_full') {
+      setUnitType('kg');
+      setUnitLabel('كغ');
+      setMinQuantity('1');
+      setStepQuantity('1');
+      setPricingUnitStep('1');
+    } else if (presetKey === 'gram_100') {
+      setUnitType('gram');
+      setUnitLabel('غرام');
+      setMinQuantity('100');
+      setStepQuantity('100');
+      setPricingUnitStep('100');
+    } else if (presetKey === 'gram_50') {
+      setUnitType('gram');
+      setUnitLabel('غرام');
+      setMinQuantity('50');
+      setStepQuantity('50');
+      setPricingUnitStep('50');
+    } else if (presetKey === 'custom') {
+      setUnitType('custom');
+    }
+  };
+
+  const applyEditUnitPreset = (presetKey: string) => {
+    if (presetKey === 'piece') {
+      setEditUnitType('piece');
+      setEditUnitLabel('قطعة');
+      setEditMinQuantity('1');
+      setEditStepQuantity('1');
+      setEditPricingUnitStep('1');
+    } else if (presetKey === 'kg_half') {
+      setEditUnitType('kg');
+      setEditUnitLabel('كغ');
+      setEditMinQuantity('0.5');
+      setEditStepQuantity('0.5');
+      setEditPricingUnitStep('1');
+    } else if (presetKey === 'kg_full') {
+      setEditUnitType('kg');
+      setEditUnitLabel('كغ');
+      setEditMinQuantity('1');
+      setEditStepQuantity('1');
+      setEditPricingUnitStep('1');
+    } else if (presetKey === 'gram_100') {
+      setEditUnitType('gram');
+      setEditUnitLabel('غرام');
+      setEditMinQuantity('100');
+      setEditStepQuantity('100');
+      setEditPricingUnitStep('100');
+    } else if (presetKey === 'gram_50') {
+      setEditUnitType('gram');
+      setEditUnitLabel('غرام');
+      setEditMinQuantity('50');
+      setEditStepQuantity('50');
+      setEditPricingUnitStep('50');
+    } else if (presetKey === 'custom') {
+      setEditUnitType('custom');
+    }
+  };
 
   // Edit product states - Product Note
   const [editHasNote, setEditHasNote] = useState(false);
@@ -495,6 +591,11 @@ export default function AdminProducts() {
     setEditOfferEndDate('');
     setEditOfferMaxQuantity('');
     setEditOfferUsedQuantity(0);
+    setEditUnitType('piece');
+    setEditUnitLabel('قطعة');
+    setEditMinQuantity('1');
+    setEditStepQuantity('1');
+    setEditPricingUnitStep('1');
   };
 
   const handleStartEdit = (product: Product) => {
@@ -530,6 +631,13 @@ export default function AdminProducts() {
     setEditOfferEndDate(formattedEndDate);
     setEditOfferMaxQuantity(product.offer_max_quantity !== null && product.offer_max_quantity !== undefined ? product.offer_max_quantity.toString() : '');
     setEditOfferUsedQuantity(product.offer_used_quantity || 0);
+
+    // Set unit & weight edit state
+    setEditUnitType((product.unit_type as any) || 'piece');
+    setEditUnitLabel(product.unit_label || 'قطعة');
+    setEditMinQuantity(product.min_quantity !== null && product.min_quantity !== undefined ? product.min_quantity.toString() : '1');
+    setEditStepQuantity(product.step_quantity !== null && product.step_quantity !== undefined ? product.step_quantity.toString() : '1');
+    setEditPricingUnitStep(product.pricing_unit_step !== null && product.pricing_unit_step !== undefined ? product.pricing_unit_step.toString() : '1');
 
     // Set product note edit state
     const hasActiveNote = !product.has_offer && !!product.note && !!product.note.trim();
@@ -623,6 +731,17 @@ export default function AdminProducts() {
           note: noteValue
         };
 
+        const parsedEditMin = editMinQuantity ? parseFloat(editMinQuantity) : 1;
+        const parsedEditStep = editStepQuantity ? parseFloat(editStepQuantity) : 1;
+        const parsedEditPricing = editPricingUnitStep ? parseFloat(editPricingUnitStep) : 1;
+        const unitPayload = {
+          unit_type: editUnitType || 'piece',
+          unit_label: editUnitLabel.trim() || 'قطعة',
+          min_quantity: parsedEditMin > 0 ? parsedEditMin : 1,
+          step_quantity: parsedEditStep > 0 ? parsedEditStep : 1,
+          pricing_unit_step: parsedEditPricing > 0 ? parsedEditPricing : 1
+        };
+
         const { data: updatedProd, error: updateError } = await supabase
           .from('products')
           .update({
@@ -630,7 +749,8 @@ export default function AdminProducts() {
             price: parsedPrice,
             category_id: editCategoryId,
             image_url: finalImageUrl,
-            ...offerPayload
+            ...offerPayload,
+            ...unitPayload
           })
           .eq('id', editingProduct.id)
           .select('*, categories(name)')
@@ -649,6 +769,10 @@ export default function AdminProducts() {
       } else {
         const matchingCat = categories.find(c => c.id === editCategoryId);
         const noteValue = !editHasOffer && editHasNote && editNote.trim() ? editNote.trim() : null;
+        const parsedEditMin = editMinQuantity ? parseFloat(editMinQuantity) : 1;
+        const parsedEditStep = editStepQuantity ? parseFloat(editStepQuantity) : 1;
+        const parsedEditPricing = editPricingUnitStep ? parseFloat(editPricingUnitStep) : 1;
+
         const mockUpdatedProd: Product = {
           ...editingProduct,
           name: editName.trim(),
@@ -662,6 +786,11 @@ export default function AdminProducts() {
           offer_max_quantity: editHasOffer && editOfferType === 'stock_limited' && editOfferMaxQuantity ? parseInt(editOfferMaxQuantity, 10) : null,
           offer_used_quantity: editHasOffer && editOfferType === 'stock_limited' ? editOfferUsedQuantity : 0,
           note: noteValue,
+          unit_type: editUnitType || 'piece',
+          unit_label: editUnitLabel.trim() || 'قطعة',
+          min_quantity: parsedEditMin > 0 ? parsedEditMin : 1,
+          step_quantity: parsedEditStep > 0 ? parsedEditStep : 1,
+          pricing_unit_step: parsedEditPricing > 0 ? parsedEditPricing : 1,
           categories: matchingCat ? { name: matchingCat.name } : null
         };
 
@@ -695,7 +824,7 @@ export default function AdminProducts() {
         if (imageFile) {
           // Compress image client-side first
           let fileToUpload: File | Blob = imageFile;
-          let fileName = `product-${Date.now()}.jpg`; // Default filename
+          let fileName = `product-${Date.now()}.jpg`;
 
           try {
             const compressed = await compressImage(imageFile);
@@ -716,7 +845,7 @@ export default function AdminProducts() {
           const { error: uploadError } = await supabase.storage
             .from('product-images')
             .upload(filePath, fileToUpload, {
-              cacheControl: '31536000', // Cache for 1 year
+              cacheControl: '31536000',
               upsert: true
             });
 
@@ -724,7 +853,6 @@ export default function AdminProducts() {
             console.error('Image upload failed:', uploadError);
             throw new Error(`فشل رفع الصورة إلى السحابة: ${uploadError.message}. يرجى محاولة استخدام صورة أخرى أو بحجم أصغر.`);
           } else {
-            // Get public URL
             const { data } = supabase.storage
               .from('product-images')
               .getPublicUrl(filePath);
@@ -746,6 +874,17 @@ export default function AdminProducts() {
           note: noteValue
         };
 
+        const parsedMin = minQuantity ? parseFloat(minQuantity) : 1;
+        const parsedStep = stepQuantity ? parseFloat(stepQuantity) : 1;
+        const parsedPricing = pricingUnitStep ? parseFloat(pricingUnitStep) : 1;
+        const unitPayload = {
+          unit_type: unitType || 'piece',
+          unit_label: unitLabel.trim() || 'قطعة',
+          min_quantity: parsedMin > 0 ? parsedMin : 1,
+          step_quantity: parsedStep > 0 ? parsedStep : 1,
+          pricing_unit_step: parsedPricing > 0 ? parsedPricing : 1
+        };
+
         const { data: newProd, error: insertError } = await supabase
           .from('products')
           .insert({
@@ -753,7 +892,8 @@ export default function AdminProducts() {
             price: parsedPrice,
             category_id: categoryId,
             image_url: finalImageUrl,
-            ...offerPayload
+            ...offerPayload,
+            ...unitPayload
           })
           .select('*, categories(name)')
           .single();
@@ -770,6 +910,10 @@ export default function AdminProducts() {
         // Mock add
         const matchingCat = categories.find(c => c.id === categoryId);
         const noteValue = !hasOffer && hasNote && note.trim() ? note.trim() : null;
+        const parsedMin = minQuantity ? parseFloat(minQuantity) : 1;
+        const parsedStep = stepQuantity ? parseFloat(stepQuantity) : 1;
+        const parsedPricing = pricingUnitStep ? parseFloat(pricingUnitStep) : 1;
+
         const mockNewProd: Product = {
           id: Math.random().toString(),
           name: name.trim(),
@@ -783,6 +927,11 @@ export default function AdminProducts() {
           offer_max_quantity: hasOffer && offerType === 'stock_limited' && offerMaxQuantity ? parseInt(offerMaxQuantity, 10) : null,
           offer_used_quantity: 0,
           note: noteValue,
+          unit_type: unitType || 'piece',
+          unit_label: unitLabel.trim() || 'قطعة',
+          min_quantity: parsedMin > 0 ? parsedMin : 1,
+          step_quantity: parsedStep > 0 ? parsedStep : 1,
+          pricing_unit_step: parsedPricing > 0 ? parsedPricing : 1,
           categories: matchingCat ? { name: matchingCat.name } : null
         };
         setProducts((prev) => [mockNewProd, ...prev]);
@@ -801,6 +950,11 @@ export default function AdminProducts() {
       setOfferMaxQuantity('');
       setHasNote(false);
       setNote('');
+      setUnitType('piece');
+      setUnitLabel('قطعة');
+      setMinQuantity('1');
+      setStepQuantity('1');
+      setPricingUnitStep('1');
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err: any) {
       console.error(err);
@@ -1002,6 +1156,159 @@ export default function AdminProducts() {
                     <span className="text-[10px] text-slate-400">صيغ JPG, PNG (حد أقصى 2 ميجا)</span>
                   </>
                 )}
+              </div>
+            </div>
+
+            {/* Unit & Weight Measurement Settings Card */}
+            <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-2xl p-3.5 space-y-3 text-right">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-emerald-900 font-bold text-xs">
+                  <Scale className="w-4 h-4 text-emerald-600" />
+                  <span>نظام البيع والقياس (الأوزان والوحدات)</span>
+                </div>
+                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-lg">
+                  {unitLabel || 'قطعة'}
+                </span>
+              </div>
+
+              <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                حدد كيف يباع هذا المنتج (بالكيلو، نصف كيلو، غرام، قطعة):
+              </p>
+
+              {/* Quick Presets Grid */}
+              <div className="grid grid-cols-2 gap-1.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => applyAddUnitPreset('piece')}
+                  className={`p-2 rounded-xl border text-right transition-all cursor-pointer ${
+                    unitType === 'piece'
+                      ? 'bg-emerald-600 border-emerald-600 text-white font-bold shadow-2xs'
+                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="font-bold text-[11px]">📦 بالقطعة / صندوق</div>
+                  <div className={`text-[9px] ${unitType === 'piece' ? 'text-emerald-100' : 'text-slate-400'}`}>زيادة 1 قطعة</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => applyAddUnitPreset('kg_half')}
+                  className={`p-2 rounded-xl border text-right transition-all cursor-pointer ${
+                    unitType === 'kg' && stepQuantity === '0.5'
+                      ? 'bg-emerald-600 border-emerald-600 text-white font-bold shadow-2xs'
+                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="font-bold text-[11px]">🥦 خضار (نصف كغ)</div>
+                  <div className={`text-[9px] ${unitType === 'kg' && stepQuantity === '0.5' ? 'text-emerald-100' : 'text-slate-400'}`}>خطوة +0.5 كغ</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => applyAddUnitPreset('kg_full')}
+                  className={`p-2 rounded-xl border text-right transition-all cursor-pointer ${
+                    unitType === 'kg' && stepQuantity === '1'
+                      ? 'bg-emerald-600 border-emerald-600 text-white font-bold shadow-2xs'
+                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="font-bold text-[11px]">⚖️ خضار (1 كغ)</div>
+                  <div className={`text-[9px] ${unitType === 'kg' && stepQuantity === '1' ? 'text-emerald-100' : 'text-slate-400'}`}>خطوة +1 كغ</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => applyAddUnitPreset('gram_100')}
+                  className={`p-2 rounded-xl border text-right transition-all cursor-pointer ${
+                    unitType === 'gram' && stepQuantity === '100'
+                      ? 'bg-emerald-600 border-emerald-600 text-white font-bold shadow-2xs'
+                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="font-bold text-[11px]">🌿 بهارات (100 غرام)</div>
+                  <div className={`text-[9px] ${unitType === 'gram' && stepQuantity === '100' ? 'text-emerald-100' : 'text-slate-400'}`}>خطوة 100 غ</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => applyAddUnitPreset('gram_50')}
+                  className={`p-2 rounded-xl border text-right transition-all cursor-pointer ${
+                    unitType === 'gram' && stepQuantity === '50'
+                      ? 'bg-emerald-600 border-emerald-600 text-white font-bold shadow-2xs'
+                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="font-bold text-[11px]">🌶️ بهارات خفيفة (50 غ)</div>
+                  <div className={`text-[9px] ${unitType === 'gram' && stepQuantity === '50' ? 'text-emerald-100' : 'text-slate-400'}`}>خطوة 50 غ</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => applyAddUnitPreset('custom')}
+                  className={`p-2 rounded-xl border text-right transition-all cursor-pointer ${
+                    unitType === 'custom'
+                      ? 'bg-emerald-600 border-emerald-600 text-white font-bold shadow-2xs'
+                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="font-bold text-[11px]">⚙️ تخصيص يدوي</div>
+                  <div className={`text-[9px] ${unitType === 'custom' ? 'text-emerald-100' : 'text-slate-400'}`}>تحديد القيم يدوياً</div>
+                </button>
+              </div>
+
+              {/* Detailed / Custom inputs */}
+              <div className="pt-2 border-t border-emerald-200/60 space-y-2 text-xs">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-700 mb-1">اسم الوحدة المعروضة</label>
+                    <input
+                      type="text"
+                      value={unitLabel}
+                      onChange={(e) => setUnitLabel(e.target.value)}
+                      placeholder="مثال: كغ / غرام / علبة"
+                      className="w-full bg-white border border-emerald-300 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-emerald-500 text-right"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-700 mb-1">الحد الأدنى للطلب</label>
+                    <input
+                      type="number"
+                      step="any"
+                      min="0.001"
+                      value={minQuantity}
+                      onChange={(e) => setMinQuantity(e.target.value)}
+                      placeholder="مثال: 0.5 أو 50"
+                      className="w-full bg-white border border-emerald-300 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-emerald-500 text-right"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-700 mb-1">مقدار الزيادة بالزر (+/-)</label>
+                    <input
+                      type="number"
+                      step="any"
+                      min="0.001"
+                      value={stepQuantity}
+                      onChange={(e) => setStepQuantity(e.target.value)}
+                      placeholder="مثال: 0.5 أو 50"
+                      className="w-full bg-white border border-emerald-300 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-emerald-500 text-right"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-700 mb-1">السعر محسوب لكل كمية</label>
+                    <input
+                      type="number"
+                      step="any"
+                      min="0.001"
+                      value={pricingUnitStep}
+                      onChange={(e) => setPricingUnitStep(e.target.value)}
+                      placeholder="1 للكيلو / 100 للغرام"
+                      className="w-full bg-white border border-emerald-300 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-emerald-500 text-right"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1335,7 +1642,17 @@ export default function AdminProducts() {
                       </td>
                       <td className="py-3 text-sm font-extrabold text-emerald-600 whitespace-nowrap">
                         {product.price !== null && product.price !== undefined && Number(product.price) > 0 ? (
-                          `${Number(product.price).toFixed(2)} TL`
+                          <div className="space-y-0.5">
+                            <span className="block font-mono text-sm">{Number(product.price).toFixed(2)} TL</span>
+                            <span className="text-[10px] font-bold text-slate-400 block leading-tight">
+                              لكل {product.pricing_unit_step && Number(product.pricing_unit_step) > 1 ? `${product.pricing_unit_step} ` : ''}{product.unit_label || (product.unit_type === 'kg' ? 'كغ' : product.unit_type === 'gram' ? 'غرام' : 'قطعة')}
+                            </span>
+                            {product.step_quantity && Number(product.step_quantity) !== 1 && (
+                              <span className="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                                خطوة: +{product.step_quantity}
+                              </span>
+                            )}
+                          </div>
                         ) : (
                           <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 shadow-xs select-none">
                             يحدد عند الطلب
@@ -1580,6 +1897,159 @@ export default function AdminProducts() {
                     )}
                   </div>
                 )}
+              </div>
+
+              {/* Unit & Weight Measurement Settings Card (Edit) */}
+              <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-2xl p-3.5 space-y-3 text-right">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-emerald-900 font-bold text-xs">
+                    <Scale className="w-4 h-4 text-emerald-600" />
+                    <span>نظام البيع والقياس (الأوزان والوحدات)</span>
+                  </div>
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-lg">
+                    {editUnitLabel || 'قطعة'}
+                  </span>
+                </div>
+
+                <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                  حدد كيف يباع هذا المنتج (بالكيلو، نصف كيلو، غرام، قطعة):
+                </p>
+
+                {/* Quick Presets Grid */}
+                <div className="grid grid-cols-2 gap-1.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => applyEditUnitPreset('piece')}
+                    className={`p-2 rounded-xl border text-right transition-all cursor-pointer ${
+                      editUnitType === 'piece'
+                        ? 'bg-emerald-600 border-emerald-600 text-white font-bold shadow-2xs'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="font-bold text-[11px]">📦 بالقطعة / صندوق</div>
+                    <div className={`text-[9px] ${editUnitType === 'piece' ? 'text-emerald-100' : 'text-slate-400'}`}>زيادة 1 قطعة</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => applyEditUnitPreset('kg_half')}
+                    className={`p-2 rounded-xl border text-right transition-all cursor-pointer ${
+                      editUnitType === 'kg' && editStepQuantity === '0.5'
+                        ? 'bg-emerald-600 border-emerald-600 text-white font-bold shadow-2xs'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="font-bold text-[11px]">🥦 خضار (نصف كغ)</div>
+                    <div className={`text-[9px] ${editUnitType === 'kg' && editStepQuantity === '0.5' ? 'text-emerald-100' : 'text-slate-400'}`}>خطوة +0.5 كغ</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => applyEditUnitPreset('kg_full')}
+                    className={`p-2 rounded-xl border text-right transition-all cursor-pointer ${
+                      editUnitType === 'kg' && editStepQuantity === '1'
+                        ? 'bg-emerald-600 border-emerald-600 text-white font-bold shadow-2xs'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="font-bold text-[11px]">⚖️ خضار (1 كغ)</div>
+                    <div className={`text-[9px] ${editUnitType === 'kg' && editStepQuantity === '1' ? 'text-emerald-100' : 'text-slate-400'}`}>خطوة +1 كغ</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => applyEditUnitPreset('gram_100')}
+                    className={`p-2 rounded-xl border text-right transition-all cursor-pointer ${
+                      editUnitType === 'gram' && editStepQuantity === '100'
+                        ? 'bg-emerald-600 border-emerald-600 text-white font-bold shadow-2xs'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="font-bold text-[11px]">🌿 بهارات (100 غرام)</div>
+                    <div className={`text-[9px] ${editUnitType === 'gram' && editStepQuantity === '100' ? 'text-emerald-100' : 'text-slate-400'}`}>خطوة 100 غ</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => applyEditUnitPreset('gram_50')}
+                    className={`p-2 rounded-xl border text-right transition-all cursor-pointer ${
+                      editUnitType === 'gram' && editStepQuantity === '50'
+                        ? 'bg-emerald-600 border-emerald-600 text-white font-bold shadow-2xs'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="font-bold text-[11px]">🌶️ بهارات خفيفة (50 غ)</div>
+                    <div className={`text-[9px] ${editUnitType === 'gram' && editStepQuantity === '50' ? 'text-emerald-100' : 'text-slate-400'}`}>خطوة 50 غ</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => applyEditUnitPreset('custom')}
+                    className={`p-2 rounded-xl border text-right transition-all cursor-pointer ${
+                      editUnitType === 'custom'
+                        ? 'bg-emerald-600 border-emerald-600 text-white font-bold shadow-2xs'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="font-bold text-[11px]">⚙️ تخصيص يدوي</div>
+                    <div className={`text-[9px] ${editUnitType === 'custom' ? 'text-emerald-100' : 'text-slate-400'}`}>تحديد القيم يدوياً</div>
+                  </button>
+                </div>
+
+                {/* Detailed / Custom inputs */}
+                <div className="pt-2 border-t border-emerald-200/60 space-y-2 text-xs">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-700 mb-1">اسم الوحدة المعروضة</label>
+                      <input
+                        type="text"
+                        value={editUnitLabel}
+                        onChange={(e) => setEditUnitLabel(e.target.value)}
+                        placeholder="مثال: كغ / غرام / علبة"
+                        className="w-full bg-white border border-emerald-300 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-emerald-500 text-right"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-700 mb-1">الحد الأدنى للطلب</label>
+                      <input
+                        type="number"
+                        step="any"
+                        min="0.001"
+                        value={editMinQuantity}
+                        onChange={(e) => setEditMinQuantity(e.target.value)}
+                        placeholder="مثال: 0.5 أو 50"
+                        className="w-full bg-white border border-emerald-300 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-emerald-500 text-right"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-700 mb-1">مقدار الزيادة بالزر (+/-)</label>
+                      <input
+                        type="number"
+                        step="any"
+                        min="0.001"
+                        value={editStepQuantity}
+                        onChange={(e) => setEditStepQuantity(e.target.value)}
+                        placeholder="مثال: 0.5 أو 50"
+                        className="w-full bg-white border border-emerald-300 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-emerald-500 text-right"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-700 mb-1">السعر محسوب لكل كمية</label>
+                      <input
+                        type="number"
+                        step="any"
+                        min="0.001"
+                        value={editPricingUnitStep}
+                        onChange={(e) => setEditPricingUnitStep(e.target.value)}
+                        placeholder="1 للكيلو / 100 للغرام"
+                        className="w-full bg-white border border-emerald-300 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-emerald-500 text-right"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Special Offer Card in Edit Modal */}

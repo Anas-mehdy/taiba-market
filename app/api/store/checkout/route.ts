@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     if (validProductIds.length > 0) {
       const { data: prodList, error: prodErr } = await supabaseAdmin
         .from('products')
-        .select('id, price, offer_type, offer_used_quantity')
+        .select('id, price, offer_type, offer_used_quantity, unit_type, unit_label, pricing_unit_step')
         .in('id', validProductIds);
 
       if (prodErr) {
@@ -68,12 +68,16 @@ export async function POST(request: NextRequest) {
 
       let actualProductId: string | null = null;
       let actualPrice = item.price || 0;
+      let unitLabel = item.unit_label || (item.unit_type === 'kg' ? 'كغ' : item.unit_type === 'gram' ? 'غرام' : 'قطعة');
+      let pricingStep = item.pricing_unit_step && Number(item.pricing_unit_step) > 0 ? Number(item.pricing_unit_step) : 1;
 
       if (isValidUuid) {
         const prodData = productMap.get(item.id);
         if (prodData) {
           actualProductId = prodData.id;
           actualPrice = prodData.price !== null && prodData.price !== undefined ? prodData.price : (item.price || 0);
+          if (prodData.unit_label) unitLabel = prodData.unit_label;
+          if (prodData.pricing_unit_step && Number(prodData.pricing_unit_step) > 0) pricingStep = Number(prodData.pricing_unit_step);
 
           // Update offer used quantity if applicable
           if (prodData.offer_type === 'stock_limited') {
@@ -96,15 +100,17 @@ export async function POST(request: NextRequest) {
         actualPrice = item.price || 0;
       }
 
-      calculatedTotalPrice += actualPrice * item.quantity;
+      const itemTotalPrice = (actualPrice * Number(item.quantity)) / pricingStep;
+      calculatedTotalPrice += itemTotalPrice;
 
       itemRecords.push({
         product_id: actualProductId,
-        quantity: item.quantity,
+        quantity: Number(item.quantity),
         price_at_purchase: actualPrice,
         product_name: item.name,
         product_image: item.image_url || null,
-        applied_offer: item.applied_offer || null
+        applied_offer: item.applied_offer || null,
+        unit_label: unitLabel
       });
     }
 
@@ -179,12 +185,17 @@ export async function POST(request: NextRequest) {
     messageLines.push('*المنتجات المطلوبة:*');
 
     cart.forEach((item: any, index: number) => {
-      let line = `${index + 1}. *${item.name}* × ${item.quantity}`;
+      const qtyFormatted = Number(Number(item.quantity).toFixed(3));
+      const label = item.unit_label || (item.unit_type === 'kg' ? 'كغ' : item.unit_type === 'gram' ? 'غرام' : 'قطعة');
+      const pricingStep = item.pricing_unit_step && Number(item.pricing_unit_step) > 0 ? Number(item.pricing_unit_step) : 1;
+      const itemTotal = (Number(item.price || 0) * Number(item.quantity)) / pricingStep;
+
+      let line = `${index + 1}. *${item.name}* (${qtyFormatted} ${label})`;
       if (item.applied_offer) {
         line += ` [🎁 عرض: ${item.applied_offer}]`;
       }
       if (item.price !== null && item.price !== undefined && Number(item.price) > 0) {
-        line += ` = ${(item.price * item.quantity).toFixed(2)} TL`;
+        line += ` = ${itemTotal.toFixed(2)} TL`;
       }
       messageLines.push(line);
     });

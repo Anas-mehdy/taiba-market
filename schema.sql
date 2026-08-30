@@ -20,6 +20,11 @@ CREATE TABLE IF NOT EXISTS products (
     sort_order INTEGER DEFAULT 0,
     is_hidden BOOLEAN DEFAULT FALSE NOT NULL,
     inventory_stock INTEGER DEFAULT NULL, -- NULL means stock is not tracked
+    unit_type TEXT DEFAULT 'piece' CHECK (unit_type IN ('piece', 'kg', 'gram', 'liter', 'custom')),
+    unit_label TEXT DEFAULT 'قطعة',
+    min_quantity DECIMAL(10, 3) DEFAULT 1.0 CHECK (min_quantity > 0),
+    step_quantity DECIMAL(10, 3) DEFAULT 1.0 CHECK (step_quantity > 0),
+    pricing_unit_step DECIMAL(10, 3) DEFAULT 1.0 CHECK (pricing_unit_step > 0),
     has_offer BOOLEAN DEFAULT FALSE NOT NULL,
     offer_title TEXT DEFAULT NULL,
     offer_type TEXT DEFAULT 'unlimited' CHECK (offer_type IN ('unlimited', 'date_limited', 'stock_limited')),
@@ -63,6 +68,13 @@ CREATE TABLE IF NOT EXISTS orders (
 );
 
 -- Migration helpers for existing databases:
+-- ALTER TABLE products ADD COLUMN IF NOT EXISTS unit_type TEXT DEFAULT 'piece';
+-- ALTER TABLE products ADD COLUMN IF NOT EXISTS unit_label TEXT DEFAULT 'قطعة';
+-- ALTER TABLE products ADD COLUMN IF NOT EXISTS min_quantity DECIMAL(10, 3) DEFAULT 1.0;
+-- ALTER TABLE products ADD COLUMN IF NOT EXISTS step_quantity DECIMAL(10, 3) DEFAULT 1.0;
+-- ALTER TABLE products ADD COLUMN IF NOT EXISTS pricing_unit_step DECIMAL(10, 3) DEFAULT 1.0;
+-- ALTER TABLE order_items ALTER COLUMN quantity TYPE DECIMAL(10, 3);
+-- ALTER TABLE order_items ADD COLUMN IF NOT EXISTS unit_label TEXT DEFAULT 'قطعة';
 -- ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_note TEXT DEFAULT NULL;
 -- ALTER TABLE orders ADD COLUMN IF NOT EXISTS status_updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now());
 -- ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check;
@@ -73,11 +85,12 @@ CREATE TABLE IF NOT EXISTS order_items (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     order_id UUID REFERENCES orders(id) ON DELETE CASCADE NOT NULL,
     product_id UUID REFERENCES products(id) ON DELETE SET NULL,
-    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    quantity DECIMAL(10, 3) NOT NULL CHECK (quantity > 0),
     price_at_purchase DECIMAL(10, 2) CHECK (price_at_purchase >= 0),
     product_name TEXT DEFAULT NULL,
     product_image TEXT DEFAULT NULL,
-    applied_offer TEXT DEFAULT NULL
+    applied_offer TEXT DEFAULT NULL,
+    unit_label TEXT DEFAULT 'قطعة'
 );
 
 -- 7. Create settings table (إعدادات المتجر ورقم الواتساب)

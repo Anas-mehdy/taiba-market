@@ -23,10 +23,16 @@ interface OrderItem {
   product_name?: string | null;
   product_image?: string | null;
   applied_offer?: string | null;
+  unit_label?: string | null;
   products?: {
     name: string;
     image_url?: string | null;
     inventory_stock?: number | null;
+    unit_label?: string | null;
+    unit_type?: string | null;
+    min_quantity?: number | null;
+    step_quantity?: number | null;
+    pricing_unit_step?: number | null;
     has_offer?: boolean;
     offer_title?: string | null;
     offer_type?: 'unlimited' | 'date_limited' | 'stock_limited';
@@ -302,10 +308,16 @@ export default function AdminDashboard() {
             applied_offer: effectiveOffer,
             product_name: item.product_name,
             product_image: item.product_image,
+            unit_label: item.unit_label || item.products?.unit_label,
             products: item.products ? { 
               name: item.products.name, 
               image_url: item.products.image_url,
               inventory_stock: item.products.inventory_stock,
+              unit_label: item.products.unit_label,
+              unit_type: item.products.unit_type,
+              min_quantity: item.products.min_quantity,
+              step_quantity: item.products.step_quantity,
+              pricing_unit_step: item.products.pricing_unit_step,
               has_offer: item.products.has_offer,
               offer_title: item.products.offer_title,
               offer_type: item.products.offer_type,
@@ -657,7 +669,11 @@ export default function AdminDashboard() {
         };
       });
 
-      const newTotalPrice = itemsToUpdate.reduce((sum, item) => sum + (item.quantity * item.price_at_purchase), 0);
+      const newTotalPrice = itemsToUpdate.reduce((sum, item) => {
+        const prodInfo = item.product_id ? allProductsMap[item.product_id] : null;
+        const pricingStep = prodInfo?.pricing_unit_step && Number(prodInfo.pricing_unit_step) > 0 ? Number(prodInfo.pricing_unit_step) : 1;
+        return sum + ((item.quantity * item.price_at_purchase) / pricingStep);
+      }, 0);
 
       if (isUrlConfigured) {
         // 1. Update items
@@ -1786,44 +1802,54 @@ export default function AdminDashboard() {
                       <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto bg-slate-50/50 sm:bg-transparent p-2 sm:p-0 rounded-xl border border-slate-100 sm:border-none">
                         <div className="flex items-center gap-2">
                           {/* Quantity Counter */}
-                          <div className="flex items-center border border-slate-250 rounded-lg overflow-hidden bg-white" dir="ltr">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const currentQty = editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity;
-                                if (currentQty > 1) {
-                                  setEditedQuantities(prev => ({ ...prev, [item.id]: currentQty - 1 }));
-                                }
-                              }}
-                              className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-slate-600 font-extrabold cursor-pointer border-r border-slate-200 transition-colors"
-                              disabled={isUpdating}
-                            >
-                              -
-                            </button>
-                            <input
-                              type="number"
-                              min="1"
-                              value={editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity}
-                              onChange={(e) => {
-                                const val = parseInt(e.target.value) || 1;
-                                setEditedQuantities(prev => ({ ...prev, [item.id]: val }));
-                              }}
-                              className="w-8 text-center text-xs font-bold font-mono outline-none border-none py-1 text-slate-800"
-                              disabled={isUpdating}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const currentQty = editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity;
-                                setEditedQuantities(prev => ({ ...prev, [item.id]: currentQty + 1 }));
-                              }}
-                              className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-slate-600 font-extrabold cursor-pointer border-l border-slate-200 transition-colors"
-                              disabled={isUpdating}
-                            >
-                              +
-                            </button>
-                          </div>
-                          <span className="text-xs font-bold text-slate-500">صندوق ×</span>
+                          {(() => {
+                            const prodInfo = item.product_id ? allProductsMap[item.product_id] : null;
+                            const step = prodInfo?.step_quantity && Number(prodInfo.step_quantity) > 0 ? Number(prodInfo.step_quantity) : (item.products?.step_quantity && Number(item.products.step_quantity) > 0 ? Number(item.products.step_quantity) : 1);
+                            const unitLabel = item.unit_label || prodInfo?.unit_label || item.products?.unit_label || (prodInfo?.unit_type === 'kg' || item.products?.unit_type === 'kg' ? 'كغ' : prodInfo?.unit_type === 'gram' || item.products?.unit_type === 'gram' ? 'غرام' : 'قطعة');
+                            const currentQty = editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity;
+                            
+                            return (
+                              <>
+                                <div className="flex items-center border border-slate-250 rounded-lg overflow-hidden bg-white" dir="ltr">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const newQty = Math.max(step, Math.round((currentQty - step) * 1000) / 1000);
+                                      setEditedQuantities(prev => ({ ...prev, [item.id]: newQty }));
+                                    }}
+                                    className="px-2 py-1 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-slate-600 font-extrabold cursor-pointer border-r border-slate-200 transition-colors"
+                                    disabled={isUpdating}
+                                  >
+                                    -
+                                  </button>
+                                  <input
+                                    type="number"
+                                    step="any"
+                                    min="0.001"
+                                    value={currentQty}
+                                    onChange={(e) => {
+                                      const val = parseFloat(e.target.value) || step;
+                                      setEditedQuantities(prev => ({ ...prev, [item.id]: val }));
+                                    }}
+                                    className="w-12 text-center text-xs font-bold font-mono outline-none border-none py-1 text-slate-800"
+                                    disabled={isUpdating}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const newQty = Math.round((currentQty + step) * 1000) / 1000;
+                                      setEditedQuantities(prev => ({ ...prev, [item.id]: newQty }));
+                                    }}
+                                    className="px-2 py-1 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-slate-600 font-extrabold cursor-pointer border-l border-slate-200 transition-colors"
+                                    disabled={isUpdating}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                                <span className="text-xs font-bold text-slate-500 whitespace-nowrap">{unitLabel} ×</span>
+                              </>
+                            );
+                          })()}
                         </div>
 
                         <div className="flex items-center gap-1.5">
@@ -2650,44 +2676,54 @@ export default function AdminDashboard() {
                       <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto bg-slate-50/50 sm:bg-transparent p-2 sm:p-0 rounded-xl border border-slate-100 sm:border-none">
                         <div className="flex items-center gap-2">
                           {/* Quantity Counter */}
-                          <div className="flex items-center border border-slate-250 rounded-lg overflow-hidden bg-white" dir="ltr">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const currentQty = editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity;
-                                if (currentQty > 1) {
-                                  setEditedQuantities(prev => ({ ...prev, [item.id]: currentQty - 1 }));
-                                }
-                              }}
-                              className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-slate-600 font-extrabold cursor-pointer border-r border-slate-200 transition-colors"
-                              disabled={isUpdating}
-                            >
-                              -
-                            </button>
-                            <input
-                              type="number"
-                              min="1"
-                              value={editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity}
-                              onChange={(e) => {
-                                const val = parseInt(e.target.value) || 1;
-                                setEditedQuantities(prev => ({ ...prev, [item.id]: val }));
-                              }}
-                              className="w-8 text-center text-xs font-bold font-mono outline-none border-none py-1 text-slate-800"
-                              disabled={isUpdating}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const currentQty = editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity;
-                                setEditedQuantities(prev => ({ ...prev, [item.id]: currentQty + 1 }));
-                              }}
-                              className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-slate-600 font-extrabold cursor-pointer border-l border-slate-200 transition-colors"
-                              disabled={isUpdating}
-                            >
-                              +
-                            </button>
-                          </div>
-                          <span className="text-xs font-bold text-slate-500">صندوق ×</span>
+                          {(() => {
+                            const prodInfo = item.product_id ? allProductsMap[item.product_id] : null;
+                            const step = prodInfo?.step_quantity && Number(prodInfo.step_quantity) > 0 ? Number(prodInfo.step_quantity) : (item.products?.step_quantity && Number(item.products.step_quantity) > 0 ? Number(item.products.step_quantity) : 1);
+                            const unitLabel = item.unit_label || prodInfo?.unit_label || item.products?.unit_label || (prodInfo?.unit_type === 'kg' || item.products?.unit_type === 'kg' ? 'كغ' : prodInfo?.unit_type === 'gram' || item.products?.unit_type === 'gram' ? 'غرام' : 'قطعة');
+                            const currentQty = editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity;
+                            
+                            return (
+                              <>
+                                <div className="flex items-center border border-slate-250 rounded-lg overflow-hidden bg-white" dir="ltr">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const newQty = Math.max(step, Math.round((currentQty - step) * 1000) / 1000);
+                                      setEditedQuantities(prev => ({ ...prev, [item.id]: newQty }));
+                                    }}
+                                    className="px-2 py-1 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-slate-600 font-extrabold cursor-pointer border-r border-slate-200 transition-colors"
+                                    disabled={isUpdating}
+                                  >
+                                    -
+                                  </button>
+                                  <input
+                                    type="number"
+                                    step="any"
+                                    min="0.001"
+                                    value={currentQty}
+                                    onChange={(e) => {
+                                      const val = parseFloat(e.target.value) || step;
+                                      setEditedQuantities(prev => ({ ...prev, [item.id]: val }));
+                                    }}
+                                    className="w-12 text-center text-xs font-bold font-mono outline-none border-none py-1 text-slate-800"
+                                    disabled={isUpdating}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const newQty = Math.round((currentQty + step) * 1000) / 1000;
+                                      setEditedQuantities(prev => ({ ...prev, [item.id]: newQty }));
+                                    }}
+                                    className="px-2 py-1 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-slate-600 font-extrabold cursor-pointer border-l border-slate-200 transition-colors"
+                                    disabled={isUpdating}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                                <span className="text-xs font-bold text-slate-500 whitespace-nowrap">{unitLabel} ×</span>
+                              </>
+                            );
+                          })()}
                         </div>
 
                         <div className="flex items-center gap-1.5">
@@ -3098,7 +3134,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* 2. Print-only Layout: Daily Aggregation Print Sheet */}
-      {printType === 'aggregation' && (
+{printType === 'aggregation' && (
         <div className="hidden print:block font-sans text-right" dir="rtl">
           {/* Brand & Sheet Header */}
           <div className="border-b-2 border-slate-900 pb-4 mb-6 text-center sm:text-right">
@@ -3189,9 +3225,12 @@ export default function AdminDashboard() {
             </thead>
             <tbody>
               {activePrintOrder.order_items.map((item, idx) => {
+                const prodInfo = item.product_id ? allProductsMap[item.product_id] : null;
                 const price = Number(item.price_at_purchase || 0);
                 const qty = item.quantity;
-                const total = price * qty;
+                const pricingStep = prodInfo?.pricing_unit_step && Number(prodInfo.pricing_unit_step) > 0 ? Number(prodInfo.pricing_unit_step) : 1;
+                const unitLabel = item.unit_label || prodInfo?.unit_label || item.products?.unit_label || (prodInfo?.unit_type === 'kg' ? 'كغ' : prodInfo?.unit_type === 'gram' ? 'غرام' : 'قطعة');
+                const total = (price * qty) / pricingStep;
                 const offer = item.applied_offer || (item.product_id && allProductsMap[item.product_id] && isOfferActive(allProductsMap[item.product_id]) ? allProductsMap[item.product_id].offer_title : null);
                 const bonusQty = offer ? getOfferBonusQuantity(offer, qty) : 0;
                 return (
@@ -3202,11 +3241,11 @@ export default function AdminDashboard() {
                       {offer && (
                         <div className="text-[11px] text-amber-900 font-extrabold mt-1 bg-amber-50 border border-amber-200/80 rounded-md px-2 py-0.5 inline-flex items-center gap-1">
                           <span>🎁 عرض خاص: {offer}</span>
-                          {bonusQty > 0 && <span className="text-amber-950 font-black">(+ {bonusQty} صندوق مجاناً)</span>}
+                          {bonusQty > 0 && <span className="text-amber-950 font-black">(+ {bonusQty} مجاناً)</span>}
                         </div>
                       )}
                     </td>
-                    <td className="border border-slate-355 px-3 py-2.5 text-center font-black font-mono">{qty} صندوق</td>
+                    <td className="border border-slate-355 px-3 py-2.5 text-center font-black font-mono">{Number(qty.toFixed(3))} {unitLabel}</td>
                     <td className="border border-slate-355 px-3 py-2.5 text-center font-extrabold font-mono">{price.toFixed(2)} TL</td>
                     <td className="border border-slate-355 px-3 py-2.5 text-center font-black font-mono">{total.toFixed(2)} TL</td>
                   </tr>
@@ -3378,9 +3417,12 @@ export default function AdminDashboard() {
             </thead>
             <tbody>
               {activePrintOrder.order_items.map((item) => {
+                const prodInfo = item.product_id ? allProductsMap[item.product_id] : null;
                 const price = Number(item.price_at_purchase || 0);
                 const qty = item.quantity;
-                const total = price * qty;
+                const pricingStep = prodInfo?.pricing_unit_step && Number(prodInfo.pricing_unit_step) > 0 ? Number(prodInfo.pricing_unit_step) : 1;
+                const unitLabel = item.unit_label || prodInfo?.unit_label || item.products?.unit_label || (prodInfo?.unit_type === 'kg' ? 'كغ' : prodInfo?.unit_type === 'gram' ? 'غرام' : 'قطعة');
+                const total = (price * qty) / pricingStep;
                 const offer = item.applied_offer || (item.product_id && allProductsMap[item.product_id] && isOfferActive(allProductsMap[item.product_id]) ? allProductsMap[item.product_id].offer_title : null);
                 const bonusQty = offer ? getOfferBonusQuantity(offer, qty) : 0;
                 return (
@@ -3394,7 +3436,7 @@ export default function AdminDashboard() {
                       )}
                       <div className="text-[11px] text-black/70 font-mono mt-0.5">{price.toFixed(2)} TL</div>
                     </td>
-                    <td className="py-2 text-center font-bold font-mono text-[13px]">{qty}</td>
+                    <td className="py-2 text-center font-bold font-mono text-[13px]">{Number(qty.toFixed(3))} {unitLabel}</td>
                     <td className="py-2 text-left font-bold font-mono text-[13px]">{total.toFixed(2)} TL</td>
                   </tr>
                 );

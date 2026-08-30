@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCart } from '@/context/CartContext';
+import { useCart, calculateItemTotal, formatQuantityWithUnit } from '@/context/CartContext';
 import { supabase } from '@/lib/supabase';
 import { 
   ChevronRight, MessageSquare, User, FileText, ShoppingCart, 
@@ -211,9 +211,9 @@ export default function CheckoutPage() {
                       </p>
                       <p className="text-[10px] text-slate-400 mt-0.5 text-right font-medium">
                         {item.price !== null && item.price !== undefined && Number(item.price) > 0 ? (
-                          `${item.quantity} × ${Number(item.price).toFixed(2)} TL`
+                          `${formatQuantityWithUnit(item.quantity, item.unit_label, item.unit_type)} × ${Number(item.price).toFixed(2)} TL`
                         ) : (
-                          `الكمية: ${item.quantity}`
+                          `الكمية: ${formatQuantityWithUnit(item.quantity, item.unit_label, item.unit_type)}`
                         )}
                         {item.applied_offer && (
                           <span className="text-amber-600 font-bold mr-1">[{item.applied_offer}]</span>
@@ -225,8 +225,8 @@ export default function CheckoutPage() {
                   {/* Left side: Price total & Actions */}
                   <div className="flex items-center gap-2 shrink-0">
                     {item.price !== null && item.price !== undefined && Number(item.price) > 0 && (
-                      <span className="text-xs font-black text-slate-800">
-                        {(Number(item.price) * item.quantity).toFixed(2)} TL
+                      <span className="text-xs font-black text-slate-800 font-mono">
+                        {calculateItemTotal(item).toFixed(2)} TL
                       </span>
                     )}
                     
@@ -234,17 +234,17 @@ export default function CheckoutPage() {
                     <div className="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200/50">
                       <button
                         onClick={() => removeFromCart(item.id)}
-                        className="p-1 hover:bg-slate-200 text-rose-500 rounded-md transition-colors"
+                        className="p-1 hover:bg-slate-200 text-rose-500 rounded-md transition-colors cursor-pointer"
                         title="تنقيص"
                       >
                         <Minus className="w-3 h-3 stroke-[2.5]" />
                       </button>
-                      <span className="text-[10px] font-bold px-1.5 min-w-4 text-center text-slate-700">
-                        {item.quantity}
+                      <span className="text-[10px] font-bold px-1.5 min-w-4 text-center text-slate-700 font-mono">
+                        {Number(item.quantity.toFixed(2))}
                       </span>
                       <button
                         onClick={() => addToCart(item)}
-                        className="p-1 hover:bg-slate-200 text-emerald-600 rounded-md transition-colors"
+                        className="p-1 hover:bg-slate-200 text-emerald-600 rounded-md transition-colors cursor-pointer"
                         title="زيادة"
                       >
                         <Plus className="w-3 h-3 stroke-[2.5]" />

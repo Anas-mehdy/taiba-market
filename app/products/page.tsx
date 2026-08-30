@@ -25,6 +25,11 @@ interface Product {
   category_id: string;
   image_url: string | null;
   is_hidden?: boolean;
+  unit_type?: 'piece' | 'kg' | 'gram' | 'liter' | 'custom' | string;
+  unit_label?: string;
+  min_quantity?: number;
+  step_quantity?: number;
+  pricing_unit_step?: number;
   has_offer?: boolean;
   offer_title?: string | null;
   offer_type?: 'unlimited' | 'date_limited' | 'stock_limited';
@@ -56,28 +61,24 @@ const isOfferActive = (product: Product): boolean => {
 
 // Fallback demo products for grocery supermarket
 const MOCK_CATEGORIES: Category[] = [
-  { id: '1', name: 'ألبان وأجبان', sort_order: 0 },
-  { id: '2', name: 'مشروبات وغازيات', sort_order: 1 },
-  { id: '3', name: 'معلبات ومجففات', sort_order: 2 },
-  { id: '4', name: 'بسكويت وحلويات', sort_order: 3 },
-  { id: '5', name: 'منظفات وعناية', sort_order: 4 }
+  { id: '1', name: 'خضار وفواكه طازجة', sort_order: 0 },
+  { id: '2', name: 'بهارات ومكسرات', sort_order: 1 },
+  { id: '3', name: 'ألبان وأجبان', sort_order: 2 },
+  { id: '4', name: 'مشروبات وغازيات', sort_order: 3 },
+  { id: '5', name: 'معلبات ومجففات', sort_order: 4 }
 ];
 
 const MOCK_PRODUCTS: Product[] = [
-  { id: 'p1', name: 'جبنة بيضاء كاملة الدسم بينار 500 غ', price: 110.00, category_id: '1', image_url: 'https://images.unsplash.com/photo-1528751014936-863e6e7a319c?w=300&auto=format&fit=crop&q=80', has_offer: true, offer_title: 'خصم 15% اليوم' },
-  { id: 'p2', name: 'لبن زبادي طازج سوتاس 1.5 كغ', price: 75.00, category_id: '1', image_url: null },
-  { id: 'p3', name: 'كوكا كولا علب 330 مل', price: 25.00, category_id: '2', image_url: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=300&auto=format&fit=crop&q=80', has_offer: true, offer_title: 'اشتري 5 و احصل على 1 مجاناً' },
-  { id: 'p4', name: 'شاي تركي ممتاز 100 ظرف', price: 85.00, category_id: '2', image_url: null },
-  { id: 'p5', name: 'صلصة طماطم تات 800 غ', price: 55.00, category_id: '3', image_url: null },
-  { id: 'p6', name: 'أرز تركي بالدو درجة أولى 1 كغ', price: 70.00, category_id: '3', image_url: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=300&auto=format&fit=crop&q=80' },
-  { id: 'p7', name: 'بسكويت شوكولاتة أولكر 12 قطعة', price: 45.00, category_id: '4', image_url: 'https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?w=300&auto=format&fit=crop&q=80' },
-  { id: 'p8', name: 'شوكولاتة داماك بالفستق الفاخر 80 غ', price: 65.00, category_id: '4', image_url: null },
-  { id: 'p9', name: 'مسحوق غسيل أوتوماتيك 3 كغ', price: 160.00, category_id: '5', image_url: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=300&auto=format&fit=crop&q=80', has_offer: true, offer_title: 'عرض توفير الغسيل' },
-  { id: 'p10', name: 'سائل جلي صحون بريل 1 لتر', price: 48.00, category_id: '5', image_url: null }
+  { id: 'p1', name: 'طماطم بلدية طازجة', price: 25.00, category_id: '1', image_url: null, unit_type: 'kg', unit_label: 'كغ', min_quantity: 0.5, step_quantity: 0.5, pricing_unit_step: 1, has_offer: true, offer_title: 'عرض الموسم' },
+  { id: 'p2', name: 'خيار بلدي نخب أول', price: 30.00, category_id: '1', image_url: null, unit_type: 'kg', unit_label: 'كغ', min_quantity: 0.5, step_quantity: 0.5, pricing_unit_step: 1 },
+  { id: 'p3', name: 'فلفل أسود حب فاخر', price: 20.00, category_id: '2', image_url: null, unit_type: 'gram', unit_label: 'غرام', min_quantity: 50, step_quantity: 50, pricing_unit_step: 50 },
+  { id: 'p4', name: 'كمون مطحون نقي', price: 15.00, category_id: '2', image_url: null, unit_type: 'gram', unit_label: 'غرام', min_quantity: 100, step_quantity: 100, pricing_unit_step: 100 },
+  { id: 'p5', name: 'جبنة بيضاء كاملة الدسم 500 غ', price: 110.00, category_id: '3', image_url: null, unit_type: 'piece', unit_label: 'علبة', min_quantity: 1, step_quantity: 1, pricing_unit_step: 1 },
+  { id: 'p6', name: 'شاي تركي ممتاز 100 ظرف', price: 85.00, category_id: '4', image_url: null, unit_type: 'piece', unit_label: 'علبة', min_quantity: 1, step_quantity: 1, pricing_unit_step: 1 }
 ];
 
 function ProductsContent() {
-  const { cart, addToCart, removeFromCart, totalQuantity, totalPrice } = useCart();
+  const { cart, addToCart, removeFromCart, totalQuantity, totalItemsCount, totalPrice } = useCart();
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category') || 'all';
 
@@ -389,9 +390,14 @@ function ProductsContent() {
                                 {/* Price Block */}
                                 <div className="space-y-0.5">
                                   {product.price !== null && product.price !== undefined && Number(product.price) > 0 ? (
-                                    <span className="text-xs font-black text-emerald-600 block leading-none">
-                                      {Number(product.price).toFixed(2)} TL
-                                    </span>
+                                    <>
+                                      <span className="text-xs font-black text-emerald-600 block leading-none font-mono">
+                                        {Number(product.price).toFixed(2)} TL
+                                      </span>
+                                      <span className="text-[9px] font-bold text-slate-400 block leading-none mt-0.5">
+                                        /{product.pricing_unit_step && Number(product.pricing_unit_step) > 1 ? `${product.pricing_unit_step} ` : ''}{product.unit_label || (product.unit_type === 'kg' ? 'كغ' : product.unit_type === 'gram' ? 'غرام' : 'قطعة')}
+                                      </span>
+                                    </>
                                   ) : (
                                     <span className="text-[9.5px] font-extrabold text-amber-700 block leading-tight">
                                       تواصل للسعر
@@ -400,22 +406,22 @@ function ProductsContent() {
                                 </div>
                                 
                                 {/* Pill Controller */}
-                                <div className="flex items-center bg-slate-50 border border-slate-200/50 rounded-full p-0.5 shadow-3xs">
+                                <div className="flex items-center bg-slate-50 border border-slate-200/60 rounded-full p-0.5 shadow-3xs">
                                   <button
                                     onClick={() => qty > 0 && removeFromCart(product.id)}
                                     disabled={qty === 0}
                                     className={`p-1 rounded-full transition-all shrink-0 select-none ${
                                       qty > 0 
-                                        ? 'bg-white hover:bg-slate-100 text-slate-700 active:scale-90 shadow-3xs' 
+                                        ? 'bg-white hover:bg-slate-100 text-slate-700 active:scale-90 shadow-3xs cursor-pointer' 
                                         : 'bg-transparent text-slate-300 cursor-not-allowed'
                                     }`}
                                   >
                                     <Minus className="w-3 h-3 stroke-[2.5]" />
                                   </button>
-                                  <span className={`w-4 text-center text-[10px] font-black select-none ${
+                                  <span className={`px-1 text-center text-[10px] font-black select-none whitespace-nowrap min-w-[20px] ${
                                     qty > 0 ? 'text-teal-900 font-black' : 'text-slate-400'
                                   }`}>
-                                    {qty}
+                                    {qty > 0 ? Number(qty.toFixed(2)) : 0}
                                   </span>
                                   <button
                                     onClick={() => addToCart({
@@ -423,9 +429,14 @@ function ProductsContent() {
                                       name: product.name,
                                       price: product.price,
                                       image_url: product.image_url,
+                                      unit_type: product.unit_type,
+                                      unit_label: product.unit_label,
+                                      min_quantity: product.min_quantity,
+                                      step_quantity: product.step_quantity,
+                                      pricing_unit_step: product.pricing_unit_step,
                                       applied_offer: offerActive ? product.offer_title : null
                                     })}
-                                    className="bg-[#25D366] hover:bg-[#20ba59] text-white p-1 rounded-full transition-all active:scale-90 shrink-0 select-none shadow-3xs"
+                                    className="bg-[#25D366] hover:bg-[#20ba59] text-white p-1 rounded-full transition-all active:scale-90 shrink-0 select-none shadow-3xs cursor-pointer"
                                   >
                                     <Plus className="w-3 h-3 stroke-[2.5]" />
                                   </button>
