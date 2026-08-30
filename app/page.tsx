@@ -187,16 +187,18 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Quick WhatsApp Contact */}
-          <a
-            href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent('مرحباً ماركت طيبة، لدي استفسار بخصوص الطلبات والعروض.')}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-[#25D366] hover:bg-[#20ba59] active:scale-95 text-white rounded-xl px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs shrink-0"
-          >
-            <Phone className="w-3.5 h-3.5 fill-current" />
-            <span>تواصل معنا</span>
-          </a>
+          {/* Similar Store Inquiries Link */}
+          <div className="text-left text-[11px] sm:text-xs text-teal-100 font-medium shrink-0 leading-tight">
+            <span>هل تريد متجراً مشابهاً؟ </span>
+            <a
+              href={`https://wa.me/905350215375?text=${encodeURIComponent('مرحبا، أريد متجر مشابه لمتجر ماركت طيبة')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-amber-300 hover:text-amber-200 font-bold underline underline-offset-2 transition-colors whitespace-nowrap"
+            >
+              تواصل معنا
+            </a>
+          </div>
         </div>
       </header>
 
