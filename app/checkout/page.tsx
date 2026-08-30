@@ -94,9 +94,16 @@ export default function CheckoutPage() {
 
       const data = await res.json().catch(() => null);
 
-      if (res.ok && data?.success && data?.whatsappUrl) {
+      if (res.ok && data?.success && data?.orderId) {
         clearCart();
-        window.location.href = data.whatsappUrl;
+        if (data.whatsappUrl) {
+          try {
+            window.open(data.whatsappUrl, '_blank');
+          } catch {
+            // popup fallback
+          }
+        }
+        router.push(`/track/${data.orderId}`);
         return;
       }
 

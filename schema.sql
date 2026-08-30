@@ -49,16 +49,24 @@ CREATE TABLE IF NOT EXISTS customers (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 5. Create orders table (الطلبيات والفواتير)
+-- 5. Create orders table (الطلبيات والفواتير ونظام التوصيل)
 CREATE TABLE IF NOT EXISTS orders (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     customer_name TEXT NOT NULL,
     customer_phone TEXT DEFAULT NULL,
     customer_address TEXT DEFAULT NULL,
     total_price DECIMAL(10, 2) NOT NULL CHECK (total_price >= 0),
-    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'delivered', 'postponed')),
+    status TEXT DEFAULT 'received' CHECK (status IN ('pending', 'received', 'preparing', 'delivering', 'delivered', 'postponed', 'cancelled')),
+    delivery_note TEXT DEFAULT NULL,
+    status_updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Migration helpers for existing databases:
+-- ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_note TEXT DEFAULT NULL;
+-- ALTER TABLE orders ADD COLUMN IF NOT EXISTS status_updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now());
+-- ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check;
+-- ALTER TABLE orders ADD CONSTRAINT orders_status_check CHECK (status IN ('pending', 'received', 'preparing', 'delivering', 'delivered', 'postponed', 'cancelled'));
 
 -- 6. Create order_items table (بنود الطلبات)
 CREATE TABLE IF NOT EXISTS order_items (

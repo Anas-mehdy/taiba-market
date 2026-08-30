@@ -3,7 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { ShoppingBag, Users, CheckSquare, ClipboardList, TrendingUp, DollarSign, Clock, AlertCircle, Trash2, Save, Copy, X, CalendarClock, Printer, Plus, Search, Download, ChevronDown, ChevronUp, Edit2, Gift, Tag, Receipt, UserCheck, CheckCircle2 } from 'lucide-react';
+import { 
+  ShoppingBag, Users, CheckSquare, ClipboardList, TrendingUp, DollarSign, 
+  Clock, AlertCircle, Trash2, Save, Copy, X, CalendarClock, Printer, Plus, 
+  Search, Download, ChevronDown, ChevronUp, Edit2, Gift, Tag, UserCheck, 
+  CheckCircle2, Truck, Package, CheckCheck, Bell, Share2, ExternalLink, 
+  MessageSquare, Phone, MapPin, Send
+} from 'lucide-react';
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
 import { isOfferActive, getOfferBonusQuantity, getOrderBoxSummary } from '@/lib/offerHelpers';
@@ -34,8 +40,12 @@ interface OrderItem {
 interface Order {
   id: string;
   customer_name: string;
+  customer_phone?: string | null;
+  customer_address?: string | null;
   total_price: number;
-  status: 'pending' | 'delivered' | 'postponed';
+  status: 'pending' | 'received' | 'preparing' | 'delivering' | 'delivered' | 'postponed' | 'cancelled';
+  delivery_note?: string | null;
+  status_updated_at?: string | null;
   created_at: string;
   order_items: OrderItem[];
 }
@@ -100,6 +110,10 @@ export default function AdminDashboard() {
   const [approvedCustomers, setApprovedCustomers] = useState<Customer[]>([]);
   const [lastSoldPrices, setLastSoldPrices] = useState<Record<string, number>>({});
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
+  
+  // Delivery management states
+  const [deliveryNotes, setDeliveryNotes] = useState<{[orderId: string]: string}>({});
+  const [isSavingDeliveryNote, setIsSavingDeliveryNote] = useState<{[orderId: string]: boolean}>({});
 
   // Assign Customer Modal State
   const [assignModalOrder, setAssignModalOrder] = useState<Order | null>(null);
@@ -195,8 +209,12 @@ export default function AdminDashboard() {
     {
       id: 'm-ord1',
       customer_name: 'سوبر ماركت الياسمين',
+      customer_phone: '05551234567',
+      customer_address: 'شارع الزهور، بناء 12',
       total_price: 475.00,
-      status: 'pending',
+      status: 'received',
+      delivery_note: 'جاري التجهيز، سيصلكم السائق خلال 30 دقيقة.',
+      status_updated_at: new Date().toISOString(),
       created_at: new Date().toISOString(),
       order_items: [
         { id: 'mi-1', order_id: 'm-ord1', product_id: 'p4', quantity: 10, price_at_purchase: 25.00, products: { name: 'كوكا كولا علب 330 مل', image_url: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=120&auto=format&fit=crop&q=60' } },
@@ -206,8 +224,12 @@ export default function AdminDashboard() {
     {
       id: 'm-ord2',
       customer_name: 'بقالة النور',
+      customer_phone: '05559876543',
+      customer_address: 'السوق المركزي، قرب الجامع',
       total_price: 620.00,
-      status: 'pending',
+      status: 'delivering',
+      delivery_note: 'عامل التوصيل في الطريق إليكم.',
+      status_updated_at: new Date().toISOString(),
       created_at: new Date(Date.now() - 3600000).toISOString(),
       order_items: [
         { id: 'mi-3', order_id: 'm-ord2', product_id: 'p1', quantity: 10, price_at_purchase: 45.00, products: { name: 'بسكويت شوكولاتة أولكر 12 قطعة', image_url: 'https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?w=120&auto=format&fit=crop&q=60' } },
@@ -217,8 +239,12 @@ export default function AdminDashboard() {
     {
       id: 'm-ord3',
       customer_name: 'محلات الأمل (مؤجلة)',
+      customer_phone: '05551122334',
+      customer_address: 'حي السلام',
       total_price: 340.00,
       status: 'postponed',
+      delivery_note: null,
+      status_updated_at: new Date(Date.now() - 7200000).toISOString(),
       created_at: new Date(Date.now() - 7200000).toISOString(),
       order_items: [
         { id: 'mi-5', order_id: 'm-ord3', product_id: 'p3', quantity: 4, price_at_purchase: 85.00, products: { name: 'شاي تركي غوكسو 100 ظرف', image_url: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=120&auto=format&fit=crop&q=60' } }
@@ -235,7 +261,7 @@ export default function AdminDashboard() {
         throw new Error('Supabase environment variables not configured');
       }
 
-      // Fetch pending and postponed orders
+      // Fetch pending, received, preparing, delivering, and postponed orders
       const { data, error } = await supabase
         .from('orders')
         .select(`
@@ -257,7 +283,7 @@ export default function AdminDashboard() {
             )
           )
         `)
-        .in('status', ['pending', 'postponed'])
+        .in('status', ['pending', 'received', 'preparing', 'delivering', 'postponed'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -265,6 +291,10 @@ export default function AdminDashboard() {
       // Make sure order_items and products nested object satisfies our type structure
       const typedOrders: Order[] = (data || []).map((order: any) => ({
         ...order,
+        customer_phone: order.customer_phone || null,
+        customer_address: order.customer_address || null,
+        delivery_note: order.delivery_note || null,
+        status_updated_at: order.status_updated_at || null,
         order_items: (order.order_items || []).map((item: any) => {
           const effectiveOffer = item.applied_offer || (item.products && isOfferActive(item.products) ? item.products.offer_title : null);
           return {
@@ -405,11 +435,11 @@ export default function AdminDashboard() {
   }, []);
 
   const calculateStats = (activeOrders: Order[], currentProducts?: any[]) => {
-    // Only calculate stats for active/pending orders (excluding postponed ones)
-    const pendingOrders = activeOrders.filter(o => o.status === 'pending');
+    // Only calculate stats for active orders (excluding postponed ones)
+    const activePendingOrders = activeOrders.filter(o => o.status !== 'postponed' && o.status !== 'delivered' && o.status !== 'cancelled');
 
     // 1. Revenue
-    const revenue = pendingOrders.reduce((sum, order) => sum + Number(order.total_price), 0);
+    const revenue = activePendingOrders.reduce((sum, order) => sum + Number(order.total_price), 0);
     setTotalRevenueToday(revenue);
 
     // 2. Aggregate quantities needed for fulfillment (Layer 1)
@@ -422,7 +452,7 @@ export default function AdminDashboard() {
       } 
     } = {};
     
-    pendingOrders.forEach((order) => {
+    activePendingOrders.forEach((order) => {
       order.order_items.forEach((item) => {
         const productName = item.product_name || item.products?.name || 'منتج غير معروف';
         const imgUrl = item.product_image || item.products?.image_url || null;
@@ -458,11 +488,11 @@ export default function AdminDashboard() {
     setAggregatedItems(aggregatedList);
   };
 
-  // Fulfillment Action: Mark all pending as delivered (Purchase renaming)
+  // Fulfillment Action: Mark all active as delivered (Purchase renaming)
   const handleFulfillAll = async () => {
-    const pendingOrders = orders.filter(o => o.status === 'pending');
-    if (pendingOrders.length === 0) return;
-    const confirmAction = window.confirm('هل أنت متأكد من تسليم كافة الطلبيات المعلقة وأرشفتها؟');
+    const activeOrdersToFulfill = orders.filter(o => o.status !== 'postponed' && o.status !== 'delivered' && o.status !== 'cancelled');
+    if (activeOrdersToFulfill.length === 0) return;
+    const confirmAction = window.confirm('هل أنت متأكد من تسليم كافة الطلبيات النشطة وأرشفتها؟');
     if (!confirmAction) return;
 
     setIsUpdating(true);
@@ -470,12 +500,15 @@ export default function AdminDashboard() {
       const isUrlConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
       
       if (isUrlConfigured) {
-        // Fetch all pending ids
-        const pendingIds = pendingOrders.map(o => o.id);
+        // Fetch all active ids
+        const activeIds = activeOrdersToFulfill.map(o => o.id);
         const { error } = await supabase
           .from('orders')
-          .update({ status: 'delivered' })
-          .in('id', pendingIds);
+          .update({ 
+            status: 'delivered',
+            status_updated_at: new Date().toISOString()
+          })
+          .in('id', activeIds);
 
         if (error) throw error;
       } else {
@@ -483,7 +516,7 @@ export default function AdminDashboard() {
       }
 
       // Success, clear active pending view, keeping postponed orders untouched
-      const updatedOrders = orders.filter(o => o.status !== 'pending');
+      const updatedOrders = orders.filter(o => o.status === 'postponed');
       setOrders(updatedOrders);
       calculateStats(updatedOrders);
       alert('تم تحديث حالة الطلبات إلى تم التسليم بنجاح!');
@@ -1073,8 +1106,106 @@ export default function AdminDashboard() {
     return allProducts.filter(p => p.name.toLowerCase().includes(query));
   };
 
-  const handlePostponeOrder = async (orderId: string, currentStatus: 'pending' | 'postponed') => {
-    const newStatus: 'pending' | 'postponed' = currentStatus === 'pending' ? 'postponed' : 'pending';
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
+    setIsUpdating(true);
+    try {
+      const isUrlConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
+      
+      if (isUrlConfigured) {
+        const { error } = await supabase
+          .from('orders')
+          .update({ 
+            status: newStatus,
+            status_updated_at: new Date().toISOString()
+          })
+          .eq('id', orderId);
+
+        if (error) throw error;
+      }
+
+      if (newStatus === 'delivered') {
+        const updatedOrders = orders.filter(o => o.id !== orderId);
+        setOrders(updatedOrders);
+        calculateStats(updatedOrders);
+        alert('تم تسليم الطلبية ونقلها للأرشيف بنجاح!');
+      } else {
+        const updatedOrders = orders.map(o => {
+          if (o.id === orderId) {
+            return { ...o, status: newStatus as any, status_updated_at: new Date().toISOString() };
+          }
+          return o;
+        });
+        setOrders(updatedOrders);
+        calculateStats(updatedOrders);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert('حدث خطأ أثناء تحديث حالة الطلب.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleSaveDeliveryNote = async (orderId: string) => {
+    const currentOrder = orders.find(o => o.id === orderId);
+    const noteText = deliveryNotes[orderId] !== undefined ? deliveryNotes[orderId] : (currentOrder?.delivery_note || '');
+    
+    setIsSavingDeliveryNote(prev => ({ ...prev, [orderId]: true }));
+    try {
+      const isUrlConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
+      
+      if (isUrlConfigured) {
+        const { error } = await supabase
+          .from('orders')
+          .update({ 
+            delivery_note: noteText.trim() || null,
+            status_updated_at: new Date().toISOString()
+          })
+          .eq('id', orderId);
+
+        if (error) throw error;
+      }
+
+      setOrders(prev => prev.map(o => {
+        if (o.id === orderId) {
+          return { ...o, delivery_note: noteText.trim() || null, status_updated_at: new Date().toISOString() };
+        }
+        return o;
+      }));
+
+      alert('تم حفظ ملاحظة التوصيل وتحديثها للزبون في رابط التتبع فورياً!');
+    } catch (err: any) {
+      console.error(err);
+      alert('حدث خطأ أثناء حفظ ملاحظة التوصيل.');
+    } finally {
+      setIsSavingDeliveryNote(prev => ({ ...prev, [orderId]: false }));
+    }
+  };
+
+  const handleCopyTrackingLink = (orderId: string) => {
+    const trackUrl = `${window.location.origin}/track/${orderId}`;
+    navigator.clipboard.writeText(trackUrl);
+    alert('تم نسخ رابط تتبع الطلب المباشر بنجاح!');
+  };
+
+  const handleShareTrackingWhatsApp = (order: Order) => {
+    const trackUrl = `${window.location.origin}/track/${order.id}`;
+    const message = `مرحباً ${order.customer_name}، يمكنك متابعة حالة طلبك وتوصيله من ماركت طيبة مباشرة عبر الرابط التالي:\n${trackUrl}`;
+    const encoded = encodeURIComponent(message);
+    
+    let url = `https://api.whatsapp.com/send?text=${encoded}`;
+    if (order.customer_phone) {
+      let cleanPhone = order.customer_phone.replace(/\D/g, '');
+      if (cleanPhone.startsWith('05')) {
+        cleanPhone = '90' + cleanPhone.substring(1);
+      }
+      url = `https://wa.me/${cleanPhone}?text=${encoded}`;
+    }
+    window.open(url, '_blank');
+  };
+
+  const handlePostponeOrder = async (orderId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'postponed' ? 'received' : 'postponed';
     const actionText = newStatus === 'postponed' ? 'تأجيل' : 'تنشيط';
     const confirmAction = window.confirm(`هل أنت متأكد من ${actionText} هذه الطلبية؟`);
     if (!confirmAction) return;
@@ -1086,18 +1217,19 @@ export default function AdminDashboard() {
       if (isUrlConfigured) {
         const { error } = await supabase
           .from('orders')
-          .update({ status: newStatus })
+          .update({ 
+            status: newStatus,
+            status_updated_at: new Date().toISOString()
+          })
           .eq('id', orderId);
 
         if (error) throw error;
-      } else {
-        console.log('Database not connected. Bypassing state update in demo mode.');
       }
 
       // Update local state
       const updatedOrders = orders.map(o => {
         if (o.id === orderId) {
-          return { ...o, status: newStatus };
+          return { ...o, status: newStatus as any, status_updated_at: new Date().toISOString() };
         }
         return o;
       });
@@ -1123,7 +1255,7 @@ export default function AdminDashboard() {
     alert('تم نسخ رابط الفاتورة المباشر إلى الحافظة بنجاح!');
   };
 
-  const activeOrdersList = orders.filter(o => o.status === 'pending');
+  const activeOrdersList = orders.filter(o => o.status !== 'postponed' && o.status !== 'delivered' && o.status !== 'cancelled');
   const postponedOrdersList = orders.filter(o => o.status === 'postponed');
 
   return (
@@ -1345,9 +1477,23 @@ export default function AdminDashboard() {
                             </button>
                           </div>
                         )}
-                        <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
-                          <Clock className="w-3.5 h-3.5 text-slate-400" />
-                          <span>ساعة الاستلام: {formatTime(order.created_at)}</span>
+                        <div className="flex items-center gap-3 text-[10px] text-slate-500 flex-wrap">
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-slate-400" />
+                            <span>ساعة الاستلام: {formatTime(order.created_at)}</span>
+                          </div>
+                          {order.customer_phone && (
+                            <div className="flex items-center gap-1 text-slate-600 font-bold">
+                              <Phone className="w-3 h-3 text-slate-400" />
+                              <span className="ltr font-mono">{order.customer_phone}</span>
+                            </div>
+                          )}
+                          {order.customer_address && (
+                            <div className="flex items-center gap-1 text-slate-600 truncate max-w-[200px]" title={order.customer_address}>
+                              <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                              <span className="truncate">{order.customer_address}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1362,22 +1508,13 @@ export default function AdminDashboard() {
                       {Number(order.total_price).toFixed(2)} TL
                     </span>
                     <button
-                      onClick={() => handlePostponeOrder(order.id, 'pending')}
+                      onClick={() => handlePostponeOrder(order.id, order.status)}
                       disabled={isUpdating}
                       className="bg-amber-50 hover:bg-amber-100 border border-amber-250 text-amber-700 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-colors"
                       title="تأجيل الطلبية لوقت لاحق"
                     >
                       <CalendarClock className="w-3.5 h-3.5" />
                       <span>تأجيل</span>
-                    </button>
-                    <button
-                      onClick={() => handleFulfillOrder(order.id, order.customer_name)}
-                      disabled={isUpdating}
-                      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-450 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-colors"
-                      title="تحديد كـ تم التسليم ونقل للأرشيف"
-                    >
-                      <CheckSquare className="w-3.5 h-3.5" />
-                      <span>تم التسليم</span>
                     </button>
                     <button
                       onClick={() => handleCancelOrder(order.id, order.customer_name)}
@@ -1388,6 +1525,199 @@ export default function AdminDashboard() {
                       <Trash2 className="w-3.5 h-3.5" />
                       <span>إلغاء</span>
                     </button>
+                  </div>
+                </div>
+
+                {/* Delivery Status & Tracking Control Bar */}
+                <div className="bg-white rounded-2xl p-3 border border-slate-200 shadow-2xs space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-bold text-slate-500">حالة الطلب والتوصيل:</span>
+                      {(() => {
+                        const st = order.status;
+                        if (st === 'delivering') {
+                          return (
+                            <span className="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-200 text-blue-800 font-extrabold px-2.5 py-1 rounded-xl text-xs">
+                              <Truck className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
+                              <span>جاري التوصيل</span>
+                            </span>
+                          );
+                        }
+                        if (st === 'preparing') {
+                          return (
+                            <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-900 font-extrabold px-2.5 py-1 rounded-xl text-xs">
+                              <Package className="w-3.5 h-3.5 text-amber-600" />
+                              <span>جاري التجهيز</span>
+                            </span>
+                          );
+                        }
+                        if (st === 'delivered') {
+                          return (
+                            <span className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-extrabold px-2.5 py-1 rounded-xl text-xs">
+                              <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>تم التسليم</span>
+                            </span>
+                          );
+                        }
+                        return (
+                          <span className="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-extrabold px-2.5 py-1 rounded-xl text-xs">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>تم الاستلام</span>
+                          </span>
+                        );
+                      })()}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => handleShareTrackingWhatsApp(order)}
+                        className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-2xs"
+                        title="إرسال رابط التتبع للزبون عبر واتساب"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>إرسال الرابط للزبون</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleCopyTrackingLink(order.id)}
+                        className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-2xs"
+                        title="نسخ رابط تتبع الطلب المباشر"
+                      >
+                        <Copy className="w-3.5 h-3.5 text-slate-500" />
+                        <span>نسخ رابط التتبع</span>
+                      </button>
+
+                      <Link
+                        href={`/track/${order.id}`}
+                        target="_blank"
+                        className="bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-800 px-2 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition-all"
+                        title="معاينة صفحة التتبع مثل الزبون"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>معاينة الرابط</span>
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Status Switcher Buttons */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateOrderStatus(order.id, 'received')}
+                      disabled={isUpdating}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                        order.status === 'received' || order.status === 'pending'
+                          ? 'bg-[#075E54] text-white border-[#075E54] shadow-xs'
+                          : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>1. تم الاستلام</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}
+                      disabled={isUpdating}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                        order.status === 'preparing'
+                          ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                          : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      <Package className="w-3.5 h-3.5" />
+                      <span>2. جاري التجهيز</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateOrderStatus(order.id, 'delivering')}
+                      disabled={isUpdating}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                        order.status === 'delivering'
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                          : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      <Truck className="w-3.5 h-3.5" />
+                      <span>3. جاري التوصيل</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateOrderStatus(order.id, 'delivered')}
+                      disabled={isUpdating}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                        order.status === 'delivered'
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                          : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'
+                      }`}
+                    >
+                      <CheckCheck className="w-3.5 h-3.5" />
+                      <span>4. تم التسليم ✓</span>
+                    </button>
+                  </div>
+
+                  {/* Delivery Note Editor */}
+                  <div className="bg-amber-50/60 border border-amber-200/80 rounded-xl p-2.5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-900">
+                        <Bell className="w-3.5 h-3.5 text-amber-600" />
+                        <span>ملاحظة تظهر للزبون في رابط التتبع:</span>
+                      </div>
+                      {order.delivery_note && (
+                        <span className="text-[10px] text-amber-800 font-bold bg-amber-200/60 px-2 py-0.5 rounded-md">
+                          ملاحظة نشطة للزبون
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Preset tags */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] text-slate-500 font-semibold">نماذج سريعة:</span>
+                      {[
+                        '🛵 عامل التوصيل في الطريق إليكم',
+                        '⏳ تأخير بسيط (15 دقيقة) بسبب الضغط',
+                        '📞 يرجى الرد على الهاتف من المندوب',
+                        '🚪 الطلب أمام الباب',
+                        '✨ تم تجهيز وتغليف طلبكم بالكامل'
+                      ].map((presetText) => (
+                        <button
+                          key={presetText}
+                          type="button"
+                          onClick={() => {
+                            setDeliveryNotes(prev => ({ ...prev, [order.id]: presetText }));
+                          }}
+                          className="bg-white hover:bg-amber-100/80 text-amber-900 border border-amber-200 text-[10px] font-bold px-2 py-0.5 rounded-lg transition-colors cursor-pointer"
+                        >
+                          {presetText}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Note Input & Save Button */}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="اكتب ملاحظة للزبون تظهر في صفحة التتبع (مثلاً: سيصل السائق بعد قليل)..."
+                        value={deliveryNotes[order.id] !== undefined ? deliveryNotes[order.id] : (order.delivery_note || '')}
+                        onChange={(e) => {
+                          setDeliveryNotes(prev => ({ ...prev, [order.id]: e.target.value }));
+                        }}
+                        className="flex-1 bg-white border border-amber-250 outline-none rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 font-medium"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleSaveDeliveryNote(order.id)}
+                        disabled={isSavingDeliveryNote[order.id] || isUpdating}
+                        className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1 shrink-0 disabled:opacity-50"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>{isSavingDeliveryNote[order.id] ? 'جاري الحفظ...' : 'حفظ وإرسال'}</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -1841,14 +2171,6 @@ export default function AdminDashboard() {
                       <span>إيصال 80 مم</span>
                     </button>
 
-                    <Link
-                      href="/admin"
-                      className="col-span-1 sm:col-auto bg-purple-50 hover:bg-purple-100 border border-purple-250 text-purple-700 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
-                      title="دفتر الدين وكشف حسابات الزبائن"
-                    >
-                      <Receipt className="w-3.5 h-3.5 text-purple-600" />
-                      <span>دفتر الدين</span>
-                    </Link>
                   </div>
 
                   <span className="text-[10px] text-slate-400 font-medium">
@@ -2691,14 +3013,6 @@ export default function AdminDashboard() {
                       <span>إيصال 80 مم</span>
                     </button>
 
-                    <Link
-                      href="/admin"
-                      className="col-span-1 sm:col-auto bg-purple-50 hover:bg-purple-100 border border-purple-250 text-purple-700 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
-                      title="دفتر الدين وكشف حسابات الزبائن"
-                    >
-                      <Receipt className="w-3.5 h-3.5 text-purple-600" />
-                      <span>دفتر الدين</span>
-                    </Link>
                   </div>
 
                   <span className="text-[10px] text-slate-400 font-medium">

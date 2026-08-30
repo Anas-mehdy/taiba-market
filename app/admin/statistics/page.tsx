@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { 
   TrendingUp, DollarSign, FileText, Users, ShoppingBag, Calendar, 
   Search, RefreshCw, X, AlertCircle, Loader2,
-  Trash2, Copy, Download, Printer, Plus, Edit3, Save, ChevronUp, ChevronDown, Gift, Tag, Receipt, UserCheck, CheckCircle2, Edit2
+  Trash2, Copy, Download, Printer, Plus, Edit3, Save, ChevronUp, ChevronDown, Gift, Tag, UserCheck, CheckCircle2, Edit2
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas-pro';
@@ -37,8 +37,12 @@ interface OrderItem {
 interface Order {
   id: string;
   customer_name: string;
+  customer_phone?: string | null;
+  customer_address?: string | null;
   total_price: number;
-  status: 'pending' | 'delivered';
+  status: 'pending' | 'received' | 'preparing' | 'delivering' | 'delivered' | 'postponed' | 'cancelled';
+  delivery_note?: string | null;
+  status_updated_at?: string | null;
   created_at: string;
   order_items: OrderItem[];
 }
@@ -1363,14 +1367,6 @@ export default function AdminStatistics() {
                     <span>إيصال 80 مم</span>
                   </button>
 
-                  <Link
-                    href="/admin"
-                    className="col-span-1 sm:col-auto bg-purple-50 hover:bg-purple-100 border border-purple-250 text-purple-700 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
-                    title="دفتر الدين وكشف حسابات الزبائن"
-                  >
-                    <Receipt className="w-3.5 h-3.5 text-purple-600" />
-                    <span>دفتر الدين</span>
-                  </Link>
                 </div>
                 </>)}
               </div>

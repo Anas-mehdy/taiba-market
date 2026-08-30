@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
       console.warn('Customer upsert non-blocking error:', custErr);
     }
 
-    // 5. Save order to database
+    // 5. Save order to database with default status 'received'
     const { data: orderData, error: orderError } = await supabaseAdmin
       .from('orders')
       .insert({
@@ -127,7 +127,8 @@ export async function POST(request: NextRequest) {
         customer_phone: phoneToSave,
         customer_address: addressToSave,
         total_price: calculatedTotalPrice,
-        status: 'pending'
+        status: 'received',
+        status_updated_at: new Date().toISOString()
       })
       .select('id')
       .single();
@@ -153,6 +154,12 @@ export async function POST(request: NextRequest) {
       await supabaseAdmin.from('orders').delete().eq('id', orderId);
       throw itemsError;
     }
+
+    // Determine base URL for live tracking link
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+    const proto = request.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https');
+    const origin = host ? `${proto}://${host}` : request.nextUrl.origin;
+    const trackUrl = `${origin}/track/${orderId}`;
 
     // 7. Construct WhatsApp formatted message
     const messageLines: string[] = [
@@ -184,6 +191,10 @@ export async function POST(request: NextRequest) {
 
     messageLines.push('-----------------------------');
     messageLines.push(`💰 *الإجمالي الكلي:* *${calculatedTotalPrice.toFixed(2)} TL*`);
+    messageLines.push('');
+    messageLines.push(`🛵 *رابط تتبع الطلب والتوصيل المباشر:*`);
+    messageLines.push(`${trackUrl}`);
+    messageLines.push('');
     messageLines.push('✨ شكراً لتسوقكم من ماركت طيبة!');
 
     const encodedText = encodeURIComponent(messageLines.join('\n'));
@@ -192,6 +203,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       orderId,
+      trackUrl,
       whatsappUrl
     });
   } catch (err: any) {

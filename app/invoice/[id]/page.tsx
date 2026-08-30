@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, use } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ShoppingBag, Loader2, Calendar, User, Clock, CheckCircle2, Printer, ChevronRight, Store, Gift, Tag, Download } from 'lucide-react';
+import { ShoppingBag, Loader2, Calendar, User, Clock, CheckCircle2, Printer, ChevronRight, Store, Gift, Tag, Download, Truck } from 'lucide-react';
 import Link from 'next/link';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas-pro';
@@ -225,7 +225,7 @@ export default function PublicInvoicePage({ params }: { params: Promise<{ id: st
             </div>
             <div>
               <h1 className="text-lg font-black text-slate-800">ماركت طيبة</h1>
-              <p className="text-[10px] text-slate-500 font-bold mt-0.5">تجارة المواد الغذائية بالجملة • ماركت طيبة</p>
+              <p className="text-[10px] text-slate-500 font-bold mt-0.5">تجارة المواد الغذائية والمنتجات الاستهلاكية</p>
             </div>
           </div>
           <span className="bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5">
@@ -375,6 +375,14 @@ export default function PublicInvoicePage({ params }: { params: Promise<{ id: st
               <Printer className="w-4 h-4" />
               <span>طباعة</span>
             </button>
+
+            <Link
+              href={`/track/${order.id}`}
+              className="bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 font-bold px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-2xs"
+            >
+              <Truck className="w-4 h-4 text-blue-700" />
+              <span>تتبع حالة التوصيل</span>
+            </Link>
 
             <Link
               href="/"
