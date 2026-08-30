@@ -1286,32 +1286,33 @@ export default function AdminDashboard() {
       </div>
 
       {/* Layer 2: Customer Order Breakdown */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-5 shadow-sm">
-        <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-          <div className="bg-purple-500/10 p-2.5 rounded-xl text-purple-600 border border-purple-500/20">
+      <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 space-y-4 sm:space-y-5 shadow-sm">
+        <div className="flex items-center gap-3 pb-3 sm:pb-4 border-b border-slate-100">
+          <div className="bg-purple-500/10 p-2 sm:p-2.5 rounded-xl text-purple-600 border border-purple-500/20">
             <ClipboardList className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-md font-bold text-slate-800">كشف الفواتير والزبائن بالتفصيل</h2>
-            <p className="text-[11px] text-slate-500">قائمة بالفواتير الفردية المستلمة وتفاصيل طلب كل زبون</p>
+            <h2 className="text-sm sm:text-base font-black text-slate-800">كشف الفواتير والزبائن بالتفصيل</h2>
+            <p className="text-[10.5px] sm:text-xs text-slate-500">قائمة بالفواتير الفردية المستلمة وتفاصيل طلب كل زبون</p>
           </div>
         </div>
 
         {activeOrdersList.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-3.5 sm:space-y-4">
             {activeOrdersList.map((order) => (
               <div 
                 key={order.id}
-                className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4 hover:border-slate-300 transition-all"
+                className="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-3 sm:p-5 space-y-3.5 hover:border-slate-300 transition-all shadow-2xs"
               >
                 {/* Order Header Info */}
-                <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${expandedOrders[order.id] ? 'pb-3 border-b border-slate-200' : ''}`}>
-                  <div className="flex justify-between items-start w-full sm:w-auto">
-                    <div className="flex items-center gap-2.5">
-                      {/* Collapse/Expand Arrow Button */}
+                <div className={`space-y-2.5 ${expandedOrders[order.id] ? 'pb-3 border-b border-slate-200' : ''}`}>
+                  {/* Top Line: Customer Name + Bound Badge + Price Tag */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      {/* Expand Toggle Button */}
                       <button
                         onClick={() => toggleOrderExpand(order.id)}
-                        className="p-1 rounded-lg text-slate-500 hover:bg-slate-200 active:scale-95 transition-all cursor-pointer flex items-center justify-center shrink-0 border border-slate-200"
+                        className="p-1.5 rounded-xl text-slate-500 hover:bg-slate-200 active:scale-95 transition-all cursor-pointer flex items-center justify-center shrink-0 border border-slate-200 bg-white"
                         title={expandedOrders[order.id] ? "إغلاق التفاصيل" : "عرض التفاصيل"}
                       >
                         {expandedOrders[order.id] ? (
@@ -1320,224 +1321,233 @@ export default function AdminDashboard() {
                           <ChevronDown className="w-4 h-4" />
                         )}
                       </button>
-                      <div className="space-y-1">
-                        {editingCustomerId === order.id ? (
-                          <div className="flex items-center gap-1.5 relative" onClick={(e) => e.stopPropagation()}>
-                            <div className="relative">
-                              <input
-                                type="text"
-                                value={tempCustomerName}
-                                onChange={(e) => {
-                                  setTempCustomerName(e.target.value);
-                                  setCustomerSearchQuery(e.target.value);
-                                  setCustomerDropdownOpen(order.id);
-                                }}
-                                onFocus={() => {
-                                  setCustomerSearchQuery(tempCustomerName);
-                                  setCustomerDropdownOpen(order.id);
-                                }}
-                                placeholder="ابحث أو اكتب اسم زبون..."
-                                className="bg-white border border-slate-350 outline-none rounded-xl px-2.5 py-1 text-[11px] text-slate-800 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] font-bold w-[180px] text-right"
-                                autoFocus
-                              />
-                              
-                              {customerDropdownOpen === order.id && (
-                                <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg w-[240px] max-h-48 overflow-y-auto z-50 p-1 text-right divide-y divide-slate-100">
-                                  {customerSearchQuery.trim() && !approvedCustomers.some(c => c.name === customerSearchQuery.trim()) && (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setTempCustomerName(customerSearchQuery.trim());
-                                        setCustomerDropdownOpen(null);
-                                      }}
-                                      className="w-full text-right px-3 py-1.5 rounded-lg text-[10px] text-[#128C7E] font-bold hover:bg-slate-50 transition-colors"
-                                    >
-                                      استخدام "{customerSearchQuery.trim()}" (زبون جديد)
-                                    </button>
-                                  )}
-                                  
-                                  {approvedCustomers
-                                    .filter(c => c.name.toLowerCase().includes(customerSearchQuery.toLowerCase()))
-                                    .map((cust) => (
-                                      <button
-                                        key={cust.id}
-                                        type="button"
-                                        onClick={() => {
-                                          setTempCustomerName(cust.name);
-                                          setCustomerDropdownOpen(null);
-                                        }}
-                                        className={`w-full text-right px-3 py-1.5 rounded-lg text-[11px] transition-colors hover:bg-slate-50 ${
-                                          tempCustomerName === cust.name ? 'bg-emerald-50 text-[#128C7E] font-bold' : 'text-slate-700'
-                                        }`}
-                                      >
-                                        {cust.name}
-                                      </button>
-                                    ))
-                                  }
 
-                                  {approvedCustomers.filter(c => c.name.toLowerCase().includes(customerSearchQuery.toLowerCase())).length === 0 && !customerSearchQuery.trim() && (
-                                    <div className="p-2 text-center text-slate-400 text-[10px]">
-                                      اكتب اسماً للبحث...
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                handleSaveCustomerName(order.id);
-                                setCustomerDropdownOpen(null);
+                      {/* Customer Name / Editing Input */}
+                      {editingCustomerId === order.id ? (
+                        <div className="flex items-center gap-1.5 relative flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
+                          <div className="relative flex-1 min-w-0">
+                            <input
+                              type="text"
+                              value={tempCustomerName}
+                              onChange={(e) => {
+                                setTempCustomerName(e.target.value);
+                                setCustomerSearchQuery(e.target.value);
+                                setCustomerDropdownOpen(order.id);
                               }}
-                              className="p-1.5 text-emerald-600 hover:bg-emerald-50 border border-emerald-100 rounded-lg transition-colors cursor-pointer"
-                              title="حفظ الاسم"
-                            >
-                              <CheckSquare className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingCustomerId(null);
-                                setCustomerDropdownOpen(null);
+                              onFocus={() => {
+                                setCustomerSearchQuery(tempCustomerName);
+                                setCustomerDropdownOpen(order.id);
                               }}
-                              className="p-1.5 text-slate-450 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer"
-                              title="إلغاء"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 
-                              className="text-sm font-bold text-slate-800 cursor-pointer hover:text-[#128C7E] transition-colors"
-                              onClick={() => toggleOrderExpand(order.id)}
-                            >
-                              {order.customer_name}
-                            </h3>
-
-                            {/* Assigning status badge button */}
-                            {(() => {
-                              const orderTotal = Number(order.total_price || 0);
-                              if (orderTotal <= 0) return null;
-
-                              const isMatched = approvedCustomers.some(
-                                c => c.name.trim().toLowerCase() === order.customer_name.trim().toLowerCase()
-                              );
-
-                              if (!isMatched) {
-                                return (
+                              placeholder="ابحث أو اكتب اسم زبون..."
+                              className="w-full bg-white border border-slate-350 outline-none rounded-xl px-2.5 py-1 text-xs text-slate-800 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] font-bold text-right"
+                              autoFocus
+                            />
+                            
+                            {customerDropdownOpen === order.id && (
+                              <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg w-[240px] max-h-48 overflow-y-auto z-50 p-1 text-right divide-y divide-slate-100">
+                                {customerSearchQuery.trim() && !approvedCustomers.some(c => c.name === customerSearchQuery.trim()) && (
                                   <button
                                     type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setAssignModalOrder(order);
-                                      setSelectedCustomerForAssign('');
-                                      setAssignSearchQuery('');
+                                    onClick={() => {
+                                      setTempCustomerName(customerSearchQuery.trim());
+                                      setCustomerDropdownOpen(null);
                                     }}
-                                    className="inline-flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-2.5 py-0.5 rounded-lg text-xs cursor-pointer shadow-2xs transition-all active:scale-95"
-                                    title="هذا الاسم غير مسجل في قائمة الزبائن المعتمدين - اضغط لربطه بزَبون"
+                                    className="w-full text-right px-3 py-1.5 rounded-lg text-[10px] text-[#128C7E] font-bold hover:bg-slate-50 transition-colors"
                                   >
-                                    <UserCheck className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                                    <span>غير مربوط بزَبون • اضغط للربط</span>
+                                    استخدام "{customerSearchQuery.trim()}" (زبون جديد)
                                   </button>
-                                );
-                              }
+                                )}
+                                
+                                {approvedCustomers
+                                  .filter(c => c.name.toLowerCase().includes(customerSearchQuery.toLowerCase()))
+                                  .map((cust) => (
+                                    <button
+                                      key={cust.id}
+                                      type="button"
+                                      onClick={() => {
+                                        setTempCustomerName(cust.name);
+                                        setCustomerDropdownOpen(null);
+                                      }}
+                                      className={`w-full text-right px-3 py-1.5 rounded-lg text-[11px] transition-colors hover:bg-slate-50 ${
+                                        tempCustomerName === cust.name ? 'bg-emerald-50 text-[#128C7E] font-bold' : 'text-slate-700'
+                                      }`}
+                                    >
+                                      {cust.name}
+                                    </button>
+                                  ))
+                                }
 
+                                {approvedCustomers.filter(c => c.name.toLowerCase().includes(customerSearchQuery.toLowerCase())).length === 0 && !customerSearchQuery.trim() && (
+                                  <div className="p-2 text-center text-slate-400 text-[10px]">
+                                    اكتب اسماً للبحث...
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleSaveCustomerName(order.id);
+                              setCustomerDropdownOpen(null);
+                            }}
+                            className="p-1.5 text-emerald-600 hover:bg-emerald-50 border border-emerald-100 rounded-lg transition-colors cursor-pointer shrink-0"
+                            title="حفظ الاسم"
+                          >
+                            <CheckSquare className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingCustomerId(null);
+                              setCustomerDropdownOpen(null);
+                            }}
+                            className="p-1.5 text-slate-450 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer shrink-0"
+                            title="إلغاء"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                          <h3 
+                            className="text-sm font-black text-slate-900 truncate cursor-pointer hover:text-[#128C7E] transition-colors"
+                            onClick={() => toggleOrderExpand(order.id)}
+                          >
+                            {order.customer_name}
+                          </h3>
+
+                          {/* Customer match badge */}
+                          {(() => {
+                            const orderTotal = Number(order.total_price || 0);
+                            if (orderTotal <= 0) return null;
+
+                            const isMatched = approvedCustomers.some(
+                              c => c.name.trim().toLowerCase() === order.customer_name.trim().toLowerCase()
+                            );
+
+                            if (!isMatched) {
                               return (
                                 <button
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setAssignModalOrder(order);
-                                    const matched = approvedCustomers.find(c => c.name.trim().toLowerCase() === order.customer_name.trim().toLowerCase());
-                                    setSelectedCustomerForAssign(matched ? matched.id : '');
+                                    setSelectedCustomerForAssign('');
                                     setAssignSearchQuery('');
                                   }}
-                                  className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 font-bold px-2 py-0.5 rounded-md text-[10.5px] cursor-pointer transition-all"
-                                  title="زبون معتمد - اضغط لتعديل الربط إذا رغبت"
+                                  className="inline-flex items-center gap-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-2 py-0.5 rounded-lg text-[10px] cursor-pointer shadow-2xs transition-all active:scale-95 shrink-0"
+                                  title="هذا الاسم غير مسجل في قائمة الزبائن المعتمدين - اضغط لربطه بزَبون"
                                 >
-                                  <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
-                                  <span>مربوط ✓</span>
+                                  <UserCheck className="w-3 h-3 text-amber-600 shrink-0" />
+                                  <span>غير مربوط</span>
                                 </button>
                               );
-                            })()}
+                            }
 
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditingCustomerId(order.id);
-                                setTempCustomerName(order.customer_name);
-                                setCustomerSearchQuery(order.customer_name);
-                              }}
-                              className="p-1 text-slate-400 hover:text-[#128C7E] hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer shrink-0"
-                              title="تعديل اسم الزبون يدوياً"
-                            >
-                              <Edit2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-3 text-[10px] text-slate-500 flex-wrap">
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-slate-400" />
-                            <span>ساعة الاستلام: {formatTime(order.created_at)}</span>
-                          </div>
-                          {order.customer_phone && (
-                            <div className="flex items-center gap-1 text-slate-600 font-bold">
-                              <Phone className="w-3 h-3 text-slate-400" />
-                              <span className="ltr font-mono">{order.customer_phone}</span>
-                            </div>
-                          )}
-                          {order.customer_address && (
-                            <div className="flex items-center gap-1 text-slate-600 truncate max-w-[200px]" title={order.customer_address}>
-                              <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                              <span className="truncate">{order.customer_address}</span>
-                            </div>
-                          )}
+                            return (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setAssignModalOrder(order);
+                                  const matched = approvedCustomers.find(c => c.name.trim().toLowerCase() === order.customer_name.trim().toLowerCase());
+                                  setSelectedCustomerForAssign(matched ? matched.id : '');
+                                  setAssignSearchQuery('');
+                                }}
+                                className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 font-bold px-1.5 py-0.5 rounded-md text-[10px] cursor-pointer transition-all shrink-0"
+                                title="زبون معتمد - اضغط لتعديل الربط إذا رغبت"
+                              >
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                                <span>مربوط ✓</span>
+                              </button>
+                            );
+                          })()}
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingCustomerId(order.id);
+                              setTempCustomerName(order.customer_name);
+                              setCustomerSearchQuery(order.customer_name);
+                            }}
+                            className="p-1 text-slate-400 hover:text-[#128C7E] hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer shrink-0"
+                            title="تعديل اسم الزبون يدوياً"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
                         </div>
-                      </div>
+                      )}
                     </div>
-                    {/* On mobile, show the price badge here to save space on the button group */}
-                    <span className="sm:hidden bg-white border border-slate-200 text-emerald-600 font-extrabold px-2.5 py-1.5 rounded-xl text-xs self-center ml-2">
+
+                    {/* Total Price Badge */}
+                    <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 font-black px-2.5 py-1 rounded-xl text-xs sm:text-sm font-mono shrink-0 shadow-2xs">
                       {Number(order.total_price).toFixed(2)} TL
-                    </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 flex-wrap w-full sm:w-auto justify-end">
-                    {/* On desktop, show the price badge in the group */}
-                    <span className="hidden sm:inline-block bg-white border border-slate-200 text-emerald-600 font-extrabold px-3 py-1.5 rounded-xl text-xs">
-                      {Number(order.total_price).toFixed(2)} TL
-                    </span>
-                    <button
-                      onClick={() => handlePostponeOrder(order.id, order.status)}
-                      disabled={isUpdating}
-                      className="bg-amber-50 hover:bg-amber-100 border border-amber-250 text-amber-700 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-colors"
-                      title="تأجيل الطلبية لوقت لاحق"
-                    >
-                      <CalendarClock className="w-3.5 h-3.5" />
-                      <span>تأجيل</span>
-                    </button>
-                    <button
-                      onClick={() => handleCancelOrder(order.id, order.customer_name)}
-                      disabled={isUpdating}
-                      className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 hover:text-rose-700 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-colors"
-                      title="إلغاء وحذف الطلبية"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>إلغاء</span>
-                    </button>
+
+                  {/* Second Line: Metadata (Time, Phone, Address) & Quick Action Buttons */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-0.5">
+                    {/* Metadata */}
+                    <div className="flex items-center gap-2 text-[10.5px] text-slate-500 flex-wrap">
+                      <div className="flex items-center gap-1 bg-white border border-slate-200 px-2 py-0.5 rounded-lg shadow-2xs">
+                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{formatTime(order.created_at)}</span>
+                      </div>
+                      {order.customer_phone && (
+                        <a 
+                          href={`tel:${order.customer_phone}`}
+                          className="flex items-center gap-1 text-slate-700 hover:text-emerald-700 bg-white border border-slate-200 px-2 py-0.5 rounded-lg font-bold font-mono transition-colors shadow-2xs"
+                        >
+                          <Phone className="w-3 h-3 text-slate-400" />
+                          <span>{order.customer_phone}</span>
+                        </a>
+                      )}
+                      {order.customer_address && (
+                        <div className="flex items-center gap-1 text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-lg truncate max-w-[200px] shadow-2xs" title={order.customer_address}>
+                          <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                          <span className="truncate">{order.customer_address}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Postpone & Cancel Buttons */}
+                    <div className="flex items-center gap-1.5 justify-end">
+                      <button
+                        onClick={() => handlePostponeOrder(order.id, order.status)}
+                        disabled={isUpdating}
+                        className="flex-1 sm:flex-initial bg-amber-50 hover:bg-amber-100 active:scale-95 border border-amber-250 text-amber-700 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all"
+                        title="تأجيل الطلبية لوقت لاحق"
+                      >
+                        <CalendarClock className="w-3.5 h-3.5" />
+                        <span>تأجيل</span>
+                      </button>
+                      <button
+                        onClick={() => handleCancelOrder(order.id, order.customer_name)}
+                        disabled={isUpdating}
+                        className="flex-1 sm:flex-initial bg-rose-50 hover:bg-rose-100 active:scale-95 border border-rose-200 text-rose-600 hover:text-rose-700 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all"
+                        title="إلغاء وحذف الطلبية"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>إلغاء</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
                 {/* Delivery Status & Tracking Control Bar */}
-                <div className="bg-white rounded-2xl p-3 border border-slate-200 shadow-2xs space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-bold text-slate-500">حالة الطلب والتوصيل:</span>
+                <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-slate-200 shadow-xs space-y-3">
+                  
+                  {/* Status Label & 3-Button Action Bar (WhatsApp, Copy, Preview) */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-slate-500">حالة الطلب:</span>
                       {(() => {
                         const st = order.status;
                         if (st === 'delivering') {
                           return (
-                            <span className="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-200 text-blue-800 font-extrabold px-2.5 py-1 rounded-xl text-xs">
+                            <span className="inline-flex items-center gap-1 bg-blue-50 border border-blue-200 text-blue-800 font-extrabold px-2.5 py-0.5 rounded-lg text-xs">
                               <Truck className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
                               <span>جاري التوصيل</span>
                             </span>
@@ -1545,7 +1555,7 @@ export default function AdminDashboard() {
                         }
                         if (st === 'preparing') {
                           return (
-                            <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-900 font-extrabold px-2.5 py-1 rounded-xl text-xs">
+                            <span className="inline-flex items-center gap-1 bg-amber-50 border border-amber-200 text-amber-900 font-extrabold px-2.5 py-0.5 rounded-lg text-xs">
                               <Package className="w-3.5 h-3.5 text-amber-600" />
                               <span>جاري التجهيز</span>
                             </span>
@@ -1553,67 +1563,69 @@ export default function AdminDashboard() {
                         }
                         if (st === 'delivered') {
                           return (
-                            <span className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-extrabold px-2.5 py-1 rounded-xl text-xs">
+                            <span className="inline-flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-800 font-extrabold px-2.5 py-0.5 rounded-lg text-xs">
                               <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
-                              <span>تم التسليم</span>
+                              <span>تم التسليم ✓</span>
                             </span>
                           );
                         }
                         return (
-                          <span className="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-extrabold px-2.5 py-1 rounded-xl text-xs">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="inline-flex items-center gap-1 bg-teal-50 border border-teal-200 text-teal-800 font-extrabold px-2.5 py-0.5 rounded-lg text-xs">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-teal-600" />
                             <span>تم الاستلام</span>
                           </span>
                         );
                       })()}
                     </div>
 
-                    <div className="flex items-center gap-1.5 flex-wrap">
+                    {/* Fast Action Buttons: WhatsApp + Copy + Preview on mobile */}
+                    <div className="grid grid-cols-3 sm:flex sm:items-center gap-1.5">
                       <button
                         type="button"
                         onClick={() => handleShareTrackingWhatsApp(order)}
-                        className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-2xs"
+                        className="col-span-1 sm:col-auto bg-emerald-50 hover:bg-emerald-100 border border-emerald-250 text-emerald-800 px-2 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-2xs"
                         title="إرسال رابط التتبع للزبون عبر واتساب"
                       >
-                        <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>إرسال الرابط للزبون</span>
+                        <MessageSquare className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span className="hidden sm:inline">إرسال الرابط للزبون</span>
+                        <span className="sm:hidden">واتساب</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => handleCopyTrackingLink(order.id)}
-                        className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-2xs"
+                        className="col-span-1 sm:col-auto bg-slate-50 hover:bg-slate-100 border border-slate-250 text-slate-700 px-2 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-2xs"
                         title="نسخ رابط تتبع الطلب المباشر"
                       >
-                        <Copy className="w-3.5 h-3.5 text-slate-500" />
-                        <span>نسخ رابط التتبع</span>
+                        <Copy className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        <span>نسخ الرابط</span>
                       </button>
 
                       <Link
                         href={`/track/${order.id}`}
                         target="_blank"
-                        className="bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-800 px-2 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition-all"
+                        className="col-span-1 sm:col-auto bg-teal-50 hover:bg-teal-100 border border-teal-250 text-teal-800 px-2 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all active:scale-95 shadow-2xs text-center"
                         title="معاينة صفحة التتبع مثل الزبون"
                       >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>معاينة الرابط</span>
+                        <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                        <span>معاينة</span>
                       </Link>
                     </div>
                   </div>
 
-                  {/* Status Switcher Buttons */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                  {/* Status Switcher Buttons: Touch friendly 4-Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <button
                       type="button"
                       onClick={() => handleUpdateOrderStatus(order.id, 'received')}
                       disabled={isUpdating}
-                      className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                      className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-black transition-all cursor-pointer border active:scale-[0.98] ${
                         order.status === 'received' || order.status === 'pending'
-                          ? 'bg-[#075E54] text-white border-[#075E54] shadow-xs'
-                          : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                          ? 'bg-[#075E54] text-white border-[#075E54] shadow-sm'
+                          : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
                       }`}
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
                       <span>1. تم الاستلام</span>
                     </button>
 
@@ -1621,13 +1633,13 @@ export default function AdminDashboard() {
                       type="button"
                       onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}
                       disabled={isUpdating}
-                      className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                      className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-black transition-all cursor-pointer border active:scale-[0.98] ${
                         order.status === 'preparing'
-                          ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
-                          : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                          ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                          : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
                       }`}
                     >
-                      <Package className="w-3.5 h-3.5" />
+                      <Package className="w-4 h-4 shrink-0" />
                       <span>2. جاري التجهيز</span>
                     </button>
 
@@ -1635,13 +1647,13 @@ export default function AdminDashboard() {
                       type="button"
                       onClick={() => handleUpdateOrderStatus(order.id, 'delivering')}
                       disabled={isUpdating}
-                      className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                      className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-black transition-all cursor-pointer border active:scale-[0.98] ${
                         order.status === 'delivering'
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                          : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                          : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
                       }`}
                     >
-                      <Truck className="w-3.5 h-3.5" />
+                      <Truck className="w-4 h-4 shrink-0" />
                       <span>3. جاري التوصيل</span>
                     </button>
 
@@ -1649,34 +1661,33 @@ export default function AdminDashboard() {
                       type="button"
                       onClick={() => handleUpdateOrderStatus(order.id, 'delivered')}
                       disabled={isUpdating}
-                      className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                      className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-black transition-all cursor-pointer border active:scale-[0.98] ${
                         order.status === 'delivered'
-                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                          : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                          : 'bg-emerald-50/80 hover:bg-emerald-100 text-emerald-800 border-emerald-200'
                       }`}
                     >
-                      <CheckCheck className="w-3.5 h-3.5" />
+                      <CheckCheck className="w-4 h-4 shrink-0" />
                       <span>4. تم التسليم ✓</span>
                     </button>
                   </div>
 
-                  {/* Delivery Note Editor */}
-                  <div className="bg-amber-50/60 border border-amber-200/80 rounded-xl p-2.5 space-y-2">
+                  {/* Delivery Note Editor with Horizontal Preset Slider */}
+                  <div className="bg-amber-50/70 border border-amber-200/90 rounded-2xl p-3 space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-900">
-                        <Bell className="w-3.5 h-3.5 text-amber-600" />
-                        <span>ملاحظة تظهر للزبون في رابط التتبع:</span>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
+                        <Bell className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span>ملاحظة تظهر للزبون في صفحة التتبع:</span>
                       </div>
                       {order.delivery_note && (
-                        <span className="text-[10px] text-amber-800 font-bold bg-amber-200/60 px-2 py-0.5 rounded-md">
-                          ملاحظة نشطة للزبون
+                        <span className="text-[10px] text-amber-800 font-bold bg-amber-200/80 px-2 py-0.5 rounded-md shrink-0">
+                          ملاحظة نشطة
                         </span>
                       )}
                     </div>
 
-                    {/* Preset tags */}
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] text-slate-500 font-semibold">نماذج سريعة:</span>
+                    {/* Single-row Horizontal Scrollable Presets Slider */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
                       {[
                         '🛵 عامل التوصيل في الطريق إليكم',
                         '⏳ تأخير بسيط (15 دقيقة) بسبب الضغط',
@@ -1690,32 +1701,33 @@ export default function AdminDashboard() {
                           onClick={() => {
                             setDeliveryNotes(prev => ({ ...prev, [order.id]: presetText }));
                           }}
-                          className="bg-white hover:bg-amber-100/80 text-amber-900 border border-amber-200 text-[10px] font-bold px-2 py-0.5 rounded-lg transition-colors cursor-pointer"
+                          className="bg-white hover:bg-amber-100 active:scale-95 text-amber-900 border border-amber-200 text-[11px] font-bold px-2.5 py-1 rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0 shadow-2xs"
                         >
                           {presetText}
                         </button>
                       ))}
                     </div>
 
-                    {/* Note Input & Save Button */}
-                    <div className="flex gap-2">
+                    {/* Full-width Unified Note Input Bar */}
+                    <div className="flex items-center gap-1.5">
                       <input
                         type="text"
-                        placeholder="اكتب ملاحظة للزبون تظهر في صفحة التتبع (مثلاً: سيصل السائق بعد قليل)..."
+                        placeholder="اكتب ملاحظة للزبون (مثلاً: سيصل السائق بعد قليل)..."
                         value={deliveryNotes[order.id] !== undefined ? deliveryNotes[order.id] : (order.delivery_note || '')}
                         onChange={(e) => {
                           setDeliveryNotes(prev => ({ ...prev, [order.id]: e.target.value }));
                         }}
-                        className="flex-1 bg-white border border-amber-250 outline-none rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 font-medium"
+                        className="flex-1 bg-white border border-amber-300 outline-none rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 font-medium"
                       />
                       <button
                         type="button"
                         onClick={() => handleSaveDeliveryNote(order.id)}
                         disabled={isSavingDeliveryNote[order.id] || isUpdating}
-                        className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1 shrink-0 disabled:opacity-50"
+                        className="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold px-3.5 py-2 rounded-xl text-xs transition-all cursor-pointer flex items-center justify-center gap-1 shrink-0 disabled:opacity-50 shadow-xs"
                       >
                         <Send className="w-3.5 h-3.5" />
-                        <span>{isSavingDeliveryNote[order.id] ? 'جاري الحفظ...' : 'حفظ وإرسال'}</span>
+                        <span className="hidden sm:inline">{isSavingDeliveryNote[order.id] ? 'جاري الحفظ...' : 'حفظ وإرسال'}</span>
+                        <span className="sm:hidden">{isSavingDeliveryNote[order.id] ? 'حفظ...' : 'إرسال'}</span>
                       </button>
                     </div>
                   </div>
@@ -2192,13 +2204,13 @@ export default function AdminDashboard() {
       </div>
 
       {/* Layer 1: Global Daily Fulfillment Stats */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-5 shadow-sm">
-        <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${aggregationExpanded ? 'pb-4 border-b border-slate-100' : ''}`}>
+      <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 space-y-4 sm:space-y-5 shadow-sm">
+        <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 ${aggregationExpanded ? 'pb-3 sm:pb-4 border-b border-slate-100' : ''}`}>
           <div className="flex items-center gap-3">
             {/* Collapse/Expand Arrow Button */}
             <button
               onClick={() => setAggregationExpanded(!aggregationExpanded)}
-              className="p-1 rounded-lg text-slate-500 hover:bg-slate-200 active:scale-95 transition-all cursor-pointer flex items-center justify-center shrink-0 border border-slate-200"
+              className="p-1.5 rounded-xl text-slate-500 hover:bg-slate-200 active:scale-95 transition-all cursor-pointer flex items-center justify-center shrink-0 border border-slate-200 bg-white"
               title={aggregationExpanded ? "إغلاق التفاصيل" : "عرض التفاصيل"}
             >
               {aggregationExpanded ? (
@@ -2207,12 +2219,12 @@ export default function AdminDashboard() {
                 <ChevronDown className="w-4 h-4" />
               )}
             </button>
-            <div className="bg-blue-500/10 p-2.5 rounded-xl text-blue-600 border border-blue-500/20">
+            <div className="bg-blue-500/10 p-2 sm:p-2.5 rounded-xl text-blue-600 border border-blue-500/20">
               <ClipboardList className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-md font-bold text-slate-800">تجميع الطلبيات الإجمالي لليوم</h2>
-              <p className="text-[11px] text-slate-500">إجمالي الكميات والسلع اللازم تجهيزها من المستودع لتلبية كافة الزبائن</p>
+              <h2 className="text-sm sm:text-base font-black text-slate-800">تجميع الطلبيات الإجمالي لليوم</h2>
+              <p className="text-[10.5px] sm:text-xs text-slate-500">إجمالي الكميات والسلع اللازم تجهيزها من المستودع لتلبية كافة الزبائن</p>
             </div>
           </div>
 
@@ -2326,32 +2338,33 @@ export default function AdminDashboard() {
       </div>
 
       {/* Postponed Orders Section */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-5 shadow-sm">
-        <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-          <div className="bg-amber-500/10 p-2.5 rounded-xl text-amber-600 border border-amber-500/20">
+      <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 space-y-4 sm:space-y-5 shadow-sm">
+        <div className="flex items-center gap-3 pb-3 sm:pb-4 border-b border-slate-100">
+          <div className="bg-amber-500/10 p-2 sm:p-2.5 rounded-xl text-amber-600 border border-amber-500/20">
             <CalendarClock className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-md font-bold text-slate-800">الطلبيات المؤجلة</h2>
-            <p className="text-[11px] text-slate-500">قائمة بالفواتير التي تم تأجيلها لوقت لاحق لتسليمها يدوياً</p>
+            <h2 className="text-sm sm:text-base font-black text-slate-800">الطلبيات المؤجلة</h2>
+            <p className="text-[10.5px] sm:text-xs text-slate-500">قائمة بالفواتير التي تم تأجيلها لوقت لاحق لتسليمها يدوياً</p>
           </div>
         </div>
 
         {postponedOrdersList.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-3.5 sm:space-y-4">
             {postponedOrdersList.map((order) => (
               <div 
                 key={order.id}
-                className="bg-amber-50/10 border border-amber-200/50 rounded-2xl p-5 space-y-4 hover:border-amber-300/60 transition-all"
+                className="bg-amber-50/20 border border-amber-200/60 rounded-2xl p-3 sm:p-5 space-y-3.5 hover:border-amber-300/70 transition-all shadow-2xs"
               >
                 {/* Order Header Info */}
-                <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${expandedOrders[order.id] ? 'pb-3 border-b border-amber-100/50' : ''}`}>
-                  <div className="flex justify-between items-start w-full sm:w-auto">
-                    <div className="flex items-center gap-2.5">
+                <div className={`space-y-2.5 ${expandedOrders[order.id] ? 'pb-3 border-b border-amber-200/60' : ''}`}>
+                  {/* Top Line: Customer Name + Bound Badge + Price Tag */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
                       {/* Collapse/Expand Arrow Button */}
                       <button
                         onClick={() => toggleOrderExpand(order.id)}
-                        className="p-1 rounded-lg text-slate-500 hover:bg-amber-100/30 active:scale-95 transition-all cursor-pointer flex items-center justify-center shrink-0 border border-amber-200/50"
+                        className="p-1.5 rounded-xl text-slate-500 hover:bg-amber-100/50 active:scale-95 transition-all cursor-pointer flex items-center justify-center shrink-0 border border-amber-200/60 bg-white"
                         title={expandedOrders[order.id] ? "إغلاق التفاصيل" : "عرض التفاصيل"}
                       >
                         {expandedOrders[order.id] ? (
@@ -2360,206 +2373,227 @@ export default function AdminDashboard() {
                           <ChevronDown className="w-4 h-4" />
                         )}
                       </button>
-                      <div className="space-y-1">
-                        {editingCustomerId === order.id ? (
-                          <div className="flex items-center gap-1.5 relative" onClick={(e) => e.stopPropagation()}>
-                            <div className="relative">
-                              <input
-                                type="text"
-                                value={tempCustomerName}
-                                onChange={(e) => {
-                                  setTempCustomerName(e.target.value);
-                                  setCustomerSearchQuery(e.target.value);
-                                  setCustomerDropdownOpen(order.id);
-                                }}
-                                onFocus={() => {
-                                  setCustomerSearchQuery(tempCustomerName);
-                                  setCustomerDropdownOpen(order.id);
-                                }}
-                                placeholder="ابحث أو اكتب اسم زبون..."
-                                className="bg-white border border-slate-350 outline-none rounded-xl px-2.5 py-1 text-[11px] text-slate-800 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] font-bold w-[180px] text-right"
-                                autoFocus
-                              />
-                              
-                              {customerDropdownOpen === order.id && (
-                                <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg w-[240px] max-h-48 overflow-y-auto z-50 p-1 text-right divide-y divide-slate-100">
-                                  {customerSearchQuery.trim() && !approvedCustomers.some(c => c.name === customerSearchQuery.trim()) && (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setTempCustomerName(customerSearchQuery.trim());
-                                        setCustomerDropdownOpen(null);
-                                      }}
-                                      className="w-full text-right px-3 py-1.5 rounded-lg text-[10px] text-[#128C7E] font-bold hover:bg-slate-50 transition-colors"
-                                    >
-                                      استخدام "{customerSearchQuery.trim()}" (زبون جديد)
-                                    </button>
-                                  )}
-                                  
-                                  {approvedCustomers
-                                    .filter(c => c.name.toLowerCase().includes(customerSearchQuery.toLowerCase()))
-                                    .map((cust) => (
-                                      <button
-                                        key={cust.id}
-                                        type="button"
-                                        onClick={() => {
-                                          setTempCustomerName(cust.name);
-                                          setCustomerDropdownOpen(null);
-                                        }}
-                                        className={`w-full text-right px-3 py-1.5 rounded-lg text-[11px] transition-colors hover:bg-slate-50 ${
-                                          tempCustomerName === cust.name ? 'bg-emerald-50 text-[#128C7E] font-bold' : 'text-slate-700'
-                                        }`}
-                                      >
-                                        {cust.name}
-                                      </button>
-                                    ))
-                                  }
 
-                                  {approvedCustomers.filter(c => c.name.toLowerCase().includes(customerSearchQuery.toLowerCase())).length === 0 && !customerSearchQuery.trim() && (
-                                    <div className="p-2 text-center text-slate-400 text-[10px]">
-                                      اكتب اسماً للبحث...
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                handleSaveCustomerName(order.id);
-                                setCustomerDropdownOpen(null);
+                      {/* Customer Name / Editing Input */}
+                      {editingCustomerId === order.id ? (
+                        <div className="flex items-center gap-1.5 relative flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
+                          <div className="relative flex-1 min-w-0">
+                            <input
+                              type="text"
+                              value={tempCustomerName}
+                              onChange={(e) => {
+                                setTempCustomerName(e.target.value);
+                                setCustomerSearchQuery(e.target.value);
+                                setCustomerDropdownOpen(order.id);
                               }}
-                              className="p-1.5 text-emerald-600 hover:bg-emerald-50 border border-emerald-100 rounded-lg transition-colors cursor-pointer"
-                              title="حفظ الاسم"
-                            >
-                              <CheckSquare className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingCustomerId(null);
-                                setCustomerDropdownOpen(null);
+                              onFocus={() => {
+                                setCustomerSearchQuery(tempCustomerName);
+                                setCustomerDropdownOpen(order.id);
                               }}
-                              className="p-1.5 text-slate-450 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer"
-                              title="إلغاء"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 
-                              className="text-sm font-bold text-slate-800 cursor-pointer hover:text-[#128C7E] transition-colors"
-                              onClick={() => toggleOrderExpand(order.id)}
-                            >
-                              {order.customer_name}
-                            </h3>
-
-                            {/* Assigning status badge button */}
-                            {(() => {
-                              const orderTotal = Number(order.total_price || 0);
-                              if (orderTotal <= 0) return null;
-
-                              const isMatched = approvedCustomers.some(
-                                c => c.name.trim().toLowerCase() === order.customer_name.trim().toLowerCase()
-                              );
-
-                              if (!isMatched) {
-                                return (
+                              placeholder="ابحث أو اكتب اسم زبون..."
+                              className="w-full bg-white border border-slate-350 outline-none rounded-xl px-2.5 py-1 text-xs text-slate-800 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] font-bold text-right"
+                              autoFocus
+                            />
+                            
+                            {customerDropdownOpen === order.id && (
+                              <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg w-[240px] max-h-48 overflow-y-auto z-50 p-1 text-right divide-y divide-slate-100">
+                                {customerSearchQuery.trim() && !approvedCustomers.some(c => c.name === customerSearchQuery.trim()) && (
                                   <button
                                     type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setAssignModalOrder(order);
-                                      setSelectedCustomerForAssign('');
-                                      setAssignSearchQuery('');
+                                    onClick={() => {
+                                      setTempCustomerName(customerSearchQuery.trim());
+                                      setCustomerDropdownOpen(null);
                                     }}
-                                    className="inline-flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-2.5 py-0.5 rounded-lg text-xs cursor-pointer shadow-2xs transition-all active:scale-95"
-                                    title="هذا الاسم غير مسجل في قائمة الزبائن المعتمدين - اضغط لربطه بزَبون"
+                                    className="w-full text-right px-3 py-1.5 rounded-lg text-[10px] text-[#128C7E] font-bold hover:bg-slate-50 transition-colors"
                                   >
-                                    <UserCheck className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                                    <span>غير مربوط بزَبون • اضغط للربط</span>
+                                    استخدام "{customerSearchQuery.trim()}" (زبون جديد)
                                   </button>
-                                );
-                              }
+                                )}
+                                
+                                {approvedCustomers
+                                  .filter(c => c.name.toLowerCase().includes(customerSearchQuery.toLowerCase()))
+                                  .map((cust) => (
+                                    <button
+                                      key={cust.id}
+                                      type="button"
+                                      onClick={() => {
+                                        setTempCustomerName(cust.name);
+                                        setCustomerDropdownOpen(null);
+                                      }}
+                                      className={`w-full text-right px-3 py-1.5 rounded-lg text-[11px] transition-colors hover:bg-slate-50 ${
+                                        tempCustomerName === cust.name ? 'bg-emerald-50 text-[#128C7E] font-bold' : 'text-slate-700'
+                                      }`}
+                                    >
+                                      {cust.name}
+                                    </button>
+                                  ))
+                                }
 
+                                {approvedCustomers.filter(c => c.name.toLowerCase().includes(customerSearchQuery.toLowerCase())).length === 0 && !customerSearchQuery.trim() && (
+                                  <div className="p-2 text-center text-slate-400 text-[10px]">
+                                    اكتب اسماً للبحث...
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleSaveCustomerName(order.id);
+                              setCustomerDropdownOpen(null);
+                            }}
+                            className="p-1.5 text-emerald-600 hover:bg-emerald-50 border border-emerald-100 rounded-lg transition-colors cursor-pointer shrink-0"
+                            title="حفظ الاسم"
+                          >
+                            <CheckSquare className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingCustomerId(null);
+                              setCustomerDropdownOpen(null);
+                            }}
+                            className="p-1.5 text-slate-450 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer shrink-0"
+                            title="إلغاء"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                          <h3 
+                            className="text-sm font-black text-slate-900 truncate cursor-pointer hover:text-[#128C7E] transition-colors"
+                            onClick={() => toggleOrderExpand(order.id)}
+                          >
+                            {order.customer_name}
+                          </h3>
+
+                          {/* Customer match badge */}
+                          {(() => {
+                            const orderTotal = Number(order.total_price || 0);
+                            if (orderTotal <= 0) return null;
+
+                            const isMatched = approvedCustomers.some(
+                              c => c.name.trim().toLowerCase() === order.customer_name.trim().toLowerCase()
+                            );
+
+                            if (!isMatched) {
                               return (
                                 <button
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setAssignModalOrder(order);
-                                    const matched = approvedCustomers.find(c => c.name.trim().toLowerCase() === order.customer_name.trim().toLowerCase());
-                                    setSelectedCustomerForAssign(matched ? matched.id : '');
+                                    setSelectedCustomerForAssign('');
                                     setAssignSearchQuery('');
                                   }}
-                                  className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 font-bold px-2 py-0.5 rounded-md text-[10.5px] cursor-pointer transition-all"
-                                  title="زبون معتمد - اضغط لتعديل الربط إذا رغبت"
+                                  className="inline-flex items-center gap-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-2 py-0.5 rounded-lg text-[10px] cursor-pointer shadow-2xs transition-all active:scale-95 shrink-0"
+                                  title="هذا الاسم غير مسجل في قائمة الزبائن المعتمدين - اضغط لربطه بزَبون"
                                 >
-                                  <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
-                                  <span>مربوط ✓</span>
+                                  <UserCheck className="w-3 h-3 text-amber-600 shrink-0" />
+                                  <span>غير مربوط</span>
                                 </button>
                               );
-                            })()}
+                            }
 
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditingCustomerId(order.id);
-                                setTempCustomerName(order.customer_name);
-                                setCustomerSearchQuery(order.customer_name);
-                              }}
-                              className="p-1 text-slate-400 hover:text-[#128C7E] hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer shrink-0"
-                              title="تعديل اسم الزبون يدوياً"
-                            >
-                              <Edit2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
-                          <Clock className="w-3.5 h-3.5 text-slate-400" />
-                          <span>ساعة الاستلام: {formatTime(order.created_at)}</span>
+                            return (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setAssignModalOrder(order);
+                                  const matched = approvedCustomers.find(c => c.name.trim().toLowerCase() === order.customer_name.trim().toLowerCase());
+                                  setSelectedCustomerForAssign(matched ? matched.id : '');
+                                  setAssignSearchQuery('');
+                                }}
+                                className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 font-bold px-1.5 py-0.5 rounded-md text-[10px] cursor-pointer transition-all shrink-0"
+                                title="زبون معتمد - اضغط لتعديل الربط إذا رغبت"
+                              >
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                                <span>مربوط ✓</span>
+                              </button>
+                            );
+                          })()}
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingCustomerId(order.id);
+                              setTempCustomerName(order.customer_name);
+                              setCustomerSearchQuery(order.customer_name);
+                            }}
+                            className="p-1 text-slate-400 hover:text-[#128C7E] hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer shrink-0"
+                            title="تعديل اسم الزبون يدوياً"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
                         </div>
-                      </div>
+                      )}
                     </div>
-                    {/* On mobile, show the price badge here to save space on the button group */}
-                    <span className="sm:hidden bg-white border border-slate-200 text-emerald-600 font-extrabold px-2.5 py-1.5 rounded-xl text-xs self-center ml-2">
+
+                    {/* Total Price Badge */}
+                    <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 font-black px-2.5 py-1 rounded-xl text-xs sm:text-sm font-mono shrink-0 shadow-2xs">
                       {Number(order.total_price).toFixed(2)} TL
-                    </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 flex-wrap w-full sm:w-auto justify-end">
-                    {/* On desktop, show the price badge in the group */}
-                    <span className="hidden sm:inline-block bg-white border border-slate-200 text-emerald-600 font-extrabold px-3 py-1.5 rounded-xl text-xs">
-                      {Number(order.total_price).toFixed(2)} TL
-                    </span>
-                    <button
-                      onClick={() => handlePostponeOrder(order.id, 'postponed')}
-                      disabled={isUpdating}
-                      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-450 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-colors"
-                      title="إعادة تنشيط الطلبية ونقلها للنشطة"
-                    >
-                      <CalendarClock className="w-3.5 h-3.5" />
-                      <span>تنشيط</span>
-                    </button>
-                    <button
-                      onClick={() => handleFulfillOrder(order.id, order.customer_name)}
-                      disabled={isUpdating}
-                      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-450 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-colors"
-                      title="تحديد كـ تم التسليم ونقل للأرشيف"
-                    >
-                      <CheckSquare className="w-3.5 h-3.5" />
-                      <span>تم التسليم</span>
-                    </button>
-                    <button
-                      onClick={() => handleCancelOrder(order.id, order.customer_name)}
-                      disabled={isUpdating}
-                      className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 hover:text-rose-700 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-colors"
-                      title="إلغاء وحذف الطلبية"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>إلغاء</span>
-                    </button>
+
+                  {/* Second Line: Metadata (Time, Phone, Address) & Quick Action Buttons */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-0.5">
+                    {/* Metadata */}
+                    <div className="flex items-center gap-2 text-[10.5px] text-slate-500 flex-wrap">
+                      <div className="flex items-center gap-1 bg-white border border-slate-200 px-2 py-0.5 rounded-lg shadow-2xs">
+                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{formatTime(order.created_at)}</span>
+                      </div>
+                      {order.customer_phone && (
+                        <a 
+                          href={`tel:${order.customer_phone}`}
+                          className="flex items-center gap-1 text-slate-700 hover:text-emerald-700 bg-white border border-slate-200 px-2 py-0.5 rounded-lg font-bold font-mono transition-colors shadow-2xs"
+                        >
+                          <Phone className="w-3 h-3 text-slate-400" />
+                          <span>{order.customer_phone}</span>
+                        </a>
+                      )}
+                      {order.customer_address && (
+                        <div className="flex items-center gap-1 text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-lg truncate max-w-[200px] shadow-2xs" title={order.customer_address}>
+                          <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                          <span className="truncate">{order.customer_address}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-1.5 justify-end">
+                      <button
+                        onClick={() => handlePostponeOrder(order.id, 'postponed')}
+                        disabled={isUpdating}
+                        className="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all shadow-xs"
+                        title="إعادة تنشيط الطلبية ونقلها للنشطة"
+                      >
+                        <CalendarClock className="w-3.5 h-3.5" />
+                        <span>تنشيط</span>
+                      </button>
+                      <button
+                        onClick={() => handleFulfillOrder(order.id, order.customer_name)}
+                        disabled={isUpdating}
+                        className="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all shadow-xs"
+                        title="تحديد كـ تم التسليم ونقل للأرشيف"
+                      >
+                        <CheckSquare className="w-3.5 h-3.5" />
+                        <span>تم التسليم</span>
+                      </button>
+                      <button
+                        onClick={() => handleCancelOrder(order.id, order.customer_name)}
+                        disabled={isUpdating}
+                        className="flex-1 sm:flex-initial bg-rose-50 hover:bg-rose-100 active:scale-95 border border-rose-200 text-rose-600 hover:text-rose-700 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all"
+                        title="إلغاء وحذف الطلبية"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>إلغاء</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 

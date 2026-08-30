@@ -171,36 +171,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Main content layout wrapper */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header */}
-        <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 shrink-0 lg:justify-end print:hidden">
+        <header className="bg-white border-b border-slate-200 h-14 sm:h-16 flex items-center justify-between px-3.5 sm:px-6 shrink-0 lg:justify-end print:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
+            className="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            title="القائمة"
           >
             <Menu className="w-5 h-5" />
           </button>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <Link
               href="/"
               target="_blank"
-              className="text-xs font-bold text-emerald-700 hover:text-white bg-emerald-50 hover:bg-[#075E54] border border-emerald-600/20 px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5"
+              className="text-[11px] sm:text-xs font-bold text-emerald-700 hover:text-white bg-emerald-50 hover:bg-[#075E54] border border-emerald-600/20 px-2.5 sm:px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>معاينة صفحة العروض</span>
+              <span className="hidden sm:inline">معاينة صفحة العروض</span>
+              <span className="sm:hidden">العروض</span>
             </Link>
             <Link
               href="/products"
               target="_blank"
-              className="text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5"
+              className="text-[11px] sm:text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-2.5 sm:px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1"
             >
               <ShoppingBag className="w-3.5 h-3.5" />
-              <span>معاينة الكتالوج</span>
+              <span className="hidden sm:inline">معاينة الكتالوج</span>
+              <span className="sm:hidden">الكتالوج</span>
             </Link>
           </div>
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-3 sm:p-6 overflow-y-auto">
           <div className="max-w-5xl mx-auto">
             {children}
           </div>
