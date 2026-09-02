@@ -113,8 +113,8 @@ const compressImage = (file: File, maxWidth = 800): Promise<Blob | File> => {
           canvas.toBlob(
             (blob) => {
               if (blob) {
-                const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
-                const compressedFile = new File([blob], `${baseName.replace(/\s+/g, '_')}_opt_${Date.now()}.jpg`, {
+                const uniqueSafeName = `product_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.jpg`;
+                const compressedFile = new File([blob], uniqueSafeName, {
                   type: 'image/jpeg',
                   lastModified: Date.now(),
                 });
@@ -670,21 +670,19 @@ export default function AdminProducts() {
           }
           finalImageUrl = null;
         } else if (editImageAction === 'new' && editImageFile) {
+          const safeUniqueId = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
           let fileToUpload: File | Blob = editImageFile;
-          let fileName = `product-${Date.now()}.jpg`;
+          let fileName = `product_${safeUniqueId}.jpg`;
 
           try {
             const compressed = await compressImage(editImageFile);
             fileToUpload = compressed;
-            if (compressed instanceof File) {
-              fileName = compressed.name;
-            } else {
-              fileName = `product-${Date.now()}.jpg`;
-            }
+            fileName = `product_${safeUniqueId}.jpg`;
           } catch (compressErr) {
             console.warn('Image compression failed, uploading original image:', compressErr);
-            const fileExt = editImageFile.name.split('.').pop();
-            fileName = `product-${Date.now()}.${fileExt}`;
+            const rawExt = editImageFile.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+            const ext = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'].includes(rawExt) ? rawExt : 'jpg';
+            fileName = `product_${safeUniqueId}.${ext}`;
           }
 
           const filePath = `${fileName}`;
@@ -823,21 +821,19 @@ export default function AdminProducts() {
         // 1. Upload image to Storage if exists
         if (imageFile) {
           // Compress image client-side first
+          const safeUniqueId = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
           let fileToUpload: File | Blob = imageFile;
-          let fileName = `product-${Date.now()}.jpg`;
+          let fileName = `product_${safeUniqueId}.jpg`;
 
           try {
             const compressed = await compressImage(imageFile);
             fileToUpload = compressed;
-            if (compressed instanceof File) {
-              fileName = compressed.name;
-            } else {
-              fileName = `product-${Date.now()}.jpg`;
-            }
+            fileName = `product_${safeUniqueId}.jpg`;
           } catch (compressErr) {
             console.warn('Image compression failed, uploading original image:', compressErr);
-            const fileExt = imageFile.name.split('.').pop();
-            fileName = `product-${Date.now()}.${fileExt}`;
+            const rawExt = imageFile.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+            const ext = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'].includes(rawExt) ? rawExt : 'jpg';
+            fileName = `product_${safeUniqueId}.${ext}`;
           }
 
           const filePath = `${fileName}`;

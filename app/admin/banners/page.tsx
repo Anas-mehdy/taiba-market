@@ -72,8 +72,8 @@ const compressImage = (file: File, maxWidth = 1200): Promise<Blob | File> => {
         canvas.toBlob(
           (blob) => {
             if (blob) {
-              const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
-              const compressedFile = new File([blob], `${baseName.replace(/\s+/g, '_')}_banner_${Date.now()}.jpg`, {
+              const uniqueSafeName = `banner_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.jpg`;
+              const compressedFile = new File([blob], uniqueSafeName, {
                 type: 'image/jpeg',
                 lastModified: Date.now(),
               });
@@ -195,7 +195,7 @@ export default function AdminBanners() {
       if (isUrlConfigured && imageFile) {
         // Compress image
         const compressed = await compressImage(imageFile);
-        const fileName = `banner-${Date.now()}.jpg`;
+        const fileName = `banner-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
 
         const { error: uploadError } = await supabase.storage
           .from('banner-images')
