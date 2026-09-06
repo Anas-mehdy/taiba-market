@@ -178,8 +178,8 @@ export default function AdminCustomers() {
     <div className="space-y-6 font-sans text-right" dir="rtl">
       {/* Offline Banner */}
       {usingMock && (
-        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-800 px-4 py-3 rounded-2xl text-xs flex items-center gap-2.5 shadow-sm">
-          <AlertCircle className="w-5 h-5 shrink-0 text-amber-600" />
+        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 px-4 py-3 rounded-2xl text-xs flex items-center gap-2.5 shadow-sm">
+          <AlertCircle className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400" />
           <span>وضع العرض التجريبي لدليل الزبائن نشط. يتم الحفظ محلياً.</span>
         </div>
       )}
@@ -187,13 +187,13 @@ export default function AdminCustomers() {
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-800">دليل الزبائن</h1>
-          <p className="text-xs text-slate-500 mt-1">سجل بأسماء زبائن الماركت وأرقام هواتفهم لتسهيل المتابعة وإكمال الفواتير</p>
+          <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">دليل الزبائن</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">سجل بأسماء زبائن الماركت وأرقام هواتفهم لتسهيل المتابعة وإكمال الفواتير</p>
         </div>
         <button
           onClick={fetchCustomers}
           disabled={loading}
-          className="p-2.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-600 rounded-xl transition-all cursor-pointer shadow-sm disabled:opacity-50"
+          className="p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-600 dark:text-slate-400 rounded-xl transition-all cursor-pointer shadow-sm disabled:opacity-50"
         >
           <RefreshCw className="w-4 h-4" />
         </button>
@@ -201,40 +201,40 @@ export default function AdminCustomers() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Add Customer */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm h-fit space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-            <Users className="w-5 h-5 text-emerald-600" />
-            <h2 className="text-sm font-bold text-slate-800">إضافة زبون جديد</h2>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm h-fit space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">إضافة زبون جديد</h2>
           </div>
           
           <form onSubmit={handleAddCustomer} className="space-y-3.5">
             <div className="space-y-1">
-              <label className="block text-xs font-bold text-slate-600">اسم الزبون / العائلة</label>
+              <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">اسم الزبون / العائلة</label>
               <input
                 type="text"
                 placeholder="مثال: أبو أحمد، أم النور..."
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-250 outline-none rounded-xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all font-bold"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-250 dark:border-slate-700 outline-none rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-800 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all font-bold"
                 required
               />
             </div>
 
             <div className="space-y-1">
-              <label className="block text-xs font-bold text-slate-600">رقم الهاتف (اختياري)</label>
+              <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">رقم الهاتف (اختياري)</label>
               <input
                 type="tel"
                 placeholder="05xxxxxxxx"
                 value={newPhone}
                 onChange={(e) => setNewPhone(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-250 outline-none rounded-xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all ltr"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-250 dark:border-slate-700 outline-none rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-800 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all ltr"
               />
             </div>
 
             <button
               type="submit"
               disabled={isUpdating || !newName.trim()}
-              className="w-full bg-[#075E54] hover:bg-[#128C7E] disabled:bg-slate-250 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all mt-2"
+              className="w-full bg-[#075E54] hover:bg-[#128C7E] disabled:bg-slate-250 dark:disabled:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all mt-2"
             >
               <Plus className="w-4 h-4" />
               <span>{isUpdating ? 'جاري الحفظ...' : 'حفظ في الدليل'}</span>
@@ -243,32 +243,32 @@ export default function AdminCustomers() {
         </div>
 
         {/* Right Column: Manage Customers List */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-slate-700" />
-              <h2 className="text-sm font-bold text-slate-800">قائمة الزبائن المسجلين ({customers.length})</h2>
+              <Users className="w-5 h-5 text-slate-700 dark:text-slate-300" />
+              <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">قائمة الزبائن المسجلين ({customers.length})</h2>
             </div>
             
             <div className="relative w-full sm:w-64">
-              <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="ابحث بالاسم أو الرقم..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-250 outline-none rounded-xl pr-9 pl-4 py-1.5 text-xs text-slate-800 focus:bg-white focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-250 dark:border-slate-700 outline-none rounded-xl pr-9 pl-4 py-1.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-800 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all"
               />
             </div>
           </div>
 
           {loading ? (
             <div className="py-12 text-center text-slate-400 flex flex-col items-center justify-center gap-3">
-              <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+              <Loader2 className="w-8 h-8 animate-spin text-emerald-600 dark:text-emerald-400" />
               <p className="text-xs font-bold">جاري تحميل دليل الزبائن...</p>
             </div>
           ) : filteredCustomers.length > 0 ? (
-            <div className="divide-y divide-slate-100 max-h-[500px] overflow-y-auto pr-1">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[500px] overflow-y-auto pr-1">
               {filteredCustomers.map((cust) => {
                 return (
                   <div key={cust.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -279,7 +279,7 @@ export default function AdminCustomers() {
                           value={tempName}
                           onChange={(e) => setTempName(e.target.value)}
                           placeholder="الاسم"
-                          className="flex-1 bg-white border border-slate-300 outline-none rounded-xl px-3 py-1.5 text-xs text-slate-800 font-bold"
+                          className="flex-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 outline-none rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 font-bold"
                           autoFocus
                         />
                         <input
@@ -287,18 +287,18 @@ export default function AdminCustomers() {
                           value={tempPhone}
                           onChange={(e) => setTempPhone(e.target.value)}
                           placeholder="الهاتف"
-                          className="w-32 bg-white border border-slate-300 outline-none rounded-xl px-3 py-1.5 text-xs text-slate-800 ltr"
+                          className="w-32 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 outline-none rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 ltr"
                         />
                         <button
                           onClick={() => handleEditCustomer(cust.id)}
-                          className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-xl"
+                          className="p-2 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-xl"
                           title="حفظ"
                         >
                           <CheckSquare className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => setEditingId(null)}
-                          className="p-2 text-slate-400 hover:bg-slate-100 rounded-xl"
+                          className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
                           title="إلغاء"
                         >
                           <X className="w-4 h-4" />
@@ -308,10 +308,10 @@ export default function AdminCustomers() {
                       <>
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-black text-slate-800">{cust.name}</span>
+                            <span className="text-xs font-black text-slate-800 dark:text-slate-100">{cust.name}</span>
                           </div>
                           {cust.phone && (
-                            <p className="text-[11px] text-slate-500 font-mono flex items-center gap-1 ltr justify-end">
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono flex items-center gap-1 ltr justify-end">
                               <span>{cust.phone}</span>
                               <Phone className="w-3 h-3 text-slate-400 inline" />
                             </p>
@@ -327,7 +327,7 @@ export default function AdminCustomers() {
                               setTempName(cust.name);
                               setTempPhone(cust.phone || '');
                             }}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                            className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-lg transition-colors cursor-pointer"
                             title="تعديل البيانات"
                           >
                             <Edit2 className="w-4 h-4" />
@@ -336,7 +336,7 @@ export default function AdminCustomers() {
                           {/* Delete */}
                           <button
                             onClick={() => handleDeleteCustomer(cust.id, cust.name)}
-                            className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            className="p-1.5 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg transition-colors cursor-pointer"
                             title="حذف من الدليل"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -350,8 +350,8 @@ export default function AdminCustomers() {
             </div>
           ) : (
             <div className="text-center py-10 space-y-2">
-              <Users className="w-10 h-10 text-slate-300 mx-auto" />
-              <h3 className="text-xs font-bold text-slate-700">لا يوجد زبائن مطابقين</h3>
+              <Users className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto" />
+              <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300">لا يوجد زبائن مطابقين</h3>
             </div>
           )}
         </div>

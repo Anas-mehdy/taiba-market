@@ -762,8 +762,8 @@ export default function AdminStatistics() {
       <div className="space-y-6 print:hidden">
         {/* Offline Demo Banner */}
       {usingMockData && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-2xl text-xs flex items-center gap-2.5 shadow-sm">
-          <AlertCircle className="w-5 h-5 shrink-0 text-amber-600" />
+        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 px-4 py-3 rounded-2xl text-xs flex items-center gap-2.5 shadow-sm">
+          <AlertCircle className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400" />
           <span>وضع العرض التجريبي للمحفوظات نشط. يمكنك اختبار الفلاتر الزمنية والبحث عن المحلات لمشاهدة تحديث المؤشرات تلقائياً.</span>
         </div>
       )}
@@ -771,12 +771,12 @@ export default function AdminStatistics() {
       {/* Header Info */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-800">إحصائيات وأرشيف المبيعات</h1>
-          <p className="text-xs text-slate-500 mt-1">تتبع المبيعات الإجمالية، فحص الفواتير المؤرشفة، وفلترة طلبيات الزبائن حسب الاسم والتاريخ</p>
+          <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">إحصائيات وأرشيف المبيعات</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">تتبع المبيعات الإجمالية، فحص الفواتير المؤرشفة، وفلترة طلبيات الزبائن حسب الاسم والتاريخ</p>
         </div>
         <button
           onClick={fetchHistoricalOrders}
-          className="p-2.5 bg-white border border-slate-200 hover:border-slate-350 text-slate-600 hover:text-slate-900 rounded-xl transition-all cursor-pointer shadow-sm"
+          className="p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 rounded-xl transition-all cursor-pointer shadow-sm"
           title="تحديث البيانات"
         >
           <RefreshCw className="w-4 h-4" />
@@ -784,14 +784,14 @@ export default function AdminStatistics() {
       </div>
 
       {/* Dynamic Filters Form Bar */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 items-end">
           
           {/* Customer Search input */}
           <div className="space-y-1.5 lg:col-span-1">
-            <label className="block text-xs font-bold text-slate-600">بحث باسم المشتري / المحل</label>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">بحث باسم المشتري / المحل</label>
             <div className="relative">
-              <span className="absolute inset-y-0 right-3 flex items-center text-slate-400">
+              <span className="absolute inset-y-0 right-3 flex items-center text-slate-400 dark:text-slate-500">
                 <Search className="w-4 h-4" />
               </span>
               <input
@@ -799,16 +799,16 @@ export default function AdminStatistics() {
                 placeholder="ابحث عن زبون..."
                 value={customerFilter}
                 onChange={(e) => setCustomerFilter(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-250 outline-none rounded-xl pr-9 pl-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-right font-bold"
+                className="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-250 dark:border-slate-700 outline-none rounded-xl pr-9 pl-4 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-800 focus:border-emerald-600 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-600 transition-all text-right font-bold"
               />
             </div>
           </div>
 
           {/* Start Date Picker Input */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-slate-600">من تاريخ</label>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">من تاريخ</label>
             <div className="relative">
-              <span className="absolute inset-y-0 right-3 flex items-center text-slate-400 pointer-events-none">
+              <span className="absolute inset-y-0 right-3 flex items-center text-slate-400 dark:text-slate-500 pointer-events-none">
                 <Calendar className="w-4 h-4" />
               </span>
               <input
@@ -816,16 +816,16 @@ export default function AdminStatistics() {
                 value={startDateFilter}
                 onChange={(e) => setStartDateFilter(e.target.value)}
                 onClick={(e) => e.currentTarget.showPicker()}
-                className="w-full bg-slate-50 border border-slate-250 outline-none rounded-xl pr-9 pl-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-right cursor-pointer font-bold"
+                className="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-250 dark:border-slate-700 outline-none rounded-xl pr-9 pl-4 py-2.5 text-xs text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:border-emerald-600 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-600 transition-all text-right cursor-pointer font-bold"
               />
             </div>
           </div>
 
           {/* End Date Picker Input */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-slate-600">إلى تاريخ</label>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">إلى تاريخ</label>
             <div className="relative">
-              <span className="absolute inset-y-0 right-3 flex items-center text-slate-400 pointer-events-none">
+              <span className="absolute inset-y-0 right-3 flex items-center text-slate-400 dark:text-slate-500 pointer-events-none">
                 <Calendar className="w-4 h-4" />
               </span>
               <input
@@ -833,7 +833,7 @@ export default function AdminStatistics() {
                 value={endDateFilter}
                 onChange={(e) => setEndDateFilter(e.target.value)}
                 onClick={(e) => e.currentTarget.showPicker()}
-                className="w-full bg-slate-50 border border-slate-250 outline-none rounded-xl pr-9 pl-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-right cursor-pointer font-bold"
+                className="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-250 dark:border-slate-700 outline-none rounded-xl pr-9 pl-4 py-2.5 text-xs text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:border-emerald-600 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-600 transition-all text-right cursor-pointer font-bold"
               />
             </div>
           </div>
@@ -846,7 +846,7 @@ export default function AdminStatistics() {
                 setEndDateFilter('');
                 setCustomerFilter('');
               }}
-              className="h-10 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer w-full shadow-sm"
+              className="h-10 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer w-full shadow-sm"
             >
               <X className="w-4.5 h-4.5" />
               <span>إعادة تعيين الفلاتر</span>
@@ -861,54 +861,54 @@ export default function AdminStatistics() {
       {/* FILTERED KPI STATS CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div 
-          className="bg-white border border-slate-200 rounded-2xl p-5 flex items-center gap-4 shadow-sm"
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex items-center gap-4 shadow-sm"
           style={{ transform: 'translate3d(0, 0, 0)', backfaceVisibility: 'hidden' }}
         >
-          <div className="bg-emerald-50 p-4 rounded-2xl text-emerald-650 border border-emerald-200/50">
-            <DollarSign className="w-6 h-6 text-emerald-600" />
+          <div className="bg-emerald-50 dark:bg-emerald-950/40 p-4 rounded-2xl text-emerald-650 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50">
+            <DollarSign className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <p className="text-xs text-slate-500 font-bold">مبيعات الفلاتر الحالية</p>
-            <h3 className="text-2xl font-black text-emerald-600 mt-1">{filteredRevenue.toFixed(2)} TL</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">مبيعات الفلاتر الحالية</p>
+            <h3 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{filteredRevenue.toFixed(2)} TL</h3>
           </div>
         </div>
 
         <div 
-          className="bg-white border border-slate-200 rounded-2xl p-5 flex items-center gap-4 shadow-sm"
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex items-center gap-4 shadow-sm"
           style={{ transform: 'translate3d(0, 0, 0)', backfaceVisibility: 'hidden' }}
         >
-          <div className="bg-emerald-50 p-4 rounded-2xl text-emerald-650 border border-emerald-200/50">
-            <FileText className="w-6 h-6 text-emerald-600" />
+          <div className="bg-emerald-50 dark:bg-emerald-950/40 p-4 rounded-2xl text-emerald-650 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50">
+            <FileText className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <p className="text-xs text-slate-500 font-bold">فواتير سُلمت في النطاق</p>
-            <h3 className="text-2xl font-black text-slate-800 mt-1">{filteredInvoicesCount} فواتير</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">فواتير سُلمت في النطاق</p>
+            <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 mt-1">{filteredInvoicesCount} فواتير</h3>
           </div>
         </div>
 
         <div 
-          className="bg-white border border-slate-200 rounded-2xl p-5 flex items-center gap-4 shadow-sm"
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex items-center gap-4 shadow-sm"
           style={{ transform: 'translate3d(0, 0, 0)', backfaceVisibility: 'hidden' }}
         >
-          <div className="bg-emerald-50 p-4 rounded-2xl text-emerald-650 border border-emerald-200/50">
-            <Users className="w-6 h-6 text-emerald-600" />
+          <div className="bg-emerald-50 dark:bg-emerald-950/40 p-4 rounded-2xl text-emerald-650 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50">
+            <Users className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <p className="text-xs text-slate-500 font-bold">زبائن مميزين مخدومين</p>
-            <h3 className="text-2xl font-black text-slate-800 mt-1">{filteredUniqueClientsCount} زبائن</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">زبائن مميزين مخدومين</p>
+            <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 mt-1">{filteredUniqueClientsCount} زبائن</h3>
           </div>
         </div>
       </div>
 
       {/* Historical Detailed Breakdown */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-5 shadow-sm">
-        <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-          <div className="bg-purple-50 p-2.5 rounded-xl text-purple-650 border border-purple-200/50">
-            <TrendingUp className="w-5 h-5 text-purple-600" />
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-5 shadow-sm">
+        <div className="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="bg-purple-50 dark:bg-purple-950/40 p-2.5 rounded-xl text-purple-650 dark:text-purple-400 border border-purple-200/50 dark:border-purple-800/50">
+            <TrendingUp className="w-5 h-5 text-purple-600 dark:text-purple-400" />
           </div>
           <div>
-            <h2 className="text-md font-bold text-slate-800">سجل الفواتير الفردية المستلمة</h2>
-            <p className="text-[11px] text-slate-500">تصفح الفواتير المطابقة بالتفصيل والأسعار وقت الشراء</p>
+            <h2 className="text-md font-bold text-slate-800 dark:text-slate-100">سجل الفواتير الفردية المستلمة</h2>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">تصفح الفواتير المطابقة بالتفصيل والأسعار وقت الشراء</p>
           </div>
         </div>
 
@@ -922,15 +922,15 @@ export default function AdminStatistics() {
             {filteredOrders.map((order) => (
               <div 
                 key={order.id}
-                className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4 hover:border-slate-300 transition-all shadow-xs"
+                className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs"
               >
                 {/* Order Header Info */}
-                <div className={`flex items-center justify-between ${expandedOrders[order.id] || editingOrderId === order.id ? 'pb-3 border-b border-slate-200' : ''}`}>
+                <div className={`flex items-center justify-between ${expandedOrders[order.id] || editingOrderId === order.id ? 'pb-3 border-b border-slate-200 dark:border-slate-700' : ''}`}>
                   <div className="flex items-center gap-2.5">
                     {/* Collapse/Expand Arrow Button */}
                     <button
                       onClick={() => toggleOrderExpand(order.id)}
-                      className="p-1 rounded-lg text-slate-500 hover:bg-slate-200 active:scale-95 transition-all cursor-pointer flex items-center justify-center shrink-0 border border-slate-200"
+                      className="p-1 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition-all cursor-pointer flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700"
                       title={expandedOrders[order.id] ? "إغلاق التفاصيل" : "عرض التفاصيل"}
                     >
                       {expandedOrders[order.id] || editingOrderId === order.id ? (
@@ -941,7 +941,7 @@ export default function AdminStatistics() {
                     </button>
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-sm font-bold text-slate-800">{order.customer_name}</h3>
+                        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{order.customer_name}</h3>
                         {(() => {
                           const orderTotal = Number(order.total_price || 0);
                           if (orderTotal <= 0) return null;
@@ -960,10 +960,10 @@ export default function AdminStatistics() {
                                   setSelectedCustomerForAssign('');
                                   setAssignSearchQuery('');
                                 }}
-                                className="inline-flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-2.5 py-0.5 rounded-lg text-xs cursor-pointer shadow-2xs transition-all active:scale-95"
+                                className="inline-flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 font-extrabold px-2.5 py-0.5 rounded-lg text-xs cursor-pointer shadow-2xs transition-all active:scale-95"
                                 title="هذا الاسم غير مسجل في قائمة الزبائن المعتمدين - اضغط لربطه بزَبون"
                               >
-                                <UserCheck className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                <UserCheck className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                                 <span>غير مربوط بزَبون • اضغط للربط</span>
                               </button>
                             );
@@ -979,16 +979,16 @@ export default function AdminStatistics() {
                                 setSelectedCustomerForAssign(matched ? matched.id : '');
                                 setAssignSearchQuery('');
                               }}
-                              className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 font-bold px-2 py-0.5 rounded-md text-[10.5px] cursor-pointer transition-all"
+                              className="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 font-bold px-2 py-0.5 rounded-md text-[10.5px] cursor-pointer transition-all"
                               title="زبون معتمد - اضغط لتعديل الربط إذا رغبت"
                             >
-                              <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
                               <span>مربوط ✓</span>
                             </button>
                           );
                         })()}
                       </div>
-                      <div className="flex items-center gap-2 text-[10px] text-slate-550 mt-1.5">
+                      <div className="flex items-center gap-2 text-[10px] text-slate-550 dark:text-slate-400 mt-1.5">
                         <span>التاريخ: {formatDate(order.created_at)}</span>
                         <span>•</span>
                         <span>الوقت: {formatTime(order.created_at)}</span>
@@ -1001,7 +1001,7 @@ export default function AdminStatistics() {
                       </div>
                     </div>
                   </div>
-                  <span className="bg-white border border-slate-200 text-emerald-600 font-extrabold px-3 py-1.5 rounded-xl text-xs shadow-sm">
+                  <span className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-emerald-600 dark:text-emerald-400 font-extrabold px-3 py-1.5 rounded-xl text-xs shadow-sm">
                     {Number(order.total_price).toFixed(2)} TL
                   </span>
                 </div>
@@ -1013,26 +1013,26 @@ export default function AdminStatistics() {
                     /* === EDIT MODE === */
                     <>
                       {order.order_items.map((item) => (
-                        <div key={item.id} className="bg-white border border-slate-200 rounded-xl p-3 space-y-2.5">
+                        <div key={item.id} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 space-y-2.5">
                           {/* Item Name Row */}
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                               {item.product_image || item.products?.image_url ? (
                                 <img 
                                   src={item.product_image || item.products?.image_url || undefined} 
-                                  className="w-10 h-10 rounded-lg object-cover shrink-0 border border-slate-200" 
+                                  className="w-10 h-10 rounded-lg object-cover shrink-0 border border-slate-200 dark:border-slate-700" 
                                   alt={item.product_name || item.products?.name || ''} 
                                 />
                               ) : (
-                                <ShoppingBag className="w-10 h-10 p-1.5 bg-slate-50 text-slate-400 border border-slate-200 rounded-lg shrink-0" />
+                                <ShoppingBag className="w-10 h-10 p-1.5 bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-lg shrink-0" />
                               )}
-                              <span className="font-bold text-xs text-slate-800">{item.product_name || item.products?.name || 'منتج غير متوفر'}</span>
+                              <span className="font-bold text-xs text-slate-800 dark:text-slate-100">{item.product_name || item.products?.name || 'منتج غير متوفر'}</span>
                             </div>
                             <button
                               type="button"
                               onClick={() => handleDeleteArchivedOrderItem(order.id, item.id)}
                               disabled={isUpdating}
-                              className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0"
+                              className="p-1.5 text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg transition-colors cursor-pointer shrink-0"
                               title="حذف هذا البند"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1043,7 +1043,7 @@ export default function AdminStatistics() {
                           <div className="flex items-center justify-between gap-2 flex-wrap">
                             <div className="flex items-center gap-2">
                               {/* Quantity Counter */}
-                              <div className="flex items-center border border-slate-250 rounded-lg overflow-hidden bg-white" dir="ltr">
+                              <div className="flex items-center border border-slate-250 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900" dir="ltr">
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -1052,7 +1052,7 @@ export default function AdminStatistics() {
                                       setEditedQuantities(prev => ({ ...prev, [item.id]: currentQty - 1 }));
                                     }
                                   }}
-                                  className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-slate-600 font-extrabold cursor-pointer border-r border-slate-200 transition-colors"
+                                  className="px-2.5 py-1 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 active:bg-slate-200 dark:active:bg-slate-600 text-slate-600 dark:text-slate-300 font-extrabold cursor-pointer border-r border-slate-200 dark:border-slate-700 transition-colors"
                                   disabled={isUpdating}
                                 >
                                   -
@@ -1065,7 +1065,7 @@ export default function AdminStatistics() {
                                     const val = parseInt(e.target.value) || 1;
                                     setEditedQuantities(prev => ({ ...prev, [item.id]: val }));
                                   }}
-                                  className="w-8 text-center text-xs font-bold font-mono outline-none border-none py-1 text-slate-800"
+                                  className="w-8 text-center text-xs font-bold font-mono outline-none border-none py-1 text-slate-800 dark:text-slate-100 bg-transparent"
                                   disabled={isUpdating}
                                 />
                                 <button
@@ -1074,13 +1074,13 @@ export default function AdminStatistics() {
                                     const currentQty = editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity;
                                     setEditedQuantities(prev => ({ ...prev, [item.id]: currentQty + 1 }));
                                   }}
-                                  className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-slate-600 font-extrabold cursor-pointer border-l border-slate-200 transition-colors"
+                                  className="px-2.5 py-1 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 active:bg-slate-200 dark:active:bg-slate-600 text-slate-600 dark:text-slate-300 font-extrabold cursor-pointer border-l border-slate-200 dark:border-slate-700 transition-colors"
                                   disabled={isUpdating}
                                 >
                                   +
                                 </button>
                               </div>
-                              <span className="text-xs font-bold text-slate-500">صندوق ×</span>
+                              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">صندوق ×</span>
                             </div>
 
                             <div className="flex items-center gap-1.5">
@@ -1096,7 +1096,7 @@ export default function AdminStatistics() {
                                   onChange={(e) => {
                                     setEditedPrices(prev => ({ ...prev, [item.id]: e.target.value }));
                                   }}
-                                  className="w-16 bg-white border border-slate-250 outline-none rounded-lg px-1.5 py-1 text-xs text-slate-800 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-center font-bold font-mono"
+                                  className="w-16 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 outline-none rounded-lg px-1.5 py-1 text-xs text-slate-800 dark:text-slate-100 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-center font-bold font-mono"
                                   disabled={isUpdating}
                                 />
                                 {focusedItemId === item.id && lastSoldPrices[item.product_id || item.product_name || ''] !== undefined && (
@@ -1115,28 +1115,28 @@ export default function AdminStatistics() {
                                   </button>
                                 )}
                               </div>
-                              <span className="text-[10px] text-slate-450 font-bold">TL</span>
+                              <span className="text-[10px] text-slate-450 dark:text-slate-400 font-bold">TL</span>
                             </div>
                           </div>
                         </div>
                       ))}
 
                       {/* إحصائية عدد الصناديق الإجمالي للفاتورة */}
-                      <div className="flex justify-between items-center text-xs font-extrabold text-[#128C7E] bg-emerald-50/30 border border-emerald-100/80 rounded-xl px-3.5 py-2 mt-2 shadow-2xs">
+                      <div className="flex justify-between items-center text-xs font-extrabold text-[#128C7E] dark:text-emerald-400 bg-emerald-50/30 dark:bg-emerald-950/20 border border-emerald-100/80 dark:border-emerald-900/40 rounded-xl px-3.5 py-2 mt-2 shadow-2xs">
                         <span>إجمالي عدد الصناديق المطلوبة:</span>
-                        <span className="font-mono text-sm bg-[#128C7E]/10 px-2 py-0.5 rounded-lg">
+                        <span className="font-mono text-sm bg-[#128C7E]/10 dark:bg-[#128C7E]/25 px-2 py-0.5 rounded-lg">
                           {order.order_items.reduce((sum, item) => sum + (editedQuantities[item.id] !== undefined ? editedQuantities[item.id] : item.quantity), 0)} صندوق
                         </span>
                       </div>
 
                       {/* Add product forms */}
-                      <div className="mt-3 pt-2 border-t border-dashed border-slate-200">
+                      <div className="mt-3 pt-2 border-t border-dashed border-slate-200 dark:border-slate-700">
                         {!showAddForm[order.id] && !showCustomAddForm[order.id] ? (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <button
                               type="button"
                               onClick={() => setShowAddForm(prev => ({ ...prev, [order.id]: true }))}
-                              className="w-full py-2 border border-dashed border-slate-350 hover:border-[#128C7E] rounded-xl text-xs text-slate-600 hover:text-[#128C7E] bg-white transition-all flex items-center justify-center gap-1 cursor-pointer font-bold"
+                              className="w-full py-2 border border-dashed border-slate-350 dark:border-slate-700 hover:border-[#128C7E] dark:hover:border-[#128C7E] rounded-xl text-xs text-slate-600 dark:text-slate-300 hover:text-[#128C7E] bg-white dark:bg-slate-800 transition-all flex items-center justify-center gap-1 cursor-pointer font-bold"
                             >
                               <Plus className="w-4 h-4" />
                               <span>إضافة منتج للفاتورة</span>
@@ -1144,33 +1144,33 @@ export default function AdminStatistics() {
                             <button
                               type="button"
                               onClick={() => setShowCustomAddForm(prev => ({ ...prev, [order.id]: true }))}
-                              className="w-full py-2 border border-dashed border-slate-350 hover:border-amber-500 rounded-xl text-xs text-slate-600 hover:text-amber-600 bg-white transition-all flex items-center justify-center gap-1 cursor-pointer font-bold"
+                              className="w-full py-2 border border-dashed border-slate-350 dark:border-slate-700 hover:border-amber-500 rounded-xl text-xs text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 bg-white dark:bg-slate-800 transition-all flex items-center justify-center gap-1 cursor-pointer font-bold"
                             >
                               <Plus className="w-4 h-4" />
                               <span>اضافة منتج غير موجود بالمتجر</span>
                             </button>
                           </div>
                         ) : showAddForm[order.id] ? (
-                          <div className="bg-slate-100 border border-slate-200 rounded-xl p-3.5 space-y-3.5 shadow-2xs relative">
+                          <div className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3.5 space-y-3.5 shadow-2xs relative">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs font-extrabold text-slate-700">إضافة بند جديد للفاتورة</span>
-                              <button type="button" onClick={() => { setShowAddForm(prev => ({ ...prev, [order.id]: false })); setSelectedProdForOrder(prev => ({ ...prev, [order.id]: '' })); setProdSearchQuery(prev => ({ ...prev, [order.id]: '' })); }} className="p-1 hover:bg-slate-250 rounded-lg transition-colors cursor-pointer text-slate-400 hover:text-slate-600">
+                              <span className="text-xs font-extrabold text-slate-700 dark:text-slate-200">إضافة بند جديد للفاتورة</span>
+                              <button type="button" onClick={() => { setShowAddForm(prev => ({ ...prev, [order.id]: false })); setSelectedProdForOrder(prev => ({ ...prev, [order.id]: '' })); setProdSearchQuery(prev => ({ ...prev, [order.id]: '' })); }} className="p-1 hover:bg-slate-250 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300">
                                 <X className="w-4 h-4" />
                               </button>
                             </div>
                             {/* Search input */}
                             <div className="space-y-1">
-                              <label className="text-[10px] text-slate-500 font-bold block">بحث عن المنتج في المتجر</label>
+                              <label className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block">بحث عن المنتج في المتجر</label>
                               <div className="relative">
-                                <Search className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2" />
-                                <input type="text" placeholder="اكتب اسم المنتج للتصفية..." value={prodSearchQuery[order.id] || ''} onChange={(e) => setProdSearchQuery(prev => ({ ...prev, [order.id]: e.target.value }))} className="w-full bg-white border border-slate-250 outline-none rounded-lg pr-8 pl-3 py-2 text-xs text-slate-800 placeholder-slate-400 text-right font-bold focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all" />
+                                <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2" />
+                                <input type="text" placeholder="اكتب اسم المنتج للتصفية..." value={prodSearchQuery[order.id] || ''} onChange={(e) => setProdSearchQuery(prev => ({ ...prev, [order.id]: e.target.value }))} className="w-full bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 outline-none rounded-lg pr-8 pl-3 py-2 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-right font-bold focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all" />
                               </div>
                             </div>
                             {/* Product list */}
-                            <div className="max-h-32 overflow-y-auto space-y-1 border border-slate-200 rounded-lg bg-white p-1.5">
+                            <div className="max-h-32 overflow-y-auto space-y-1 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 p-1.5">
                               {allProducts.filter(p => !prodSearchQuery[order.id] || p.name.toLowerCase().includes((prodSearchQuery[order.id] || '').toLowerCase())).map((product) => (
-                                <button key={product.id} type="button" onClick={() => setSelectedProdForOrder(prev => ({ ...prev, [order.id]: product.id }))} className={`w-full text-right px-2.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${selectedProdForOrder[order.id] === product.id ? 'bg-[#128C7E]/10 text-[#128C7E] border border-emerald-200' : 'hover:bg-slate-50 text-slate-700'}`}>
-                                  {product.image_url ? <img src={product.image_url} className="w-8 h-8 rounded-md object-cover shrink-0 border border-slate-200" alt="" /> : <ShoppingBag className="w-8 h-8 p-1 bg-slate-50 text-slate-400 border border-slate-200 rounded-md shrink-0" />}
+                                <button key={product.id} type="button" onClick={() => setSelectedProdForOrder(prev => ({ ...prev, [order.id]: product.id }))} className={`w-full text-right px-2.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${selectedProdForOrder[order.id] === product.id ? 'bg-[#128C7E]/10 dark:bg-[#128C7E]/20 text-[#128C7E] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>
+                                  {product.image_url ? <img src={product.image_url} className="w-8 h-8 rounded-md object-cover shrink-0 border border-slate-200 dark:border-slate-700" alt="" /> : <ShoppingBag className="w-8 h-8 p-1 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-md shrink-0" />}
                                   <span>{product.name}</span>
                                 </button>
                               ))}
@@ -1178,42 +1178,42 @@ export default function AdminStatistics() {
                             {/* Qty & Price */}
                             <div className="grid grid-cols-2 gap-2">
                               <div className="space-y-1">
-                                <label className="text-[10px] text-slate-500 font-bold block">الكمية</label>
-                                <input type="number" min="1" value={addQtyForOrder[order.id] || 1} onChange={(e) => setAddQtyForOrder(prev => ({ ...prev, [order.id]: parseInt(e.target.value) || 1 }))} className="w-full bg-white border border-slate-250 outline-none rounded-lg px-3 py-2 text-xs text-slate-800 text-center font-bold font-mono focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all" />
+                                <label className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block">الكمية</label>
+                                <input type="number" min="1" value={addQtyForOrder[order.id] || 1} onChange={(e) => setAddQtyForOrder(prev => ({ ...prev, [order.id]: parseInt(e.target.value) || 1 }))} className="w-full bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 outline-none rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-100 text-center font-bold font-mono focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all" />
                               </div>
                               <div className="space-y-1">
-                                <label className="text-[10px] text-slate-500 font-bold block">السعر (TL)</label>
-                                <input type="number" step="0.01" min="0" placeholder="0.00" value={addPriceForOrder[order.id] || ''} onChange={(e) => setAddPriceForOrder(prev => ({ ...prev, [order.id]: e.target.value }))} className="w-full bg-white border border-slate-250 outline-none rounded-lg px-3 py-2 text-xs text-slate-800 text-center font-bold font-mono focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all" />
+                                <label className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block">السعر (TL)</label>
+                                <input type="number" step="0.01" min="0" placeholder="0.00" value={addPriceForOrder[order.id] || ''} onChange={(e) => setAddPriceForOrder(prev => ({ ...prev, [order.id]: e.target.value }))} className="w-full bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 outline-none rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-100 text-center font-bold font-mono focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all" />
                               </div>
                             </div>
-                            <button type="button" onClick={() => handleAddArchivedOrderItem(order.id)} disabled={isUpdating || !selectedProdForOrder[order.id]} className="w-full bg-[#128C7E] hover:bg-[#128C7E]/90 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-sm">
+                            <button type="button" onClick={() => handleAddArchivedOrderItem(order.id)} disabled={isUpdating || !selectedProdForOrder[order.id]} className="w-full bg-[#128C7E] hover:bg-[#128C7E]/90 disabled:bg-slate-200 dark:disabled:bg-slate-700 disabled:text-slate-400 dark:disabled:text-slate-500 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-sm">
                               <Plus className="w-4 h-4" /> <span>إضافة المنتج</span>
                             </button>
                           </div>
                         ) : (
                           /* Custom product form */
-                          <div className="bg-amber-50/50 border border-amber-200 rounded-xl p-3.5 space-y-3.5 shadow-2xs relative">
+                          <div className="bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-850 rounded-xl p-3.5 space-y-3.5 shadow-2xs relative">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs font-extrabold text-amber-800">إضافة منتج مخصص (غير موجود بالمتجر)</span>
-                              <button type="button" onClick={() => { setShowCustomAddForm(prev => ({ ...prev, [order.id]: false })); setCustomProductName(prev => ({ ...prev, [order.id]: '' })); }} className="p-1 hover:bg-amber-100 rounded-lg transition-colors cursor-pointer text-amber-400 hover:text-amber-600">
+                              <span className="text-xs font-extrabold text-amber-800 dark:text-amber-300">إضافة منتج مخصص (غير موجود بالمتجر)</span>
+                              <button type="button" onClick={() => { setShowCustomAddForm(prev => ({ ...prev, [order.id]: false })); setCustomProductName(prev => ({ ...prev, [order.id]: '' })); }} className="p-1 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-lg transition-colors cursor-pointer text-amber-400 hover:text-amber-600 dark:hover:text-amber-300">
                                 <X className="w-4 h-4" />
                               </button>
                             </div>
                             <div className="space-y-1">
-                              <label className="text-[10px] text-amber-700 font-bold block">اسم المنتج</label>
-                              <input type="text" placeholder="أدخل اسم المنتج..." value={customProductName[order.id] || ''} onChange={(e) => setCustomProductName(prev => ({ ...prev, [order.id]: e.target.value }))} className="w-full bg-white border border-amber-250 outline-none rounded-lg px-3 py-2 text-xs text-slate-800 placeholder-slate-400 text-right font-bold focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all" />
+                              <label className="text-[10px] text-amber-700 dark:text-amber-400 font-bold block">اسم المنتج</label>
+                              <input type="text" placeholder="أدخل اسم المنتج..." value={customProductName[order.id] || ''} onChange={(e) => setCustomProductName(prev => ({ ...prev, [order.id]: e.target.value }))} className="w-full bg-white dark:bg-slate-900 border border-amber-250 dark:border-amber-700 outline-none rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-right font-bold focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all" />
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                               <div className="space-y-1">
-                                <label className="text-[10px] text-amber-700 font-bold block">الكمية</label>
-                                <input type="number" min="1" value={customProductQty[order.id] || 1} onChange={(e) => setCustomProductQty(prev => ({ ...prev, [order.id]: parseInt(e.target.value) || 1 }))} className="w-full bg-white border border-amber-250 outline-none rounded-lg px-3 py-2 text-xs text-slate-800 text-center font-bold font-mono focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all" />
+                                <label className="text-[10px] text-amber-700 dark:text-amber-400 font-bold block">الكمية</label>
+                                <input type="number" min="1" value={customProductQty[order.id] || 1} onChange={(e) => setCustomProductQty(prev => ({ ...prev, [order.id]: parseInt(e.target.value) || 1 }))} className="w-full bg-white dark:bg-slate-900 border border-amber-250 dark:border-amber-700 outline-none rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-100 text-center font-bold font-mono focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all" />
                               </div>
                               <div className="space-y-1">
-                                <label className="text-[10px] text-amber-700 font-bold block">السعر (TL)</label>
-                                <input type="number" step="0.01" min="0" placeholder="0.00" value={customProductPrice[order.id] || ''} onChange={(e) => setCustomProductPrice(prev => ({ ...prev, [order.id]: e.target.value }))} className="w-full bg-white border border-amber-250 outline-none rounded-lg px-3 py-2 text-xs text-slate-800 text-center font-bold font-mono focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all" />
+                                <label className="text-[10px] text-amber-700 dark:text-amber-400 font-bold block">السعر (TL)</label>
+                                <input type="number" step="0.01" min="0" placeholder="0.00" value={customProductPrice[order.id] || ''} onChange={(e) => setCustomProductPrice(prev => ({ ...prev, [order.id]: e.target.value }))} className="w-full bg-white dark:bg-slate-900 border border-amber-250 dark:border-amber-700 outline-none rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-100 text-center font-bold font-mono focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all" />
                               </div>
                             </div>
-                            <button type="button" onClick={() => handleAddCustomArchivedOrderItem(order.id)} disabled={isUpdating || !(customProductName[order.id] || '').trim()} className="w-full bg-amber-600 hover:bg-amber-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-sm">
+                            <button type="button" onClick={() => handleAddCustomArchivedOrderItem(order.id)} disabled={isUpdating || !(customProductName[order.id] || '').trim()} className="w-full bg-amber-600 hover:bg-amber-700 disabled:bg-slate-200 dark:disabled:bg-slate-700 disabled:text-slate-400 dark:disabled:text-slate-500 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-sm">
                               <Plus className="w-4 h-4" /> <span>إضافة المنتج المخصص</span>
                             </button>
                           </div>
@@ -1221,7 +1221,7 @@ export default function AdminStatistics() {
                       </div>
 
                       {/* Save/Cancel buttons */}
-                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-200">
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
                         <button
                           onClick={() => handleSaveArchivedPrices(order.id)}
                           disabled={isUpdating}
@@ -1232,7 +1232,7 @@ export default function AdminStatistics() {
                         </button>
                         <button
                           onClick={handleCancelEditing}
-                          className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-sm border border-slate-200"
+                          className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-sm border border-slate-200 dark:border-slate-700"
                         >
                           <X className="w-4 h-4" />
                           <span>إلغاء</span>
@@ -1243,35 +1243,35 @@ export default function AdminStatistics() {
                     /* === READ-ONLY MODE === */
                     <>
                       {order.order_items.map((item) => (
-                        <div key={item.id} className="flex justify-between items-center text-xs text-slate-655">
+                        <div key={item.id} className="flex justify-between items-center text-xs text-slate-655 dark:text-slate-300">
                           <div className="flex items-center gap-2">
                             {item.product_image || item.products?.image_url ? (
                               <img 
                                 src={item.product_image || item.products?.image_url || undefined} 
                                 onClick={() => setActivePreviewImage(item.product_image || item.products?.image_url || null)}
-                                className="w-14 h-14 rounded-lg object-cover shrink-0 border border-slate-200 cursor-zoom-in hover:brightness-95 transition-all" 
+                                className="w-14 h-14 rounded-lg object-cover shrink-0 border border-slate-200 dark:border-slate-700 cursor-zoom-in hover:brightness-95 transition-all" 
                                 alt={item.product_name || item.products?.name || ''} 
                               />
                             ) : (
-                              <ShoppingBag className="w-14 h-14 p-2.5 bg-white text-slate-400 border border-slate-200 rounded-lg shrink-0" />
+                              <ShoppingBag className="w-14 h-14 p-2.5 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-lg shrink-0" />
                             )}
                             <div className="flex flex-col text-right">
-                              <span className="font-bold text-slate-800 text-right">{item.product_name || item.products?.name || 'منتج غير متوفر'}</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-100 text-right">{item.product_name || item.products?.name || 'منتج غير متوفر'}</span>
                               {(() => {
                                 const offer = item.applied_offer || (item.products && isOfferActive(item.products) ? item.products.offer_title : null);
                                 if (!offer) return null;
                                 const bonusQty = getOfferBonusQuantity(offer, item.quantity);
                                 return (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 rounded-md mt-0.5 w-fit">
-                                    <Gift className="w-3 h-3 text-amber-600 shrink-0" />
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/50 px-1.5 py-0.5 rounded-md mt-0.5 w-fit">
+                                    <Gift className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
                                     <span>{offer}</span>
-                                    {bonusQty > 0 && <span className="text-amber-950 font-extrabold mr-0.5">(+ {bonusQty} صندوق مجاناً)</span>}
+                                    {bonusQty > 0 && <span className="text-amber-950 dark:text-amber-200 font-extrabold mr-0.5">(+ {bonusQty} صندوق مجاناً)</span>}
                                   </span>
                                 );
                               })()}
                             </div>
                           </div>
-                          <span className="font-semibold text-slate-800">
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
                             {item.price_at_purchase !== null && item.price_at_purchase !== undefined && Number(item.price_at_purchase) > 0 ? (
                               `${item.quantity} صندوق × ${Number(item.price_at_purchase).toFixed(2)} TL`
                             ) : (
@@ -1285,9 +1285,9 @@ export default function AdminStatistics() {
                       {(() => {
                         const summary = getOrderBoxSummary(order.order_items);
                         return (
-                          <div className="flex justify-between items-center text-xs font-extrabold text-[#128C7E] bg-emerald-50/30 border border-emerald-100/80 rounded-xl px-3.5 py-2 mt-2 shadow-2xs">
+                          <div className="flex justify-between items-center text-xs font-extrabold text-[#128C7E] dark:text-emerald-400 bg-emerald-50/30 dark:bg-emerald-950/20 border border-emerald-100/80 dark:border-emerald-900/40 rounded-xl px-3.5 py-2 mt-2 shadow-2xs">
                             <span>إجمالي عدد الصناديق المطلوبة:</span>
-                            <span className="font-mono text-sm bg-[#128C7E]/10 px-2 py-0.5 rounded-lg">
+                            <span className="font-mono text-sm bg-[#128C7E]/10 dark:bg-[#128C7E]/25 px-2 py-0.5 rounded-lg">
                               {summary.bonusBoxes > 0 ? (
                                 `${summary.totalBoxes} صندوق (${summary.paidBoxes} أصلية + ${summary.bonusBoxes} مجاناً بالعروض)`
                               ) : (
@@ -1303,7 +1303,7 @@ export default function AdminStatistics() {
                 </div>
 
                 {/* Actions Buttons for Archived Orders */}
-                <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-200 print:hidden">
+                <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-200 dark:border-slate-700 print:hidden">
                   {editingOrderId !== order.id && (
                     <button
                       onClick={() => {
@@ -1312,7 +1312,7 @@ export default function AdminStatistics() {
                         setEditedQuantities({});
                       }}
                       disabled={isUpdating || (editingOrderId !== null && editingOrderId !== order.id)}
-                      className="col-span-2 sm:col-auto bg-indigo-50 hover:bg-indigo-100 border border-indigo-250 text-indigo-700 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm disabled:opacity-50"
+                      className="col-span-2 sm:col-auto bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-250 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm disabled:opacity-50"
                       title="تعديل هذه الفاتورة"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
@@ -1323,7 +1323,7 @@ export default function AdminStatistics() {
                   <button
                     onClick={() => handleDeleteOrder(order.id, order.customer_name)}
                     disabled={isUpdating}
-                    className="col-span-2 sm:col-auto bg-red-50 hover:bg-red-100 border border-red-250 text-red-700 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm disabled:opacity-50"
+                    className="col-span-2 sm:col-auto bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-250 dark:border-red-800/60 text-red-700 dark:text-red-300 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm disabled:opacity-50"
                     title="حذف هذه الفاتورة نهائياً من الأرشيف"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -1332,7 +1332,7 @@ export default function AdminStatistics() {
 
                   <button
                     onClick={() => handleCopyInvoiceLink(order.id, order.total_price)}
-                    className="col-span-1 sm:col-auto bg-slate-50 hover:bg-slate-100 border border-slate-250 text-slate-600 hover:text-slate-800 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
+                    className="col-span-1 sm:col-auto bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-250 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-100 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
                     title="نسخ رابط الفاتورة المباشر"
                   >
                     <Copy className="w-3.5 h-3.5" />
@@ -1342,7 +1342,7 @@ export default function AdminStatistics() {
                   <button
                     onClick={() => handleDownloadPDF(order)}
                     disabled={isUpdating}
-                    className="col-span-1 sm:col-auto bg-teal-50 hover:bg-teal-100 border border-teal-250 text-teal-700 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm disabled:opacity-50 w-full sm:w-auto"
+                    className="col-span-1 sm:col-auto bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100 dark:hover:bg-teal-900/50 border border-teal-250 dark:border-teal-800/60 text-teal-700 dark:text-teal-300 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm disabled:opacity-50 w-full sm:w-auto"
                     title="تحميل الفاتورة كـ PDF للواتساب"
                   >
                     <Download className="w-3.5 h-3.5" />
@@ -1351,7 +1351,7 @@ export default function AdminStatistics() {
 
                   <button
                     onClick={() => handlePrintInvoice(order)}
-                    className="col-span-1 sm:col-auto bg-blue-50 hover:bg-blue-100 border border-blue-250 text-blue-700 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
+                    className="col-span-1 sm:col-auto bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-250 dark:border-blue-800/60 text-blue-700 dark:text-blue-300 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
                     title="طباعة الفاتورة A4"
                   >
                     <Printer className="w-3.5 h-3.5" />
@@ -1360,7 +1360,7 @@ export default function AdminStatistics() {
 
                   <button
                     onClick={() => handlePrintReceipt(order)}
-                    className="col-span-1 sm:col-auto bg-amber-50 hover:bg-amber-100 border border-amber-250 text-amber-700 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
+                    className="col-span-1 sm:col-auto bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-250 dark:border-amber-800/60 text-amber-700 dark:text-amber-300 font-bold px-3 py-2 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm w-full sm:w-auto"
                     title="طباعة إيصال حراري 80 مم"
                   >
                     <Printer className="w-3.5 h-3.5" />
@@ -1374,22 +1374,22 @@ export default function AdminStatistics() {
           </div>
         ) : (
           <div className="text-center py-10 space-y-2">
-            <FileText className="w-10 h-10 text-slate-400 mx-auto" />
-            <h3 className="text-sm font-bold text-slate-700">لم نجد أي طلبيات مطابقة للبحث</h3>
-            <p className="text-xs text-slate-550">جرب تعديل التاريخ أو تصفية مدخلات اسم الزبون.</p>
+            <FileText className="w-10 h-10 text-slate-400 dark:text-slate-500 mx-auto" />
+            <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">لم نجد أي طلبيات مطابقة للبحث</h3>
+            <p className="text-xs text-slate-550 dark:text-slate-400">جرب تعديل التاريخ أو تصفية مدخلات اسم الزبون.</p>
           </div>
         )}
       </div>
 
       {/* Filtered Sales Item Aggregator */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-5 shadow-sm">
-        <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-          <div className="bg-blue-50 p-2.5 rounded-xl text-blue-650 border border-blue-200/50">
-            <ShoppingBag className="w-5 h-5 text-blue-600" />
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-5 shadow-sm">
+        <div className="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="bg-blue-50 dark:bg-blue-950/40 p-2.5 rounded-xl text-blue-650 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/50">
+            <ShoppingBag className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h2 className="text-md font-bold text-slate-800">إجمالي المنتجات والسلع المباعة (في الفلاتر الحالية)</h2>
-            <p className="text-[11px] text-slate-500">الكميات التراكمية المباعة من كل منتج وقيمتها المالية الإجمالية</p>
+            <h2 className="text-md font-bold text-slate-800 dark:text-slate-100">إجمالي المنتجات والسلع المباعة (في الفلاتر الحالية)</h2>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">الكميات التراكمية المباعة من كل منتج وقيمتها المالية الإجمالية</p>
           </div>
         </div>
 
@@ -1398,25 +1398,25 @@ export default function AdminStatistics() {
             {aggregatedSoldItems.map((item, idx) => (
               <div 
                 key={idx}
-                className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center justify-between hover:border-slate-300 transition-colors shadow-xs"
+                className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between hover:border-slate-300 dark:hover:border-slate-700 transition-colors shadow-xs"
               >
                 <div className="flex items-center gap-3">
                   {item.imageUrl ? (
                     <img 
                       src={item.imageUrl} 
                       onClick={() => setActivePreviewImage(item.imageUrl || null)}
-                      className="w-14 h-14 rounded-xl object-cover shrink-0 border border-slate-200 shadow-xs cursor-zoom-in hover:brightness-95 transition-all" 
+                      className="w-14 h-14 rounded-xl object-cover shrink-0 border border-slate-200 dark:border-slate-700 shadow-xs cursor-zoom-in hover:brightness-95 transition-all" 
                       alt={item.productName} 
                     />
                   ) : (
-                    <ShoppingBag className="w-14 h-14 p-2.5 bg-white text-slate-400 border border-slate-200 rounded-xl shrink-0" />
+                    <ShoppingBag className="w-14 h-14 p-2.5 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-xl shrink-0" />
                   )}
                   <div className="space-y-1">
-                    <span className="text-sm font-semibold text-slate-800 block">{item.productName}</span>
-                    <span className="text-[10px] text-emerald-650 font-bold font-mono block">الإيراد: {item.totalSales.toFixed(2)} TL</span>
+                    <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 block">{item.productName}</span>
+                    <span className="text-[10px] text-emerald-650 dark:text-emerald-400 font-bold font-mono block">الإيراد: {item.totalSales.toFixed(2)} TL</span>
                   </div>
                 </div>
-                <span className="bg-white text-emerald-600 font-extrabold px-3 py-1.5 rounded-xl text-sm border border-slate-200 shadow-sm shrink-0">
+                <span className="bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 font-extrabold px-3 py-1.5 rounded-xl text-sm border border-slate-200 dark:border-slate-700 shadow-sm shrink-0">
                   {item.totalQty} علبة / صندوق
                 </span>
               </div>
@@ -1424,9 +1424,9 @@ export default function AdminStatistics() {
           </div>
         ) : (
           <div className="text-center py-10 space-y-2">
-            <ShoppingBag className="w-10 h-10 text-slate-400 mx-auto" />
-            <h3 className="text-sm font-bold text-slate-700">لا يوجد كميات مباعة</h3>
-            <p className="text-xs text-slate-550">لا تطابق الفلاتر الحالية أي طلبيات مسجلة.</p>
+            <ShoppingBag className="w-10 h-10 text-slate-400 dark:text-slate-500 mx-auto" />
+            <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">لا يوجد كميات مباعة</h3>
+            <p className="text-xs text-slate-550 dark:text-slate-400">لا تطابق الفلاتر الحالية أي طلبيات مسجلة.</p>
           </div>
         )}
       </div>
@@ -1721,12 +1721,12 @@ export default function AdminStatistics() {
 
       {/* Assign Customer Modal */}
       {assignModalOrder && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 space-y-4 text-right">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 text-right">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <UserCheck className="w-5 h-5 text-[#128C7E]" />
-                <h3 className="text-sm font-bold text-slate-800">
+                <UserCheck className="w-5 h-5 text-[#128C7E] dark:text-emerald-400" />
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
                   ربط الفاتورة بزَبون معتمد
                 </h3>
               </div>
@@ -1735,46 +1735,46 @@ export default function AdminStatistics() {
                   setAssignModalOrder(null);
                   setSelectedCustomerForAssign('');
                 }}
-                className="p-1 text-slate-400 hover:bg-slate-100 rounded-lg cursor-pointer"
+                className="p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl text-xs space-y-1.5">
+            <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 p-3.5 rounded-2xl text-xs space-y-1.5">
               <div className="flex justify-between">
-                <span className="text-slate-500">الاسم الحالي في الطلب:</span>
-                <b className="text-slate-900 font-extrabold">{assignModalOrder.customer_name}</b>
+                <span className="text-slate-500 dark:text-slate-400">الاسم الحالي في الطلب:</span>
+                <b className="text-slate-900 dark:text-slate-100 font-extrabold">{assignModalOrder.customer_name}</b>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">رقم الفاتورة:</span>
-                <span className="font-mono font-bold text-slate-700">#{assignModalOrder.id.slice(0, 8).toUpperCase()}</span>
+                <span className="text-slate-500 dark:text-slate-400">رقم الفاتورة:</span>
+                <span className="font-mono font-bold text-slate-700 dark:text-slate-300">#{assignModalOrder.id.slice(0, 8).toUpperCase()}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">إجمالي الفاتورة:</span>
-                <b className="text-emerald-700 font-black">{Number(assignModalOrder.total_price).toFixed(2)} TL</b>
+                <span className="text-slate-500 dark:text-slate-400">إجمالي الفاتورة:</span>
+                <b className="text-emerald-700 dark:text-emerald-400 font-black">{Number(assignModalOrder.total_price).toFixed(2)} TL</b>
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="block text-xs font-bold text-slate-700">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                 اختر الزبون من قائمة الزبائن المعتمدين لربطها بكشف حسابه:
               </label>
 
               {/* Search bar inside modal */}
               <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="ابحث عن اسم الزبون..."
                   value={assignSearchQuery}
                   onChange={(e) => setAssignSearchQuery(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-250 outline-none rounded-xl pr-9 pl-3 py-1.5 text-xs text-slate-800 focus:bg-white focus:border-[#128C7E] font-medium"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-250 dark:border-slate-700 outline-none rounded-xl pr-9 pl-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-800 focus:border-[#128C7E] font-medium"
                 />
               </div>
 
               {/* Customer selection list */}
-              <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100 bg-white">
+              <div className="max-h-48 overflow-y-auto border border-slate-200 dark:border-slate-700 rounded-xl divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
                 {approvedCustomers
                   .filter(c => c.name.toLowerCase().includes(assignSearchQuery.toLowerCase()))
                   .map(c => {
@@ -1785,30 +1785,30 @@ export default function AdminStatistics() {
                         type="button"
                         onClick={() => setSelectedCustomerForAssign(c.id)}
                         className={`w-full p-2.5 text-right text-xs font-bold flex items-center justify-between cursor-pointer transition-colors ${
-                          isSelected ? 'bg-emerald-50 text-emerald-800' : 'hover:bg-slate-50 text-slate-700'
+                          isSelected ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300' : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-200'
                         }`}
                       >
                         <span>{c.name}</span>
-                        {isSelected && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+                        {isSelected && <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
                       </button>
                     );
                   })}
                 {approvedCustomers.filter(c => c.name.toLowerCase().includes(assignSearchQuery.toLowerCase())).length === 0 && (
-                  <div className="p-4 text-center text-xs text-slate-400">
+                  <div className="p-4 text-center text-xs text-slate-400 dark:text-slate-500">
                     لا يوجد زبون مطابق للبحث
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => {
                   setAssignModalOrder(null);
                   setSelectedCustomerForAssign('');
                 }}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs cursor-pointer transition-all"
+                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs cursor-pointer transition-all"
               >
                 إلغاء
               </button>
@@ -1816,7 +1816,7 @@ export default function AdminStatistics() {
                 type="button"
                 onClick={handleAssignOrderToCustomer}
                 disabled={!selectedCustomerForAssign || isUpdating}
-                className="px-5 py-2 bg-[#128C7E] hover:bg-[#128C7E]/90 disabled:bg-slate-300 text-white font-bold rounded-xl text-xs cursor-pointer shadow-xs transition-all flex items-center gap-1.5"
+                className="px-5 py-2 bg-[#128C7E] hover:bg-[#128C7E]/90 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white font-bold rounded-xl text-xs cursor-pointer shadow-xs transition-all flex items-center gap-1.5"
               >
                 <UserCheck className="w-4 h-4" />
                 <span>{isUpdating ? 'جاري الربط...' : 'تأكيد ربط الفاتورة'}</span>

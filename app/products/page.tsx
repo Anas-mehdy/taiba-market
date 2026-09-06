@@ -11,6 +11,7 @@ import {
   AlertCircle, ShoppingCart, X, Package, Maximize2, Gift, Tag,
   ChevronRight, Sparkles, Filter
 } from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle';
 
 interface Category {
   id: string;
@@ -174,8 +175,8 @@ function ProductsContent() {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen bg-slate-50 font-sans pb-24">
-      {/* Top Banner for Demo Mode */}
+    <div className="flex-1 flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-24 transition-colors duration-200">
+      {/* Demo Warning Banner */}
       {usingMockData && (
         <div className="bg-amber-500 text-white px-4 py-1.5 text-center text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm shrink-0">
           <AlertCircle className="w-3.5 h-3.5" />
@@ -184,7 +185,7 @@ function ProductsContent() {
       )}
 
       {/* Main Header */}
-      <header className="sticky top-0 bg-[#075E54] text-white px-4 py-3.5 shadow-md z-40 shrink-0">
+      <header className="sticky top-0 bg-[#075E54] dark:bg-[#053d36] text-white px-4 py-3.5 shadow-md z-40 shrink-0 border-b border-teal-800/30">
         <div className="max-w-md mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
             <Link href="/" className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-amber-300/60 shadow-sm shrink-0 bg-white hover:scale-105 transition-transform block">
@@ -193,22 +194,26 @@ function ProductsContent() {
             </Link>
             <div className="min-w-0">
               <h1 className="text-base font-black tracking-tight truncate leading-tight">ماركت طيبة</h1>
-              <p className="text-[10px] text-teal-100 font-medium truncate mt-0.5">كتالوج الأصناف والأسعار المباشرة</p>
+              <p className="text-[10px] text-teal-100 dark:text-teal-200 font-medium truncate mt-0.5">كتالوج الأصناف والأسعار المباشرة</p>
             </div>
           </div>
 
-          <Link
-            href="/"
-            className="bg-[#128C7E]/40 hover:bg-[#128C7E]/70 border border-[#128C7E]/40 rounded-xl px-2.5 py-1.5 text-[10px] text-teal-50 font-bold transition-all shrink-0 flex items-center gap-1"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>العروض اليومية</span>
-          </Link>
+          <div className="flex items-center gap-2 shrink-0">
+            <ThemeToggle className="bg-white/10 hover:bg-white/20 text-teal-100 hover:text-white border-teal-600/40" />
+
+            <Link
+              href="/"
+              className="bg-[#128C7E]/40 hover:bg-[#128C7E]/70 border border-[#128C7E]/40 rounded-xl px-2.5 py-1.5 text-[10px] text-teal-50 font-bold transition-all shrink-0 flex items-center gap-1"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>العروض اليومية</span>
+            </Link>
+          </div>
         </div>
       </header>
 
       {/* Sticky Filters & Search */}
-      <section className="bg-white border-b border-slate-200 py-3 px-4 sticky top-[62px] z-30 shadow-xs">
+      <section className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-3 px-4 sticky top-[62px] z-30 shadow-xs transition-colors duration-200">
         <div className="max-w-md mx-auto space-y-3">
           {/* Search Input */}
           <div className="relative">
@@ -220,12 +225,12 @@ function ProductsContent() {
               placeholder="ابحث عن منتج أو صنف..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-100 border-none outline-none rounded-xl pr-9 pl-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:bg-slate-50 focus:ring-2 focus:ring-[#128C7E]/40 transition-all text-right font-medium"
+              className="w-full bg-slate-100 dark:bg-slate-800/90 border border-transparent dark:border-slate-700/60 outline-none rounded-xl pr-9 pl-4 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-slate-50 dark:focus:bg-slate-800 focus:ring-2 focus:ring-[#128C7E]/40 transition-all text-right font-medium"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -238,8 +243,8 @@ function ProductsContent() {
               onClick={() => setSelectedCategory('all')}
               className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border shrink-0 snap-start ${
                 selectedCategory === 'all'
-                  ? 'bg-[#128C7E] text-white border-[#128C7E] shadow-xs'
-                  : 'bg-slate-100 text-slate-600 border-transparent hover:bg-slate-200'
+                  ? 'bg-[#128C7E] dark:bg-[#0d786c] text-white border-[#128C7E] shadow-xs'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-transparent dark:border-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-750'
               }`}
             >
               الكل ({products.filter(p => !p.is_hidden).length})
@@ -252,8 +257,8 @@ function ProductsContent() {
                   onClick={() => setSelectedCategory(category.id)}
                   className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border shrink-0 snap-start ${
                     selectedCategory === category.id
-                      ? 'bg-[#128C7E] text-white border-[#128C7E] shadow-xs'
-                      : 'bg-slate-100 text-slate-600 border-transparent hover:bg-slate-200'
+                      ? 'bg-[#128C7E] dark:bg-[#0d786c] text-white border-[#128C7E] shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-transparent dark:border-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-750'
                   }`}
                 >
                   {category.name} ({count})
@@ -270,10 +275,10 @@ function ProductsContent() {
           {loading ? (
             <div className="grid grid-cols-2 gap-3.5">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="bg-white p-3 rounded-3xl border border-slate-100 space-y-3 animate-pulse">
-                  <div className="w-full aspect-square bg-slate-200 rounded-2xl" />
-                  <div className="h-4 bg-slate-200 rounded w-3/4" />
-                  <div className="h-4 bg-slate-200 rounded w-1/2" />
+                <div key={i} className="bg-white dark:bg-slate-900 p-3 rounded-3xl border border-slate-100 dark:border-slate-800 space-y-3 animate-pulse">
+                  <div className="w-full aspect-square bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+                  <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4" />
+                  <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/2" />
                 </div>
               ))}
             </div>
@@ -298,13 +303,13 @@ function ProductsContent() {
                 {groupedCategories.map(({ category, products: catProducts }) => (
                   <div key={category.id} className="space-y-3">
                     {/* Category section header */}
-                    <div className="flex items-center gap-2 pb-2 border-b border-slate-200/60">
-                      <div className="bg-[#128C7E]/10 p-1.5 rounded-xl text-[#128C7E] border border-[#128C7E]/10 shrink-0">
+                    <div className="flex items-center gap-2 pb-2 border-b border-slate-200/60 dark:border-slate-800">
+                      <div className="bg-[#128C7E]/10 dark:bg-[#128C7E]/20 p-1.5 rounded-xl text-[#128C7E] dark:text-emerald-400 border border-[#128C7E]/10 dark:border-[#128C7E]/30 shrink-0">
                         <Package className="w-4 h-4" />
                       </div>
                       <div>
-                        <h2 className="text-xs font-black text-slate-800 leading-tight">{category.name}</h2>
-                        <p className="text-[9px] text-slate-400 font-bold leading-none mt-0.5">
+                        <h2 className="text-xs font-black text-slate-800 dark:text-slate-100 leading-tight">{category.name}</h2>
+                        <p className="text-[9px] text-slate-400 dark:text-slate-400 font-bold leading-none mt-0.5">
                           {catProducts.length} {catProducts.length === 1 ? 'منتج واحد' : catProducts.length === 2 ? 'منتجين' : 'منتجات'}
                         </p>
                       </div>
@@ -318,12 +323,14 @@ function ProductsContent() {
                         return (
                           <div
                             key={product.id}
-                            className={`bg-white p-3 rounded-3xl border flex flex-col justify-between hover:shadow-xs transition-all duration-200 relative overflow-hidden ${
-                              offerActive ? 'border-amber-300 ring-1 ring-amber-300/40' : 'border-slate-200/70'
+                            className={`bg-white dark:bg-slate-900 p-3 rounded-3xl border flex flex-col justify-between hover:shadow-xs transition-all duration-200 relative overflow-hidden ${
+                              offerActive 
+                                ? 'border-amber-300 dark:border-amber-500/70 ring-1 ring-amber-300/40 dark:ring-amber-500/30' 
+                                : 'border-slate-200/70 dark:border-slate-800'
                             }`}
                           >
                             {/* In-Stock Indicator dot */}
-                            <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-emerald-500 z-10 border border-white" title="متوفر" />
+                            <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-emerald-500 z-10 border border-white dark:border-slate-800" title="متوفر" />
 
                             {/* Offer Badge Ribbon if active */}
                             {offerActive && (
@@ -336,7 +343,7 @@ function ProductsContent() {
                             {/* Product Image Wrapper */}
                             <div 
                               onClick={() => product.image_url && openImagePreview(product.image_url)}
-                              className={`w-full aspect-square bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 mb-2 relative shrink-0 group ${
+                              className={`w-full aspect-square bg-slate-50 dark:bg-slate-800/90 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 dark:border-slate-700/60 mb-2 relative shrink-0 group ${
                                 product.image_url ? 'cursor-zoom-in' : 'select-none'
                               }`}
                             >
@@ -353,9 +360,9 @@ function ProductsContent() {
                                   </div>
                                 </>
                               ) : (
-                                <div className="flex flex-col items-center justify-center text-slate-350 space-y-1 select-none py-3">
-                                  <ShoppingBag className="w-7 h-7 text-slate-300 stroke-[1.5]" />
-                                  <span className="text-[8.5px] text-slate-400 font-bold">لا توجد صورة</span>
+                                <div className="flex flex-col items-center justify-center text-slate-350 dark:text-slate-500 space-y-1 select-none py-3">
+                                  <ShoppingBag className="w-7 h-7 text-slate-300 dark:text-slate-600 stroke-[1.5]" />
+                                  <span className="text-[8.5px] text-slate-400 dark:text-slate-400 font-bold">لا توجد صورة</span>
                                 </div>
                               )}
                             </div>
@@ -363,14 +370,14 @@ function ProductsContent() {
                             {/* Info Area */}
                             <div className="flex-1 flex flex-col justify-between">
                               <div>
-                                <h3 className="text-xs font-bold text-slate-800 line-clamp-2 text-right mb-1 min-h-[30px] leading-tight">
+                                <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 line-clamp-2 text-right mb-1 min-h-[30px] leading-tight">
                                   {product.name}
                                 </h3>
 
                                 {/* Offer Text Callout */}
                                 {offerActive && (
-                                  <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-1.5 mb-1.5 text-[9px] font-bold text-amber-900 text-right leading-tight flex items-start gap-1">
-                                    <Tag className="w-3 h-3 text-amber-600 shrink-0 mt-0.5" />
+                                  <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 rounded-xl p-1.5 mb-1.5 text-[9px] font-bold text-amber-900 dark:text-amber-300 text-right leading-tight flex items-start gap-1">
+                                    <Tag className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                                     <div className="flex-1">
                                       <span>{product.offer_title}</span>
                                     </div>
@@ -379,47 +386,47 @@ function ProductsContent() {
 
                                 {/* Product Note Callout */}
                                 {!offerActive && product.note && product.note.trim() && (
-                                  <div className="bg-slate-50 border border-slate-200/70 rounded-xl p-1.5 mb-1.5 text-[9px] font-medium text-slate-650 text-right leading-tight">
+                                  <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60 rounded-xl p-1.5 mb-1.5 text-[9px] font-medium text-slate-650 dark:text-slate-300 text-right leading-tight">
                                     <span>{product.note.trim()}</span>
                                   </div>
                                 )}
                               </div>
                               
                               {/* Price and Add Control */}
-                              <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-100">
+                              <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
                                 {/* Price Block */}
                                 <div className="space-y-0.5">
                                   {product.price !== null && product.price !== undefined && Number(product.price) > 0 ? (
                                     <>
-                                      <span className="text-xs font-black text-emerald-600 block leading-none font-mono">
+                                      <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 block leading-none font-mono">
                                         {Number(product.price).toFixed(2)} TL
                                       </span>
-                                      <span className="text-[9px] font-bold text-slate-400 block leading-none mt-0.5">
+                                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-400 block leading-none mt-0.5">
                                         /{product.pricing_unit_step && Number(product.pricing_unit_step) > 1 ? `${product.pricing_unit_step} ` : ''}{product.unit_label || (product.unit_type === 'kg' ? 'كغ' : product.unit_type === 'gram' ? 'غرام' : 'قطعة')}
                                       </span>
                                     </>
                                   ) : (
-                                    <span className="text-[9.5px] font-extrabold text-amber-700 block leading-tight">
+                                    <span className="text-[9.5px] font-extrabold text-amber-700 dark:text-amber-400 block leading-tight">
                                       تواصل للسعر
                                     </span>
                                   )}
                                 </div>
                                 
                                 {/* Pill Controller */}
-                                <div className="flex items-center bg-slate-50 border border-slate-200/60 rounded-full p-0.5 shadow-3xs">
+                                <div className="flex items-center bg-slate-50 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-750 rounded-full p-0.5 shadow-3xs">
                                   <button
                                     onClick={() => qty > 0 && removeFromCart(product.id)}
                                     disabled={qty === 0}
                                     className={`p-1 rounded-full transition-all shrink-0 select-none ${
                                       qty > 0 
-                                        ? 'bg-white hover:bg-slate-100 text-slate-700 active:scale-90 shadow-3xs cursor-pointer' 
-                                        : 'bg-transparent text-slate-300 cursor-not-allowed'
+                                        ? 'bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 active:scale-90 shadow-3xs cursor-pointer' 
+                                        : 'bg-transparent text-slate-300 dark:text-slate-600 cursor-not-allowed'
                                     }`}
                                   >
                                     <Minus className="w-3 h-3 stroke-[2.5]" />
                                   </button>
                                   <span className={`px-1 text-center text-[10px] font-black select-none whitespace-nowrap min-w-[20px] ${
-                                    qty > 0 ? 'text-teal-900 font-black' : 'text-slate-400'
+                                    qty > 0 ? 'text-teal-900 dark:text-emerald-300 font-black' : 'text-slate-400 dark:text-slate-500'
                                   }`}>
                                     {qty > 0 ? Number(qty.toFixed(2)) : 0}
                                   </span>
@@ -452,17 +459,17 @@ function ProductsContent() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-16 px-4 bg-white rounded-3xl border border-slate-100 space-y-3">
-                <ShoppingBag className="w-12 h-12 text-slate-300 mx-auto" />
-                <h3 className="text-xs font-bold text-slate-600">لم نجد أي منتجات تطابق بحثك</h3>
-                <p className="text-[11px] text-slate-400">تأكد من كتابة الاسم بشكل صحيح أو تصفح الأقسام الأخرى.</p>
+              <div className="text-center py-16 px-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 space-y-3">
+                <ShoppingBag className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto" />
+                <h3 className="text-xs font-bold text-slate-600 dark:text-slate-300">لم نجد أي منتجات تطابق بحثك</h3>
+                <p className="text-[11px] text-slate-400 dark:text-slate-400">تأكد من كتابة الاسم بشكل صحيح أو تصفح الأقسام الأخرى.</p>
               </div>
             );
           })() : (
-            <div className="text-center py-16 px-4 bg-white rounded-3xl border border-slate-100 space-y-3">
-              <ShoppingBag className="w-12 h-12 text-slate-300 mx-auto" />
-              <h3 className="text-xs font-bold text-slate-600">لم نجد أي منتجات تطابق بحثك</h3>
-              <p className="text-[11px] text-slate-400">تأكد من كتابة الاسم بشكل صحيح أو تصفح الأقسام الأخرى.</p>
+            <div className="text-center py-16 px-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 space-y-3">
+              <ShoppingBag className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto" />
+              <h3 className="text-xs font-bold text-slate-600 dark:text-slate-300">لم نجد أي منتجات تطابق بحثك</h3>
+              <p className="text-[11px] text-slate-400 dark:text-slate-400">تأكد من كتابة الاسم بشكل صحيح أو تصفح الأقسام الأخرى.</p>
             </div>
           )}
         </div>
@@ -530,7 +537,7 @@ function ProductsContent() {
 export default function ProductsPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-[#075E54] font-bold text-xs">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 text-[#075E54] dark:text-emerald-400 font-bold text-xs">
         جاري تحميل الكتالوج...
       </div>
     }>

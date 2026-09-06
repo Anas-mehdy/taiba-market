@@ -9,6 +9,7 @@ import {
   Sparkles, RefreshCw, AlertCircle, Bell, Truck, Package, 
   CheckCheck, Share2, Info, ArrowRight, ExternalLink
 } from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle';
 import { isOfferActive, getOfferBonusQuantity, getOrderBoxSummary } from '@/lib/offerHelpers';
 
 interface OrderItem {
@@ -309,23 +310,23 @@ export default function TrackOrderPage({ params }: { params: Promise<{ id: strin
 
   if (loading && !order) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center font-sans" dir="rtl">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col items-center justify-center p-6 text-center font-sans" dir="rtl">
         <div className="w-14 h-14 border-4 border-[#128C7E] border-t-transparent rounded-full animate-spin mb-4" />
-        <h2 className="text-base font-bold text-slate-800">جاري تحميل حالة الطلبية المباشرة...</h2>
-        <p className="text-xs text-slate-400 mt-1">ماركت طيبة • خدمة التوصيل المنزلي</p>
+        <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">جاري تحميل حالة الطلبية المباشرة...</h2>
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">ماركت طيبة • خدمة التوصيل المنزلي</p>
       </div>
     );
   }
 
   if (error || !order) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center font-sans space-y-4" dir="rtl">
-        <div className="bg-rose-50 p-4 rounded-3xl text-rose-500 w-16 h-16 flex items-center justify-center shadow-inner">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col items-center justify-center p-6 text-center font-sans space-y-4" dir="rtl">
+        <div className="bg-rose-50 dark:bg-rose-950/40 p-4 rounded-3xl text-rose-500 w-16 h-16 flex items-center justify-center shadow-inner border border-rose-100 dark:border-rose-900/50">
           <AlertCircle className="w-8 h-8" />
         </div>
         <div className="space-y-1">
-          <h1 className="text-lg font-bold text-slate-800">تعذر العثور على الطلبية</h1>
-          <p className="text-xs text-slate-500 max-w-xs">{error || 'تأكد من صحة الرابط أو تواصل مع إدارة المتجر للمساعدة.'}</p>
+          <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100">تعذر العثور على الطلبية</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs">{error || 'تأكد من صحة الرابط أو تواصل مع إدارة المتجر للمساعدة.'}</p>
         </div>
         <Link
           href="/"
@@ -348,9 +349,9 @@ export default function TrackOrderPage({ params }: { params: Promise<{ id: strin
   const storeWhatsappChatUrl = `https://wa.me/${storeWhatsapp}?text=${whatsappMessageText}`;
 
   return (
-    <div className="min-h-screen bg-slate-100/70 font-sans pb-20 text-right text-slate-800" dir="rtl">
+    <div className="min-h-screen bg-slate-100/70 dark:bg-slate-950 font-sans pb-20 text-right text-slate-800 dark:text-slate-100 transition-colors duration-200" dir="rtl">
       {/* Top Header */}
-      <header className="bg-gradient-to-r from-[#075E54] to-[#128C7E] text-white px-4 py-4 shadow-md sticky top-0 z-40">
+      <header className="bg-gradient-to-r from-[#075E54] to-[#128C7E] dark:from-[#053d36] dark:to-[#0c5950] text-white px-4 py-4 shadow-md sticky top-0 z-40 border-b border-teal-800/30">
         <div className="max-w-xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-300/50 shadow-sm shrink-0 bg-white">
@@ -359,11 +360,13 @@ export default function TrackOrderPage({ params }: { params: Promise<{ id: strin
             </div>
             <div>
               <h1 className="text-base font-black tracking-tight">{storeName}</h1>
-              <p className="text-[11px] text-teal-100 font-medium">متابعة وتتبع حالة الطلبية المباشرة</p>
+              <p className="text-[11px] text-teal-100 dark:text-teal-200 font-medium">متابعة وتتبع حالة الطلبية المباشرة</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            <ThemeToggle className="bg-white/10 hover:bg-white/20 text-teal-100 hover:text-white border-teal-600/40" />
+
             <button
               onClick={() => fetchOrderDetails(true)}
               disabled={isRefreshing}
@@ -387,52 +390,52 @@ export default function TrackOrderPage({ params }: { params: Promise<{ id: strin
       <main className="max-w-xl mx-auto px-4 py-5 space-y-4">
         
         {/* Live Status Header Banner */}
-        <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
             <div className="flex items-center gap-2">
               <span className="relative flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
               </span>
-              <span className="text-xs font-bold text-slate-700">تتبع مباشر للطلبية</span>
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">تتبع مباشر للطلبية</span>
             </div>
-            <span className="text-xs font-mono font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-xl">
+            <span className="text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-xl">
               #{order.id.substring(0, 8).toUpperCase()}
             </span>
           </div>
 
           {/* Current Status Highlights */}
           {isCancelled ? (
-            <div className="bg-rose-50 border border-rose-200 p-4 rounded-2xl flex items-center gap-3 text-rose-700">
+            <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 p-4 rounded-2xl flex items-center gap-3 text-rose-700 dark:text-rose-400">
               <AlertCircle className="w-6 h-6 shrink-0" />
               <div>
                 <h3 className="text-sm font-black">تم إلغاء الطلب</h3>
-                <p className="text-xs text-rose-600 mt-0.5">تم إلغاء هذه الطلبية من قبل إدارة المتجر.</p>
+                <p className="text-xs text-rose-600 dark:text-rose-400 mt-0.5">تم إلغاء هذه الطلبية من قبل إدارة المتجر.</p>
               </div>
             </div>
           ) : isPostponed ? (
-            <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-center gap-3 text-amber-800">
-              <Clock className="w-6 h-6 shrink-0 text-amber-600" />
+            <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 p-4 rounded-2xl flex items-center gap-3 text-amber-800 dark:text-amber-300">
+              <Clock className="w-6 h-6 shrink-0 text-amber-600 dark:text-amber-400" />
               <div>
                 <h3 className="text-sm font-black">الطلب مؤجل</h3>
-                <p className="text-xs text-amber-700 mt-0.5">تم تأجيل موعد تسليم الطلبية بناءً على الاتفاق.</p>
+                <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">تم تأجيل موعد تسليم الطلبية بناءً على الاتفاق.</p>
               </div>
             </div>
           ) : (
             <div className="text-center py-2 space-y-2">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-emerald-50 text-[#128C7E] shadow-inner mb-1 border border-emerald-100">
-                {currentStepIdx === 0 && <CheckCircle2 className="w-8 h-8 text-[#128C7E]" />}
-                {currentStepIdx === 1 && <Package className="w-8 h-8 text-amber-600 animate-bounce" />}
-                {currentStepIdx === 2 && <Truck className="w-8 h-8 text-[#128C7E] animate-pulse" />}
-                {currentStepIdx === 3 && <CheckCheck className="w-8 h-8 text-emerald-600" />}
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-emerald-50 dark:bg-emerald-950/50 text-[#128C7E] dark:text-emerald-400 shadow-inner mb-1 border border-emerald-100 dark:border-emerald-900/40">
+                {currentStepIdx === 0 && <CheckCircle2 className="w-8 h-8 text-[#128C7E] dark:text-emerald-400" />}
+                {currentStepIdx === 1 && <Package className="w-8 h-8 text-amber-600 dark:text-amber-400 animate-bounce" />}
+                {currentStepIdx === 2 && <Truck className="w-8 h-8 text-[#128C7E] dark:text-emerald-400 animate-pulse" />}
+                {currentStepIdx === 3 && <CheckCheck className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />}
               </div>
 
               <div>
-                <span className="inline-block bg-[#128C7E]/10 text-[#075E54] text-[11px] font-extrabold px-3 py-1 rounded-full mb-1">
+                <span className="inline-block bg-[#128C7E]/10 dark:bg-emerald-500/20 text-[#075E54] dark:text-emerald-300 text-[11px] font-extrabold px-3 py-1 rounded-full mb-1">
                   المرحلة الحالية: {currentStepInfo.label}
                 </span>
-                <h2 className="text-lg font-black text-slate-850">{currentStepInfo.title}</h2>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed mt-1">
+                <h2 className="text-lg font-black text-slate-850 dark:text-slate-100">{currentStepInfo.title}</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed mt-1">
                   {currentStepInfo.description}
                 </p>
               </div>
@@ -441,7 +444,7 @@ export default function TrackOrderPage({ params }: { params: Promise<{ id: strin
 
           {/* Stepper Progress Visualizer */}
           {!isCancelled && !isPostponed && (
-            <div className="pt-4 border-t border-slate-100">
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
               <div className="grid grid-cols-4 gap-1 sm:gap-2 relative">
                 {STEPS.map((step, idx) => {
                   const isCompleted = idx < currentStepIdx;
@@ -457,8 +460,8 @@ export default function TrackOrderPage({ params }: { params: Promise<{ id: strin
                           isCompleted
                             ? 'bg-[#128C7E] text-white shadow-xs'
                             : isCurrent
-                            ? 'bg-[#075E54] text-white ring-4 ring-emerald-100 shadow-md scale-105'
-                            : 'bg-slate-100 text-slate-400 border border-slate-200'
+                            ? 'bg-[#075E54] dark:bg-emerald-600 text-white ring-4 ring-emerald-100 dark:ring-emerald-950/70 shadow-md scale-105'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700'
                         }`}
                       >
                         {isCompleted ? (
@@ -472,10 +475,10 @@ export default function TrackOrderPage({ params }: { params: Promise<{ id: strin
                       <span 
                         className={`text-[10.5px] mt-2 font-bold leading-tight ${
                           isCurrent 
-                            ? 'text-[#075E54] font-black' 
+                            ? 'text-[#075E54] dark:text-emerald-400 font-black' 
                             : isCompleted 
-                            ? 'text-slate-700' 
-                            : 'text-slate-400'
+                            ? 'text-slate-700 dark:text-slate-300' 
+                            : 'text-slate-400 dark:text-slate-500'
                         }`}
                       >
                         {step.label}
@@ -486,7 +489,7 @@ export default function TrackOrderPage({ params }: { params: Promise<{ id: strin
               </div>
 
               {/* Progress bar line connecting steps */}
-              <div className="w-full bg-slate-100 h-1.5 rounded-full mt-4 overflow-hidden">
+              <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-4 overflow-hidden">
                 <div 
                   className="bg-gradient-to-l from-[#128C7E] to-[#25D366] h-full transition-all duration-500 rounded-full"
                   style={{ width: `${(currentStepIdx / (STEPS.length - 1)) * 100}%` }}
@@ -498,27 +501,27 @@ export default function TrackOrderPage({ params }: { params: Promise<{ id: strin
 
         {/* Live Store Note / Announcement Box (ملاحظات المتجر وعامل التوصيل) */}
         {order.delivery_note && (
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50/50 rounded-3xl p-5 border-2 border-amber-200/90 shadow-sm space-y-2.5 animate-fadeIn">
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-amber-950/30 dark:to-orange-950/20 rounded-3xl p-5 border-2 border-amber-200/90 dark:border-amber-800/60 shadow-sm space-y-2.5 animate-fadeIn">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="bg-amber-500 p-1.5 rounded-xl text-white shadow-xs">
                   <Bell className="w-4 h-4" />
                 </div>
-                <h3 className="text-xs font-black text-amber-950">ملاحظة وتنبيه من إدارة المتجر / التوصيل:</h3>
+                <h3 className="text-xs font-black text-amber-950 dark:text-amber-200">ملاحظة وتنبيه من إدارة المتجر / التوصيل:</h3>
               </div>
-              <span className="text-[10px] font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-lg">
+              <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-900/60 px-2 py-0.5 rounded-lg">
                 تحديث فوري
               </span>
             </div>
 
-            <div className="bg-white/80 backdrop-blur-xs rounded-2xl p-3.5 border border-amber-200/60 shadow-2xs">
-              <p className="text-xs font-bold text-slate-800 leading-relaxed whitespace-pre-wrap">
+            <div className="bg-white/80 dark:bg-slate-900/90 backdrop-blur-xs rounded-2xl p-3.5 border border-amber-200/60 dark:border-amber-800/40 shadow-2xs">
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-100 leading-relaxed whitespace-pre-wrap">
                 {order.delivery_note}
               </p>
             </div>
 
             {order.status_updated_at && (
-              <p className="text-[10px] text-amber-700/80 font-medium">
+              <p className="text-[10px] text-amber-700/80 dark:text-amber-400 font-medium">
                 آخر تحديث للحالة: {formatDateTime(order.status_updated_at)}
               </p>
             )}
@@ -526,61 +529,61 @@ export default function TrackOrderPage({ params }: { params: Promise<{ id: strin
         )}
 
         {/* Customer & Delivery Details Card */}
-        <div className="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-xs space-y-3">
-          <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100">
-            <User className="w-4 h-4 text-emerald-600" />
-            <h3 className="text-xs font-bold text-slate-800">بيانات المستلم والتوصيل</h3>
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+          <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+            <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">بيانات المستلم والتوصيل</h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-            <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex items-center gap-2.5">
-              <User className="w-4 h-4 text-slate-400 shrink-0" />
+            <div className="bg-slate-50 dark:bg-slate-800/70 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-700/60 flex items-center gap-2.5">
+              <User className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
               <div className="min-w-0 flex-1">
-                <span className="text-[10px] text-slate-400 block font-semibold">اسم العميل</span>
-                <span className="font-bold text-slate-800 truncate block">{order.customer_name}</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-400 block font-semibold">اسم العميل</span>
+                <span className="font-bold text-slate-800 dark:text-slate-100 truncate block">{order.customer_name}</span>
               </div>
             </div>
 
             {order.customer_phone && (
-              <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-slate-400 shrink-0" />
+              <div className="bg-slate-50 dark:bg-slate-800/70 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-700/60 flex items-center gap-2.5">
+                <Phone className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <span className="text-[10px] text-slate-400 block font-semibold">رقم الهاتف</span>
-                  <span className="font-bold text-slate-800 ltr block text-right font-mono">{order.customer_phone}</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-400 block font-semibold">رقم الهاتف</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-100 ltr block text-right font-mono">{order.customer_phone}</span>
                 </div>
               </div>
             )}
 
             {order.customer_address && (
-              <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex items-start gap-2.5 sm:col-span-2">
-                <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+              <div className="bg-slate-50 dark:bg-slate-800/70 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-700/60 flex items-start gap-2.5 sm:col-span-2">
+                <MapPin className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
                 <div className="min-w-0 flex-1">
-                  <span className="text-[10px] text-slate-400 block font-semibold">عنوان التوصيل</span>
-                  <span className="font-bold text-slate-800 leading-snug block">{order.customer_address}</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-400 block font-semibold">عنوان التوصيل</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-100 leading-snug block">{order.customer_address}</span>
                 </div>
               </div>
             )}
 
-            <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex items-center gap-2.5 sm:col-span-2">
-              <Clock className="w-4 h-4 text-slate-400 shrink-0" />
+            <div className="bg-slate-50 dark:bg-slate-800/70 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-700/60 flex items-center gap-2.5 sm:col-span-2">
+              <Clock className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
               <div className="min-w-0 flex-1">
-                <span className="text-[10px] text-slate-400 block font-semibold">تاريخ ووقت تسجيل الطلب</span>
-                <span className="font-bold text-slate-800 block">{formatDateTime(order.created_at)}</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-400 block font-semibold">تاريخ ووقت تسجيل الطلب</span>
+                <span className="font-bold text-slate-800 dark:text-slate-100 block">{formatDateTime(order.created_at)}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Order Items Breakdown */}
-        <div className="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-xs space-y-3">
-          <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+          <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-2">
-              <ShoppingBag className="w-4 h-4 text-emerald-600" />
-              <h3 className="text-xs font-bold text-slate-800">تفاصيل المواد المطلوبة ({order.order_items.length})</h3>
+              <ShoppingBag className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">تفاصيل المواد المطلوبة ({order.order_items.length})</h3>
             </div>
             <Link 
               href={`/invoice/${order.id}`}
-              className="text-[11px] font-bold text-[#128C7E] hover:underline flex items-center gap-1"
+              className="text-[11px] font-bold text-[#128C7E] dark:text-emerald-400 hover:underline flex items-center gap-1"
             >
               <FileText className="w-3.5 h-3.5" />
               <span>عرض الفاتورة المسعرة</span>
@@ -588,13 +591,13 @@ export default function TrackOrderPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* Items list */}
-          <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto pr-1">
+          <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-80 overflow-y-auto pr-1">
             {order.order_items.map((item) => {
               const itemTotal = Number(item.price_at_purchase || 0) * item.quantity;
               return (
                 <div key={item.id} className="py-2.5 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/60 flex items-center justify-center shrink-0 overflow-hidden">
                       {item.product_image ? (
                         <img 
                           src={item.product_image} 
@@ -603,21 +606,21 @@ export default function TrackOrderPage({ params }: { params: Promise<{ id: strin
                           loading="lazy" 
                         />
                       ) : (
-                        <ShoppingBag className="w-4 h-4 text-slate-350 stroke-[1.5]" />
+                        <ShoppingBag className="w-4 h-4 text-slate-350 dark:text-slate-500 stroke-[1.5]" />
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-slate-800 truncate">{item.product_name || 'منتج غير معروف'}</p>
-                      <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">{item.product_name || 'منتج غير معروف'}</p>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-400 font-medium mt-0.5">
                         {item.quantity} {item.price_at_purchase > 0 ? `× ${Number(item.price_at_purchase).toFixed(2)} TL` : 'صندوق'}
                         {item.applied_offer && (
-                          <span className="text-amber-600 font-bold mr-1">[{item.applied_offer}]</span>
+                          <span className="text-amber-600 dark:text-amber-400 font-bold mr-1">[{item.applied_offer}]</span>
                         )}
                       </p>
                     </div>
                   </div>
 
-                  <span className="text-xs font-black text-slate-800 shrink-0">
+                  <span className="text-xs font-black text-slate-800 dark:text-slate-200 shrink-0">
                     {item.price_at_purchase > 0 ? `${itemTotal.toFixed(2)} TL` : 'يحدد لاحقاً'}
                   </span>
                 </div>
@@ -629,9 +632,9 @@ export default function TrackOrderPage({ params }: { params: Promise<{ id: strin
           {(() => {
             const summary = getOrderBoxSummary(order.order_items);
             return (
-              <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100 flex items-center justify-between text-xs font-bold text-slate-700">
-                <span className="text-[11px] text-slate-500">إجمالي عدد الصناديق:</span>
-                <span className="font-mono text-xs bg-slate-200/60 px-2 py-0.5 rounded-lg text-slate-800">
+              <div className="bg-slate-50 dark:bg-slate-800/80 rounded-2xl p-3 border border-slate-100 dark:border-slate-700/60 flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">إجمالي عدد الصناديق:</span>
+                <span className="font-mono text-xs bg-slate-200/60 dark:bg-slate-700 px-2 py-0.5 rounded-lg text-slate-800 dark:text-slate-200">
                   {summary.bonusBoxes > 0 
                     ? `${summary.totalBoxes} صندوق (${summary.paidBoxes} أصلية + ${summary.bonusBoxes} عروض مجانية)`
                     : `${summary.paidBoxes} صندوق`
@@ -642,9 +645,9 @@ export default function TrackOrderPage({ params }: { params: Promise<{ id: strin
           })()}
 
           {/* Grand Total */}
-          <div className="pt-3 border-t border-dashed border-slate-200 flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-600">المجموع الكلي:</span>
-            <span className="text-base font-black text-[#128C7E]">
+          <div className="pt-3 border-t border-dashed border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-400">المجموع الكلي:</span>
+            <span className="text-base font-black text-[#128C7E] dark:text-emerald-400">
               {Number(order.total_price).toFixed(2)} TL
             </span>
           </div>
@@ -665,16 +668,16 @@ export default function TrackOrderPage({ params }: { params: Promise<{ id: strin
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={handleCopyLink}
-              className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 active:scale-95 py-2.5 px-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+              className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 active:scale-95 py-2.5 px-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer"
             >
               {copiedLink ? (
                 <>
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span className="text-emerald-700 font-black">تم نسخ الرابط!</span>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-emerald-700 dark:text-emerald-400 font-black">تم نسخ الرابط!</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-4 h-4 text-slate-500" />
+                  <Copy className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                   <span>نسخ رابط التتبع</span>
                 </>
               )}
@@ -682,16 +685,16 @@ export default function TrackOrderPage({ params }: { params: Promise<{ id: strin
 
             <Link
               href={`/invoice/${order.id}`}
-              className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 active:scale-95 py-2.5 px-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-2xs"
+              className="bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 active:scale-95 py-2.5 px-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-2xs"
             >
-              <FileText className="w-4 h-4 text-emerald-700" />
+              <FileText className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
               <span>تحميل الفاتورة PDF</span>
             </Link>
           </div>
         </div>
 
         {/* Footer Note */}
-        <div className="text-center pt-4 text-[10px] text-slate-400 space-y-1">
+        <div className="text-center pt-4 text-[10px] text-slate-400 dark:text-slate-500 space-y-1">
           <p>يتم تحديث هذه الصفحة تلقائياً عند تغيير حالة الطلب من قبل المتجر.</p>
           <p className="font-medium">ماركت طيبة • الجودة والتوفير والتوصيل السريع</p>
         </div>

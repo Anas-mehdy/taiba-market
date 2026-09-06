@@ -140,18 +140,18 @@ export default function AdminSettings() {
 
       {/* Header Info */}
       <div>
-        <h1 className="text-xl font-bold text-slate-800">إعدادات النظام العامة</h1>
-        <p className="text-xs text-slate-500 mt-1">تعديل رقم الهاتف المستلم لطلبات الواتساب وتخصيص قنوات التوجيه للمبيعات</p>
+        <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">إعدادات النظام العامة</h1>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">تعديل رقم الهاتف المستلم لطلبات الواتساب وتخصيص قنوات التوجيه للمبيعات</p>
       </div>
 
-      <div className="max-w-2xl bg-white border border-slate-200 rounded-3xl p-6 space-y-6 shadow-sm">
-        <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-          <Settings className="w-5 h-5 text-emerald-600" />
-          <h2 className="text-sm font-bold text-slate-800">قناة استلام الطلبات (WhatsApp)</h2>
+      <div className="max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-6 shadow-sm">
+        <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+          <Settings className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+          <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">قناة استلام الطلبات (WhatsApp)</h2>
         </div>
 
         {loading ? (
-          <div className="py-10 text-center text-slate-400 flex flex-col items-center justify-center gap-3">
+          <div className="py-10 text-center text-slate-400 dark:text-slate-500 flex flex-col items-center justify-center gap-3">
             <Loader2 className="w-8 h-8 animate-spin text-emerald-550" />
             <p className="text-xs font-bold">جاري تحميل الإعدادات...</p>
           </div>
@@ -160,7 +160,7 @@ export default function AdminSettings() {
             
             {/* Input field */}
             <div className="space-y-2">
-              <label className="block text-xs font-bold text-slate-600">رقم الهاتف المستلم</label>
+              <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">رقم الهاتف المستلم</label>
               
               <div className="relative">
                 <span className="absolute inset-y-0 right-3.5 flex items-center text-slate-400">
@@ -173,33 +173,33 @@ export default function AdminSettings() {
                   value={rawNumber}
                   onChange={(e) => setRawNumber(e.target.value)}
                   placeholder="أدخل رقم الواتساب (مثال: +90 530 000 00 00)"
-                  className="w-full bg-slate-50 border border-slate-250 outline-none rounded-xl pr-10 pl-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-right ltr"
+                  className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 outline-none rounded-xl pr-10 pl-4 py-3 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-800 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-right ltr"
                   disabled={saving}
                 />
               </div>
 
-              <p className="text-[10px] text-slate-500 leading-relaxed">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
                 * يمكنك إدخال الرقم بأي صيغة (مع فراغات، مع إشارة +، أو بالبدء بـ 0). سيقوم النظام تلقائياً بتنظيف المدخلات وتنسيقها بالشكل الدولي المعتمد لدى شركة واتساب.
               </p>
             </div>
 
             {/* Live Sanitize Dynamic Preview Card */}
             {rawNumber && (
-              <div className="bg-slate-55 border border-slate-200 rounded-2xl p-4 space-y-2.5">
-                <h4 className="text-xs font-bold text-slate-600">المعالجة التلقائية الذكية:</h4>
+              <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 space-y-2.5">
+                <h4 className="text-xs font-bold text-slate-600 dark:text-slate-300">المعالجة التلقائية الذكية:</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  <div className="bg-white p-2.5 rounded-xl border border-slate-200">
-                    <span className="text-slate-400 block mb-0.5">القيمة التي قمت بكتابتها:</span>
-                    <span className="font-mono text-slate-700 font-medium">{rawNumber}</span>
+                  <div className="bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-750">
+                    <span className="text-slate-400 dark:text-slate-400 block mb-0.5">القيمة التي قمت بكتابتها:</span>
+                    <span className="font-mono text-slate-700 dark:text-slate-200 font-medium">{rawNumber}</span>
                   </div>
-                  <div className="bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-200">
-                    <span className="text-emerald-700 block mb-0.5">الصيغة النهائية للحفظ (wa.me):</span>
-                    <span className="font-mono text-emerald-600 font-extrabold">{sanitizedNumber || 'جاري المعالجة...'}</span>
+                  <div className="bg-emerald-50/50 dark:bg-emerald-950/40 p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/60">
+                    <span className="text-emerald-700 dark:text-emerald-300 block mb-0.5">الصيغة النهائية للحفظ (wa.me):</span>
+                    <span className="font-mono text-emerald-600 dark:text-emerald-400 font-extrabold">{sanitizedNumber || 'جاري المعالجة...'}</span>
                   </div>
                 </div>
                 {sanitizedNumber && (
-                  <div className="pt-2 border-t border-slate-200 text-[10px] text-slate-500">
-                    رابط الطلب المباشر النشط للمتجر: <span className="font-mono text-emerald-600 underline select-all">https://wa.me/{sanitizedNumber}</span>
+                  <div className="pt-2 border-t border-slate-200 dark:border-slate-700 text-[10px] text-slate-500 dark:text-slate-400">
+                    رابط الطلب المباشر النشط للمتجر: <span className="font-mono text-emerald-600 dark:text-emerald-400 underline select-all">https://wa.me/{sanitizedNumber}</span>
                   </div>
                 )}
               </div>
@@ -209,13 +209,13 @@ export default function AdminSettings() {
             {statusMsg && (
               <div className={`p-4 rounded-2xl text-xs flex items-start gap-2.5 font-semibold leading-relaxed border ${
                 statusMsg.type === 'success' 
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
-                  : 'bg-rose-55 border-rose-200 text-rose-800'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300' 
+                  : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/50 text-rose-800 dark:text-rose-300'
               }`}>
                 {statusMsg.type === 'success' ? (
-                  <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600" />
+                  <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
                 ) : (
-                  <AlertCircle className="w-5 h-5 shrink-0 text-rose-600" />
+                  <AlertCircle className="w-5 h-5 shrink-0 text-rose-600 dark:text-rose-400" />
                 )}
                 <span>{statusMsg.text}</span>
               </div>
@@ -225,7 +225,7 @@ export default function AdminSettings() {
             <button
               type="submit"
               disabled={saving || !rawNumber}
-              className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-100 disabled:text-slate-400 text-white font-bold py-3 px-5 rounded-xl text-sm flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
+              className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 text-white font-bold py-3 px-5 rounded-xl text-sm flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
             >
               {saving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

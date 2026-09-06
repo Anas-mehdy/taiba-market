@@ -338,13 +338,13 @@ export default function AdminBanners() {
       {/* Header Info */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-slate-800">إدارة عروض وبانرات المتجر</h1>
-          <p className="text-xs text-slate-500 mt-1">رفع بوسترات العروض الترويجية اليومية التي تظهر في الصفحة الرئيسية للماركت</p>
+          <h1 className="text-xl font-black text-slate-800 dark:text-slate-100">إدارة عروض وبانرات المتجر</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">رفع بوسترات العروض الترويجية اليومية التي تظهر في الصفحة الرئيسية للماركت</p>
         </div>
         <button
           onClick={fetchBanners}
           disabled={loading}
-          className="p-2.5 bg-white border border-slate-200 hover:border-slate-350 text-slate-600 rounded-xl transition-all cursor-pointer shadow-sm"
+          className="p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl transition-all cursor-pointer shadow-sm"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
@@ -353,17 +353,17 @@ export default function AdminBanners() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
         {/* Add Banner Form */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-5 space-y-4 shadow-sm">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-            <Sparkles className="w-5 h-5 text-emerald-600" />
-            <h2 className="text-sm font-bold text-slate-800">إضافة بوستر عرض جديد</h2>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 space-y-4 shadow-sm">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <Sparkles className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">إضافة بوستر عرض جديد</h2>
           </div>
 
           <form onSubmit={handleAddBanner} className="space-y-4">
             
             {/* Poster Image File Upload */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-700">صورة البوستر / الإعلان</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">صورة البوستر / الإعلان</label>
               <input
                 type="file"
                 ref={fileInputRef}
@@ -375,10 +375,10 @@ export default function AdminBanners() {
               />
               <label
                 htmlFor="banner-file-input"
-                className="w-full border-2 border-dashed border-slate-250 hover:border-[#128C7E] bg-slate-50 hover:bg-emerald-50/30 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all text-slate-500 min-h-[160px]"
+                className="w-full border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-[#128C7E] dark:hover:border-emerald-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-emerald-50/30 dark:hover:bg-slate-800 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all text-slate-500 dark:text-slate-400 min-h-[160px]"
               >
                 {imagePreview ? (
-                  <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border border-slate-200">
+                  <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
                     <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xs font-bold opacity-0 hover:opacity-100 transition-opacity">
                       تغيير الصورة
@@ -386,21 +386,21 @@ export default function AdminBanners() {
                   </div>
                 ) : (
                   <>
-                    <Upload className="w-8 h-8 text-[#128C7E]" />
-                    <span className="text-xs font-bold text-slate-700">اضغط لرفع صورة العرض</span>
-                    <span className="text-[10px] text-slate-400">JPG, PNG, WEBP (بنسبة عرض 16:9 مستحسن)</span>
+                    <Upload className="w-8 h-8 text-[#128C7E] dark:text-emerald-400" />
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200">اضغط لرفع صورة العرض</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500">JPG, PNG, WEBP (بنسبة عرض 16:9 مستحسن)</span>
                   </>
                 )}
               </label>
             </div>
 
             {errorMsg && (
-              <div className="bg-rose-50 border border-rose-100 text-rose-600 p-3 rounded-xl text-xs font-bold">
+              <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 p-3 rounded-xl text-xs font-bold">
                 {errorMsg}
               </div>
             )}
             {successMsg && (
-              <div className="bg-emerald-50 border border-emerald-100 text-emerald-600 p-3 rounded-xl text-xs font-bold flex items-center gap-1.5">
+              <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 text-emerald-600 dark:text-emerald-400 p-3 rounded-xl text-xs font-bold flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>{successMsg}</span>
               </div>
@@ -409,7 +409,7 @@ export default function AdminBanners() {
             <button
               type="submit"
               disabled={submitting || (!imageFile && !imagePreview)}
-              className="w-full bg-[#075E54] hover:bg-[#128C7E] disabled:bg-slate-200 text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer disabled:cursor-not-allowed"
+              className="w-full bg-[#075E54] hover:bg-[#128C7E] disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer disabled:cursor-not-allowed"
             >
               {submitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -422,17 +422,17 @@ export default function AdminBanners() {
         </div>
 
         {/* Banners List */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-5 lg:col-span-2 space-y-4 shadow-sm">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 lg:col-span-2 space-y-4 shadow-sm">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-2">
-              <ImageIcon className="w-5 h-5 text-emerald-600" />
-              <h2 className="text-sm font-bold text-slate-800">العروض والبوسترات الحالية ({banners.length})</h2>
+              <ImageIcon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">العروض والبوسترات الحالية ({banners.length})</h2>
             </div>
           </div>
 
           {loading ? (
-            <div className="py-12 text-center text-slate-400 flex flex-col items-center justify-center gap-3">
-              <Loader2 className="w-8 h-8 animate-spin text-[#128C7E]" />
+            <div className="py-12 text-center text-slate-400 dark:text-slate-500 flex flex-col items-center justify-center gap-3">
+              <Loader2 className="w-8 h-8 animate-spin text-[#128C7E] dark:text-emerald-400" />
               <p className="text-xs font-bold">جاري تحميل البانرات...</p>
             </div>
           ) : banners.length > 0 ? (
@@ -440,11 +440,13 @@ export default function AdminBanners() {
               {banners.map((banner) => (
                 <div
                   key={banner.id}
-                  className={`border rounded-2xl overflow-hidden transition-all bg-white flex flex-col justify-between ${
-                    banner.is_active ? 'border-slate-200 shadow-2xs' : 'border-slate-200/60 opacity-60 bg-slate-50'
+                  className={`border rounded-2xl overflow-hidden transition-all bg-white dark:bg-slate-850 flex flex-col justify-between ${
+                    banner.is_active 
+                      ? 'border-slate-200 dark:border-slate-700 shadow-2xs' 
+                      : 'border-slate-200/60 dark:border-slate-800 opacity-60 bg-slate-50 dark:bg-slate-900'
                   }`}
                 >
-                  <div className="relative aspect-[16/9] bg-slate-100 border-b border-slate-100">
+                  <div className="relative aspect-[16/9] bg-slate-100 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-800">
                     <img src={banner.image_url} alt="بوستر العرض" className="w-full h-full object-cover" />
                     <button
                       onClick={() => handleToggleActive(banner)}
@@ -460,8 +462,8 @@ export default function AdminBanners() {
                     </button>
                   </div>
 
-                  <div className="p-3 flex items-center justify-between bg-white">
-                    <span className="text-[11px] font-semibold text-slate-400">
+                  <div className="p-3 flex items-center justify-between bg-white dark:bg-slate-850">
+                    <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-400">
                       {banner.is_active ? 'معروض للزبائن' : 'غير معروض'}
                     </span>
 
@@ -484,9 +486,9 @@ export default function AdminBanners() {
             </div>
           ) : (
             <div className="text-center py-12 space-y-2">
-              <Sparkles className="w-10 h-10 text-slate-300 mx-auto" />
-              <h3 className="text-xs font-bold text-slate-700">لا توجد عروض مضافة بعد</h3>
-              <p className="text-[11px] text-slate-400">استخدم النموذج الجانبي لرفع أول بوستر إعلاني يظهر في الصفحة الرئيسية للمتجر.</p>
+              <Sparkles className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto" />
+              <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300">لا توجد عروض مضافة بعد</h3>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500">استخدم النموذج الجانبي لرفع أول بوستر إعلاني يظهر في الصفحة الرئيسية للمتجر.</p>
             </div>
           )}
         </div>

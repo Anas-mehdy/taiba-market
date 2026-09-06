@@ -9,6 +9,7 @@ import {
   ChevronRight, MessageSquare, User, FileText, ShoppingCart, 
   Trash2, ArrowRight, X, ShoppingBag, Phone, MapPin, Plus, Minus
 } from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function CheckoutPage() {
   const { cart, totalPrice, totalQuantity, clearCart, removeFromCart, addToCart } = useCart();
@@ -119,18 +120,30 @@ export default function CheckoutPage() {
 
   if (cart.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 bg-slate-50 min-h-screen font-sans text-center pb-24">
-        <div className="max-w-md mx-auto space-y-6">
-          <div className="bg-teal-50 p-4 rounded-3xl text-[#128C7E] w-20 h-20 flex items-center justify-center mx-auto shadow-inner">
-            <ShoppingCart className="w-10 h-10" />
+      <div className="flex-1 flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-24 transition-colors duration-200">
+        <header className="bg-[#075E54] dark:bg-[#053d36] text-white px-4 py-3.5 shadow-md shrink-0 border-b border-teal-800/30">
+          <div className="max-w-md mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Link href="/products" className="hover:bg-[#128C7E] p-1.5 rounded-xl text-white transition-colors">
+                <ChevronRight className="w-6 h-6" />
+              </Link>
+              <h1 className="text-base font-bold">سلة المشتريات</h1>
+            </div>
+            <ThemeToggle className="bg-white/10 hover:bg-white/20 text-teal-100 hover:text-white border-teal-600/40" />
           </div>
-          <div className="space-y-2">
-            <h1 className="text-xl font-extrabold text-slate-800">سلتك فارغة حالياً</h1>
-            <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
+        </header>
+
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
+          <div className="w-20 h-20 bg-slate-100 dark:bg-slate-900 rounded-3xl flex items-center justify-center text-slate-400 dark:text-slate-500 mb-4 border border-slate-200/60 dark:border-slate-800 shadow-inner">
+            <ShoppingCart className="w-10 h-10 stroke-[1.5]" />
+          </div>
+          <div className="space-y-1.5 mb-6">
+            <h2 className="text-base font-black text-slate-800 dark:text-slate-100">سلتك الحالية فارغة</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed">
               تصفح كتالوج منتجات ماركت طيبة وأضف المواد التي تحتاجها لإصدار الفاتورة وإرسالها مباشرة.
             </p>
           </div>
-          <div className="flex flex-col gap-2.5 max-w-xs mx-auto">
+          <div className="flex flex-col gap-2.5 max-w-xs mx-auto w-full">
             <Link
               href="/products"
               className="inline-flex items-center justify-center gap-2 bg-[#075E54] hover:bg-[#128C7E] text-white font-bold py-3 px-6 rounded-2xl transition-all shadow-md active:scale-95 text-xs"
@@ -140,7 +153,7 @@ export default function CheckoutPage() {
             </Link>
             <Link
               href="/"
-              className="inline-flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-6 rounded-2xl transition-all text-xs"
+              className="inline-flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-bold py-2.5 px-6 rounded-2xl transition-all text-xs border border-transparent dark:border-slate-750"
             >
               <span>مشاهدة العروض اليومية</span>
             </Link>
@@ -151,17 +164,20 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen bg-slate-50 font-sans pb-24">
+    <div className="flex-1 flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-24 transition-colors duration-200">
       {/* Header */}
-      <header className="bg-[#075E54] text-white px-4 py-3.5 shadow-md z-40 shrink-0">
-        <div className="max-w-md mx-auto flex items-center gap-3">
-          <Link href="/products" className="hover:bg-[#128C7E] p-1.5 rounded-xl text-white transition-colors">
-            <ChevronRight className="w-6 h-6" />
-          </Link>
-          <div>
-            <h1 className="text-base font-bold">معاينة الفاتورة والطلب</h1>
-            <p className="text-[10px] text-teal-100 font-medium">ماركت طيبة • طلب سريع عبر واتساب</p>
+      <header className="bg-[#075E54] dark:bg-[#053d36] text-white px-4 py-3.5 shadow-md z-40 shrink-0 border-b border-teal-800/30">
+        <div className="max-w-md mx-auto flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Link href="/products" className="hover:bg-[#128C7E] p-1.5 rounded-xl text-white transition-colors">
+              <ChevronRight className="w-6 h-6" />
+            </Link>
+            <div>
+              <h1 className="text-base font-bold">معاينة الفاتورة والطلب</h1>
+              <p className="text-[10px] text-teal-100 dark:text-teal-200 font-medium">ماركت طيبة • طلب سريع عبر واتساب</p>
+            </div>
           </div>
+          <ThemeToggle className="bg-white/10 hover:bg-white/20 text-teal-100 hover:text-white border-teal-600/40" />
         </div>
       </header>
 
@@ -170,26 +186,26 @@ export default function CheckoutPage() {
         <div className="max-w-md mx-auto space-y-4">
           
           {/* Summary Invoice Header Card */}
-          <div className="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-xs space-y-3">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-emerald-600" />
-                <h2 className="text-xs font-bold text-slate-800">قائمة المواد المختارة ({totalQuantity})</h2>
+                <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <h2 className="text-xs font-bold text-slate-800 dark:text-slate-100">قائمة المواد المختارة ({totalQuantity})</h2>
               </div>
-              <Link href="/products" className="text-[11px] font-bold text-[#128C7E] hover:underline">
+              <Link href="/products" className="text-[11px] font-bold text-[#128C7E] dark:text-emerald-400 hover:underline">
                 + إضافة مواد أخرى
               </Link>
             </div>
 
             {/* List of items */}
-            <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto no-scrollbar pr-1">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-72 overflow-y-auto no-scrollbar pr-1">
               {cart.map((item) => (
                 <div key={item.id} className="py-2.5 flex items-center justify-between gap-3">
                   {/* Right side: Image Thumbnail & Text details */}
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     <div
                       onClick={() => item.image_url && openImagePreview(item.image_url)}
-                      className={`w-11 h-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden relative group ${
+                      className={`w-11 h-11 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/60 flex items-center justify-center shrink-0 overflow-hidden relative group ${
                         item.image_url ? 'cursor-zoom-in hover:brightness-95 transition-all' : 'select-none'
                       }`}
                     >
@@ -201,22 +217,22 @@ export default function CheckoutPage() {
                           loading="lazy"
                         />
                       ) : (
-                        <ShoppingBag className="w-4 h-4 text-slate-350 stroke-[1.5]" />
+                        <ShoppingBag className="w-4 h-4 text-slate-350 dark:text-slate-500 stroke-[1.5]" />
                       )}
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-slate-800 truncate text-right">
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate text-right">
                         {item.name}
                       </p>
-                      <p className="text-[10px] text-slate-400 mt-0.5 text-right font-medium">
+                      <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5 text-right font-medium">
                         {item.price !== null && item.price !== undefined && Number(item.price) > 0 ? (
                           `${formatQuantityWithUnit(item.quantity, item.unit_label, item.unit_type)} × ${Number(item.price).toFixed(2)} TL`
                         ) : (
                           `الكمية: ${formatQuantityWithUnit(item.quantity, item.unit_label, item.unit_type)}`
                         )}
                         {item.applied_offer && (
-                          <span className="text-amber-600 font-bold mr-1">[{item.applied_offer}]</span>
+                          <span className="text-amber-600 dark:text-amber-400 font-bold mr-1">[{item.applied_offer}]</span>
                         )}
                       </p>
                     </div>
@@ -225,26 +241,26 @@ export default function CheckoutPage() {
                   {/* Left side: Price total & Actions */}
                   <div className="flex items-center gap-2 shrink-0">
                     {item.price !== null && item.price !== undefined && Number(item.price) > 0 && (
-                      <span className="text-xs font-black text-slate-800 font-mono">
+                      <span className="text-xs font-black text-slate-800 dark:text-slate-200 font-mono">
                         {calculateItemTotal(item).toFixed(2)} TL
                       </span>
                     )}
                     
                     {/* Compact Plus/Minus */}
-                    <div className="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200/50">
+                    <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200/50 dark:border-slate-700/60">
                       <button
                         onClick={() => removeFromCart(item.id)}
-                        className="p-1 hover:bg-slate-200 text-rose-500 rounded-md transition-colors cursor-pointer"
+                        className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 text-rose-500 dark:text-rose-400 rounded-md transition-colors cursor-pointer"
                         title="تنقيص"
                       >
                         <Minus className="w-3 h-3 stroke-[2.5]" />
                       </button>
-                      <span className="text-[10px] font-bold px-1.5 min-w-4 text-center text-slate-700 font-mono">
+                      <span className="text-[10px] font-bold px-1.5 min-w-4 text-center text-slate-700 dark:text-slate-200 font-mono">
                         {Number(item.quantity.toFixed(2))}
                       </span>
                       <button
                         onClick={() => addToCart(item)}
-                        className="p-1 hover:bg-slate-200 text-emerald-600 rounded-md transition-colors cursor-pointer"
+                        className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 text-emerald-600 dark:text-emerald-400 rounded-md transition-colors cursor-pointer"
                         title="زيادة"
                       >
                         <Plus className="w-3 h-3 stroke-[2.5]" />
@@ -256,24 +272,24 @@ export default function CheckoutPage() {
             </div>
 
             {/* Total Row */}
-            <div className="pt-3 border-t border-dashed border-slate-200 flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500">إجمالي الفاتورة التقريبي:</span>
-              <span className="text-base font-black text-[#128C7E]">
+            <div className="pt-3 border-t border-dashed border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">إجمالي الفاتورة التقريبي:</span>
+              <span className="text-base font-black text-[#128C7E] dark:text-emerald-400">
                 {totalPrice.toFixed(2)} TL
               </span>
             </div>
           </div>
 
           {/* Customer Info Form */}
-          <form onSubmit={handleCheckout} className="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-xs space-y-3.5">
-            <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-              <User className="w-4 h-4 text-emerald-600" />
-              <h2 className="text-xs font-bold text-slate-800">معلومات التوصيل والطلب</h2>
+          <form onSubmit={handleCheckout} className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3.5">
+            <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+              <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <h2 className="text-xs font-bold text-slate-800 dark:text-slate-100">معلومات التوصيل والطلب</h2>
             </div>
 
             {/* Customer Name */}
             <div className="space-y-1">
-              <label htmlFor="customerName" className="block text-[11px] font-bold text-slate-600 text-right">
+              <label htmlFor="customerName" className="block text-[11px] font-bold text-slate-600 dark:text-slate-300 text-right">
                 الاسم أو اسم العائلة <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
@@ -286,7 +302,7 @@ export default function CheckoutPage() {
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="مثال: أبو أحمد، عائلة فلان..."
-                  className="w-full bg-slate-50 border border-slate-200 outline-none rounded-xl pr-9 pl-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-right font-medium"
+                  className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/70 outline-none rounded-xl pr-9 pl-4 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-800 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-right font-medium"
                   disabled={isSubmitting}
                   required
                 />
@@ -295,8 +311,8 @@ export default function CheckoutPage() {
 
             {/* Customer Phone (Optional) */}
             <div className="space-y-1">
-              <label htmlFor="customerPhone" className="block text-[11px] font-bold text-slate-600 text-right">
-                رقم الهاتف للتواصل <span className="text-slate-400 text-[10px] font-normal">(اختياري)</span>
+              <label htmlFor="customerPhone" className="block text-[11px] font-bold text-slate-600 dark:text-slate-300 text-right">
+                رقم الهاتف للتواصل <span className="text-slate-400 dark:text-slate-500 text-[10px] font-normal">(اختياري)</span>
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 right-3 flex items-center text-slate-400">
@@ -308,7 +324,7 @@ export default function CheckoutPage() {
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   placeholder="05xxxxxxxx"
-                  className="w-full bg-slate-50 border border-slate-200 outline-none rounded-xl pr-9 pl-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-right font-medium ltr"
+                  className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/70 outline-none rounded-xl pr-9 pl-4 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-800 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-right font-medium ltr"
                   disabled={isSubmitting}
                 />
               </div>
@@ -316,8 +332,8 @@ export default function CheckoutPage() {
 
             {/* Customer Address (Optional) */}
             <div className="space-y-1">
-              <label htmlFor="customerAddress" className="block text-[11px] font-bold text-slate-600 text-right">
-                العنوان أو الحي <span className="text-slate-400 text-[10px] font-normal">(اختياري للتوصيل المنزلي)</span>
+              <label htmlFor="customerAddress" className="block text-[11px] font-bold text-slate-600 dark:text-slate-300 text-right">
+                العنوان أو الحي <span className="text-slate-400 dark:text-slate-500 text-[10px] font-normal">(اختياري للتوصيل المنزلي)</span>
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 right-3 flex items-center text-slate-400">
@@ -329,14 +345,14 @@ export default function CheckoutPage() {
                   value={customerAddress}
                   onChange={(e) => setCustomerAddress(e.target.value)}
                   placeholder="الشارع، البناء، رقم الشقة..."
-                  className="w-full bg-slate-50 border border-slate-200 outline-none rounded-xl pr-9 pl-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-right font-medium"
+                  className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/70 outline-none rounded-xl pr-9 pl-4 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-800 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-right font-medium"
                   disabled={isSubmitting}
                 />
               </div>
             </div>
 
             {errorMsg && (
-              <div className="bg-rose-50 border border-rose-100 text-rose-600 p-3 rounded-xl text-xs text-right font-semibold">
+              <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 p-3 rounded-xl text-xs text-right font-semibold">
                 {errorMsg}
               </div>
             )}
@@ -345,13 +361,13 @@ export default function CheckoutPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-[#25D366] hover:bg-[#20ba59] disabled:bg-slate-300 text-white rounded-2xl py-3 px-4 font-black text-xs flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98] cursor-pointer"
+              className="w-full bg-[#25D366] hover:bg-[#20ba59] disabled:bg-slate-300 dark:disabled:bg-slate-800 text-white rounded-2xl py-3 px-4 font-black text-xs flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98] cursor-pointer"
             >
               <MessageSquare className="w-4 h-4 fill-current" />
               <span>{isSubmitting ? 'جاري تجهيز الفاتورة...' : 'إرسال الفاتورة عبر واتساب إلى الماركت'}</span>
             </button>
             
-            <p className="text-[10px] text-slate-400 text-center leading-tight">
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center leading-tight">
               سيتم فتح تطبيق واتساب تلقائياً مع تفاصيل طلبك لتأكيد التجهيز والتوصيل.
             </p>
           </form>

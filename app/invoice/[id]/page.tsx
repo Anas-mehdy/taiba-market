@@ -4,6 +4,7 @@ import React, { useState, useEffect, use } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ShoppingBag, Loader2, Calendar, User, Clock, CheckCircle2, Printer, ChevronRight, Store, Gift, Tag, Download, Truck } from 'lucide-react';
 import Link from 'next/link';
+import ThemeToggle from '@/components/ThemeToggle';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas-pro';
 import { isOfferActive, getOfferBonusQuantity, getOrderBoxSummary } from '@/lib/offerHelpers';
@@ -217,59 +218,71 @@ export default function PublicInvoicePage({ params }: { params: Promise<{ id: st
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-10 font-sans text-right" dir="rtl">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-10 font-sans text-right text-slate-800 dark:text-slate-100 transition-colors duration-200" dir="rtl">
+      {/* Top Floating Controls Bar */}
+      <div className="max-w-xl mx-auto px-4 pt-4 flex items-center justify-between print:hidden">
+        <Link
+          href="/"
+          className="text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1 transition-colors"
+        >
+          <ChevronRight className="w-4 h-4 rotate-180" />
+          <span>العودة للمتجر</span>
+        </Link>
+        <ThemeToggle className="bg-white/80 dark:bg-slate-900/80" />
+      </div>
+
       {/* Printable Invoice Container */}
-      <div id="invoice-printable-card" className="max-w-xl mx-auto bg-white border border-slate-200 shadow-md sm:rounded-3xl p-6 sm:mt-10 print:mt-0 print:border-none print:shadow-none space-y-6">
+      <div id="invoice-printable-card" className="max-w-xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md sm:rounded-3xl p-6 mt-4 sm:mt-6 print:mt-0 print:border-none print:shadow-none space-y-6">
         
         {/* Brand Header */}
-        <div className="flex items-center justify-between pb-5 border-b border-slate-200">
+        <div className="flex items-center justify-between pb-5 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-emerald-600/30 shadow-xs shrink-0 bg-white">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo.jpg" alt="ماركت طيبة" className="w-full h-full object-cover" />
             </div>
             <div>
-              <h1 className="text-lg font-black text-slate-800">ماركت طيبة</h1>
-              <p className="text-[10px] text-slate-500 font-bold mt-0.5">تجارة المواد الغذائية والمنتجات الاستهلاكية</p>
+              <h1 className="text-lg font-black text-slate-800 dark:text-slate-100">ماركت طيبة</h1>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5">تجارة المواد الغذائية والمنتجات الاستهلاكية</p>
             </div>
           </div>
-          <span className="bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5">
+          <span className="bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span>فاتورة مسعّرة</span>
           </span>
         </div>
 
         {/* Invoice Metadata Grid */}
-        <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/60 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+        <div className="bg-slate-50 dark:bg-slate-800/70 rounded-2xl p-4 border border-slate-200/60 dark:border-slate-700/60 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-slate-600">
-              <User className="w-4 h-4 text-slate-400" />
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+              <User className="w-4 h-4 text-slate-400 dark:text-slate-400" />
               <span className="font-bold">الزبون:</span>
-              <span className="text-slate-800 font-semibold">{order.customer_name}</span>
+              <span className="text-slate-800 dark:text-slate-100 font-semibold">{order.customer_name}</span>
             </div>
-            <div className="flex items-center gap-2 text-slate-600">
-              <Calendar className="w-4 h-4 text-slate-400" />
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+              <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-400" />
               <span className="font-bold">التاريخ:</span>
-              <span className="text-slate-800 font-semibold">{formatDate(order.created_at)}</span>
+              <span className="text-slate-800 dark:text-slate-100 font-semibold">{formatDate(order.created_at)}</span>
             </div>
           </div>
           <div className="space-y-2 sm:text-left sm:flex sm:flex-col sm:items-end">
-            <div className="flex items-center gap-2 text-slate-600">
-              <Clock className="w-4 h-4 text-slate-400" />
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+              <Clock className="w-4 h-4 text-slate-400 dark:text-slate-400" />
               <span className="font-bold">ساعة الطلب:</span>
-              <span className="text-slate-800 font-semibold">{formatTime(order.created_at)}</span>
+              <span className="text-slate-800 dark:text-slate-100 font-semibold">{formatTime(order.created_at)}</span>
             </div>
-            <div className="flex items-center gap-2 text-slate-600">
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
               <span className="font-bold">رقم الفاتورة:</span>
-              <span className="font-mono text-slate-800 font-bold">{order.id.slice(0, 8).toUpperCase()}</span>
+              <span className="font-mono text-slate-800 dark:text-slate-100 font-bold">{order.id.slice(0, 8).toUpperCase()}</span>
             </div>
           </div>
         </div>
 
         {/* Invoice Items Table */}
         <div className="space-y-3">
-          <h3 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2">تفاصيل المواد والأسعار</h3>
-          <div className="divide-y divide-slate-100">
+          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-2">تفاصيل المواد والأسعار</h3>
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {order.order_items.map((item) => {
               const pricingStep = item.products?.pricing_unit_step && Number(item.products.pricing_unit_step) > 0 ? Number(item.products.pricing_unit_step) : 1;
               const itemTotalPrice = ((item.price_at_purchase || 0) * item.quantity) / pricingStep;
@@ -278,7 +291,7 @@ export default function PublicInvoicePage({ params }: { params: Promise<{ id: st
                 <div key={item.id} className="py-3 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     {/* Image Thumbnail */}
-                    <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
+                    <div className="w-10 h-10 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center shrink-0 overflow-hidden">
                       {item.product_image || item.products?.image_url ? (
                         <img
                           src={item.product_image || item.products?.image_url || undefined}
@@ -286,13 +299,13 @@ export default function PublicInvoicePage({ params }: { params: Promise<{ id: st
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <ShoppingBag className="w-5 h-5 text-slate-350" />
+                        <ShoppingBag className="w-5 h-5 text-slate-350 dark:text-slate-500" />
                       )}
                     </div>
                     {/* Item details */}
                     <div className="min-w-0 flex-1 text-right">
-                      <p className="text-sm font-bold text-slate-800 truncate">{item.product_name || item.products?.name || 'منتج غير متوفر'}</p>
-                      <p className="text-[10px] text-slate-450 font-semibold mt-0.5">
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{item.product_name || item.products?.name || 'منتج غير متوفر'}</p>
+                      <p className="text-[10px] text-slate-450 dark:text-slate-400 font-semibold mt-0.5">
                         {item.price_at_purchase > 0 ? (
                           `${Number(item.quantity.toFixed(3))} ${unitLabel} × ${Number(item.price_at_purchase).toFixed(2)} TL`
                         ) : (
@@ -304,10 +317,10 @@ export default function PublicInvoicePage({ params }: { params: Promise<{ id: st
                         if (!offer) return null;
                         const bonusQty = getOfferBonusQuantity(offer, item.quantity);
                         return (
-                          <div className="mt-1 inline-flex items-center gap-1 bg-amber-50 border border-amber-200/80 text-amber-900 font-bold px-2 py-0.5 rounded-lg text-[9.5px]">
-                            <Gift className="w-3 h-3 text-amber-600 shrink-0" />
+                          <div className="mt-1 inline-flex items-center gap-1 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 text-amber-900 dark:text-amber-300 font-bold px-2 py-0.5 rounded-lg text-[9.5px]">
+                            <Gift className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
                             <span>عرض خاص: {offer}</span>
-                            {bonusQty > 0 && <span className="text-amber-950 font-extrabold mr-1">(+ {bonusQty} صندوق مجاناً)</span>}
+                            {bonusQty > 0 && <span className="text-amber-950 dark:text-amber-200 font-extrabold mr-1">(+ {bonusQty} صندوق مجاناً)</span>}
                           </div>
                         );
                       })()}
@@ -315,7 +328,7 @@ export default function PublicInvoicePage({ params }: { params: Promise<{ id: st
 
                   </div>
                   {/* Total Price for item */}
-                  <span className="text-sm font-black text-slate-800 whitespace-nowrap">
+                  <span className="text-sm font-black text-slate-800 dark:text-slate-100 whitespace-nowrap">
                     {item.price_at_purchase > 0 ? (
                       `${itemTotalPrice.toFixed(2)} TL`
                     ) : (
@@ -332,9 +345,9 @@ export default function PublicInvoicePage({ params }: { params: Promise<{ id: st
         {(() => {
           const summary = getOrderBoxSummary(order.order_items);
           return (
-            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/60 flex items-center justify-between text-xs font-bold text-slate-700">
+            <div className="bg-slate-50 dark:bg-slate-800/80 rounded-2xl p-4 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
               <span>إجمالي عدد الصناديق المطلوبة:</span>
-              <span className="font-mono text-sm bg-slate-200/60 px-2.5 py-0.5 rounded-lg text-slate-800">
+              <span className="font-mono text-sm bg-slate-200/60 dark:bg-slate-700 px-2.5 py-0.5 rounded-lg text-slate-800 dark:text-slate-200">
                 {summary.bonusBoxes > 0 ? (
                   `${summary.totalBoxes} صندوق (${summary.paidBoxes} أصلية + ${summary.bonusBoxes} مجاناً بالعروض)`
                 ) : (
@@ -345,39 +358,38 @@ export default function PublicInvoicePage({ params }: { params: Promise<{ id: st
           );
         })()}
 
-
         {/* Grand Total Card */}
-        <div className="bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100 flex items-center justify-between">
+        <div className="bg-emerald-50/50 dark:bg-emerald-950/30 rounded-2xl p-4 border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-between">
           <div>
-            <span className="text-xs font-bold text-slate-500 block">إجمالي الفاتورة النهائي</span>
-            <span className="text-[10px] text-emerald-650 font-bold block mt-0.5">* شامل كافة المواد الغذائية أعلاه</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block">إجمالي الفاتورة النهائي</span>
+            <span className="text-[10px] text-emerald-650 dark:text-emerald-400 font-bold block mt-0.5">* شامل كافة المواد الغذائية أعلاه</span>
           </div>
-          <span className="text-xl font-black text-emerald-600">
+          <span className="text-xl font-black text-emerald-600 dark:text-emerald-400">
             {Number(order.total_price).toFixed(2)} TL
           </span>
         </div>
 
         {/* Footer info & Printable Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-5 border-t border-slate-200 text-center sm:text-right print:hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-5 border-t border-slate-200 dark:border-slate-800 text-center sm:text-right print:hidden">
           <p className="text-[10px] text-slate-400 font-bold">شكراً لتعاملكم معنا • ماركت طيبة</p>
           <div className="flex items-center justify-center gap-2 flex-wrap">
             <button
               onClick={handleDownloadPDF}
               disabled={isGeneratingPdf}
-              className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-bold px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-2xs disabled:opacity-50"
+              className="bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 font-bold px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-2xs disabled:opacity-50"
               title="تنزيل الفاتورة كملف PDF"
             >
               {isGeneratingPdf ? (
-                <Loader2 className="w-4 h-4 animate-spin text-emerald-700" />
+                <Loader2 className="w-4 h-4 animate-spin text-emerald-700 dark:text-emerald-400" />
               ) : (
-                <Download className="w-4 h-4 text-emerald-700" />
+                <Download className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
               )}
               <span>{isGeneratingPdf ? 'جاري التنزيل...' : 'تنزيل PDF'}</span>
             </button>
 
             <button
               onClick={handlePrint}
-              className="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-bold px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-2xs"
+              className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-2xs"
             >
               <Printer className="w-4 h-4" />
               <span>طباعة</span>
@@ -385,9 +397,9 @@ export default function PublicInvoicePage({ params }: { params: Promise<{ id: st
 
             <Link
               href={`/track/${order.id}`}
-              className="bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 font-bold px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-2xs"
+              className="bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800/60 text-blue-800 dark:text-blue-300 font-bold px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-2xs"
             >
-              <Truck className="w-4 h-4 text-blue-700" />
+              <Truck className="w-4 h-4 text-blue-700 dark:text-blue-400" />
               <span>تتبع حالة التوصيل</span>
             </Link>
 

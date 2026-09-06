@@ -342,15 +342,15 @@ export default function InventoryPage() {
     <div className="space-y-6 font-sans text-right pb-10" dir="rtl">
       
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white border border-slate-200 rounded-3xl p-6 shadow-xs">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <div className="bg-emerald-500/10 p-2.5 rounded-2xl text-emerald-600 border border-emerald-500/20">
+            <div className="bg-emerald-500/10 dark:bg-emerald-950/40 p-2.5 rounded-2xl text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-800/40">
               <Boxes className="w-6 h-6" />
             </div>
-            <h1 className="text-xl font-black text-slate-850">إدارة مخزون المستودع</h1>
+            <h1 className="text-xl font-black text-slate-850 dark:text-slate-100">إدارة مخزون المستودع</h1>
           </div>
-          <p className="text-xs text-slate-500 font-medium">
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
             تتبع وإدارة مخزون البضائع المتاحة بالصناديق. ينخفض المخزون تلقائياً عند طلب الزبون وينعكس التعديل عند تعديل الفواتير.
           </p>
         </div>
@@ -358,17 +358,17 @@ export default function InventoryPage() {
         <button
           onClick={fetchData}
           disabled={loading}
-          className="self-start md:self-center bg-slate-100 hover:bg-slate-200 disabled:bg-slate-50 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 cursor-pointer transition-all active:scale-95 border border-slate-200/80 shadow-2xs"
+          className="self-start md:self-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:bg-slate-50 dark:disabled:bg-slate-850 text-slate-700 dark:text-slate-200 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 cursor-pointer transition-all active:scale-95 border border-slate-200/80 dark:border-slate-700 shadow-2xs"
         >
-          <RefreshCw className={`w-4 h-4 text-slate-500 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 text-slate-500 dark:text-slate-400 ${loading ? 'animate-spin' : ''}`} />
           <span>تحديث البيانات</span>
         </button>
       </div>
 
       {/* Demo Warning */}
       {usingMockData && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-800 text-xs flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 text-amber-800 dark:text-amber-300 text-xs flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
           <div>
             <span className="font-bold">وضع العرض التجريبي نشط:</span> لم يتم العثور على تهيئة لقاعدة بيانات Supabase. التغييرات التي تجريها الآن تُحفظ في ذاكرة المتصفح المؤقتة (Local Storage).
           </div>
@@ -380,13 +380,13 @@ export default function InventoryPage() {
         
         {/* Left Side: Add Product to Inventory */}
         <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-xs space-y-4">
-            <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
-              <Plus className="w-5 h-5 text-emerald-600" />
-              <h2 className="text-sm font-bold text-slate-800">إضافة منتج متتبع للمخزون</h2>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs space-y-4">
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2">
+              <Plus className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">إضافة منتج متتبع للمخزون</h2>
             </div>
             
-            <p className="text-[11px] text-slate-500 leading-relaxed">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
               ابحث عن أي منتج من قائمة المنتجات المتاحة لإدراجه تحت إدارة المخزون وتحديد عدد الصناديق المتوفرة لديه.
             </p>
 
@@ -398,12 +398,12 @@ export default function InventoryPage() {
                 placeholder="ابحث بالاسم لإضافة السلعة..."
                 value={dbSearchQuery}
                 onChange={(e) => setDbSearchQuery(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 outline-none rounded-xl pr-10 pl-4 py-3 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-right"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none rounded-xl pr-10 pl-4 py-3 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:bg-white dark:focus:bg-slate-750 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-right"
               />
               {dbSearchQuery && (
                 <button
                   onClick={() => setDbSearchQuery('')}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300 p-1 cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -412,29 +412,29 @@ export default function InventoryPage() {
 
             {/* Search Results Dropdown List */}
             {showSearchResults && (
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden max-h-64 overflow-y-auto divide-y divide-slate-150 shadow-2xs">
+              <div className="bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden max-h-64 overflow-y-auto divide-y divide-slate-150 dark:divide-slate-700/50 shadow-2xs">
                 {dbSearchResults.length > 0 ? (
                   dbSearchResults.map((prod) => {
                     const isTracked = prod.inventory_stock !== null;
                     return (
                       <div 
                         key={prod.id} 
-                        className="p-3 flex items-center justify-between text-xs hover:bg-slate-100/80 transition-colors"
+                        className="p-3 flex items-center justify-between text-xs hover:bg-slate-100/80 dark:hover:bg-slate-700/50 transition-colors"
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           {prod.image_url ? (
-                            <img src={prod.image_url} alt="" className="w-8 h-8 rounded-lg object-cover border border-slate-200 shrink-0" />
+                            <img src={prod.image_url} alt="" className="w-8 h-8 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shrink-0" />
                           ) : (
-                            <ShoppingBag className="w-8 h-8 p-1.5 bg-white text-slate-400 border border-slate-200 rounded-lg shrink-0" />
+                            <ShoppingBag className="w-8 h-8 p-1.5 bg-white dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700 rounded-lg shrink-0" />
                           )}
                           <div className="min-w-0">
-                            <p className="font-bold text-slate-850 truncate">{prod.name}</p>
-                            <p className="text-[10px] text-slate-400">{prod.categories?.name || 'بدون قسم'}</p>
+                            <p className="font-bold text-slate-850 dark:text-slate-100 truncate">{prod.name}</p>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500">{prod.categories?.name || 'بدون قسم'}</p>
                           </div>
                         </div>
 
                         {isTracked ? (
-                          <div className="text-[10px] bg-slate-200 text-slate-600 font-bold px-2 py-1 rounded-lg shrink-0">
+                          <div className="text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold px-2 py-1 rounded-lg shrink-0">
                             مضاف: {prod.inventory_stock} صندوق
                           </div>
                         ) : (
@@ -443,7 +443,7 @@ export default function InventoryPage() {
                               setSelectedProductToAdd(prod);
                               setInitialStockInput('10');
                             }}
-                            className="bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white border border-emerald-500/20 font-bold px-2.5 py-1.5 rounded-lg text-[10px] transition-all cursor-pointer shadow-2xs shrink-0"
+                            className="bg-emerald-500/10 dark:bg-emerald-950/40 hover:bg-emerald-500 dark:hover:bg-emerald-600 text-emerald-600 dark:text-emerald-400 hover:text-white border border-emerald-500/20 dark:border-emerald-800/40 font-bold px-2.5 py-1.5 rounded-lg text-[10px] transition-all cursor-pointer shadow-2xs shrink-0"
                           >
                             إختر المنتج
                           </button>
@@ -452,7 +452,7 @@ export default function InventoryPage() {
                     );
                   })
                 ) : (
-                  <div className="p-4 text-center text-slate-400 text-xs">
+                  <div className="p-4 text-center text-slate-400 dark:text-slate-500 text-xs">
                     لم نعثر على أي منتج يطابق بحثك.
                   </div>
                 )}
@@ -461,23 +461,23 @@ export default function InventoryPage() {
 
             {/* Selected Product Form/Modal (Inline) */}
             {selectedProductToAdd && (
-              <div className="bg-emerald-500/5 border border-emerald-100 rounded-2xl p-4 space-y-4 animate-fadeIn">
+              <div className="bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-800/40 rounded-2xl p-4 space-y-4 animate-fadeIn">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-2.5">
                     {selectedProductToAdd.image_url ? (
-                      <img src={selectedProductToAdd.image_url} alt="" className="w-10 h-10 rounded-lg object-cover border border-emerald-200 shrink-0" />
+                      <img src={selectedProductToAdd.image_url} alt="" className="w-10 h-10 rounded-lg object-cover border border-emerald-200 dark:border-emerald-800/60 shrink-0" />
                     ) : (
-                      <ShoppingBag className="w-10 h-10 p-2 bg-white text-emerald-500/60 border border-emerald-200 rounded-lg shrink-0" />
+                      <ShoppingBag className="w-10 h-10 p-2 bg-white dark:bg-slate-800 text-emerald-500/60 border border-emerald-200 dark:border-emerald-800/60 rounded-lg shrink-0" />
                     )}
                     <div>
-                      <h3 className="text-xs font-extrabold text-slate-800">{selectedProductToAdd.name}</h3>
-                      <p className="text-[10px] text-slate-500">{selectedProductToAdd.categories?.name || 'بدون قسم'}</p>
+                      <h3 className="text-xs font-extrabold text-slate-800 dark:text-slate-100">{selectedProductToAdd.name}</h3>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">{selectedProductToAdd.categories?.name || 'بدون قسم'}</p>
                     </div>
                   </div>
                   
                   <button 
                     onClick={() => setSelectedProductToAdd(null)}
-                    className="text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-200 p-1 rounded-full border border-slate-200 transition-colors cursor-pointer"
+                    className="text-slate-400 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 p-1 rounded-full border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -485,20 +485,20 @@ export default function InventoryPage() {
 
                 {/* Stock input field */}
                 <div className="space-y-1.5">
-                  <label className="block text-[11px] font-bold text-slate-650">الكمية المتوفرة حالياً (عدد الصناديق):</label>
+                  <label className="block text-[11px] font-bold text-slate-650 dark:text-slate-300">الكمية المتوفرة حالياً (عدد الصناديق):</label>
                   <div className="flex gap-2">
                     <input
                       type="number"
                       value={initialStockInput}
                       onChange={(e) => setInitialStockInput(e.target.value)}
                       placeholder="0"
-                      className="w-full bg-white border border-slate-200 outline-none rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-right"
+                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-right"
                     />
                     
                     <button
                       onClick={handleAddToInventory}
                       disabled={actionLoadingId === selectedProductToAdd.id}
-                      className="bg-[#128C7E] hover:bg-[#128C7E]/95 disabled:bg-slate-100 text-white font-bold px-4 py-2.5 rounded-xl text-xs shrink-0 cursor-pointer shadow-xs active:scale-95 transition-all flex items-center gap-1.5"
+                      className="bg-[#128C7E] hover:bg-[#128C7E]/95 disabled:bg-slate-100 dark:disabled:bg-slate-800 text-white font-bold px-4 py-2.5 rounded-xl text-xs shrink-0 cursor-pointer shadow-xs active:scale-95 transition-all flex items-center gap-1.5"
                     >
                       {actionLoadingId === selectedProductToAdd.id ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -516,18 +516,18 @@ export default function InventoryPage() {
 
         {/* Right Side: Tracked Inventory Products List */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-xs space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs space-y-4">
             
             {/* Header & Internal Filters */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div>
-                <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                   <span>المنتجات المتتبعة في المخزون</span>
-                  <span className="bg-[#128C7E]/10 text-[#128C7E] font-extrabold px-2 py-0.5 rounded-full text-[10px]">
+                  <span className="bg-[#128C7E]/10 dark:bg-emerald-950/40 text-[#128C7E] dark:text-emerald-400 font-extrabold px-2 py-0.5 rounded-full text-[10px]">
                     {filteredTrackedProducts.length} من {trackedProducts.length}
                   </span>
                 </h2>
-                <p className="text-[10px] text-slate-400 mt-0.5">قائمة بالمنتجات التي تخضع حالياً لمراقبة وتحديث كميات المخزون.</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">قائمة بالمنتجات التي تخضع حالياً لمراقبة وتحديث كميات المخزون.</p>
               </div>
 
               {/* Internal search and category filters */}
@@ -540,10 +540,10 @@ export default function InventoryPage() {
                     placeholder="بحث في المخزون..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="bg-slate-50 border border-slate-200 outline-none rounded-xl pr-8 pl-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-[#128C7E] transition-all text-right w-full sm:w-44"
+                    className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none rounded-xl pr-8 pl-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:bg-white dark:focus:bg-slate-750 focus:border-[#128C7E] transition-all text-right w-full sm:w-44"
                   />
                   {searchQuery && (
-                    <button onClick={() => setSearchQuery('')} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-450 hover:text-slate-700">
+                    <button onClick={() => setSearchQuery('')} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-450 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
                       <X className="w-3 h-3" />
                     </button>
                   )}
@@ -553,11 +553,11 @@ export default function InventoryPage() {
                 <select
                   value={selectedFilterCategory}
                   onChange={(e) => setSelectedFilterCategory(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 outline-none rounded-xl px-2.5 py-1.5 text-xs text-slate-700 cursor-pointer focus:border-[#128C7E] transition-colors"
+                  className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none rounded-xl px-2.5 py-1.5 text-xs text-slate-700 dark:text-slate-200 cursor-pointer focus:border-[#128C7E] transition-colors"
                 >
                   <option value="all">كل الأقسام</option>
                   {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                    <option key={c.id} value={c.id} className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200">{c.name}</option>
                   ))}
                 </select>
               </div>
@@ -565,13 +565,13 @@ export default function InventoryPage() {
 
             {/* Error or Success Toast Notifications */}
             {errorMsg && (
-              <div className="bg-rose-50 border border-rose-100 text-rose-600 p-3 rounded-xl text-xs flex items-center gap-2.5 font-bold">
+              <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 p-3 rounded-xl text-xs flex items-center gap-2.5 font-bold">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
             )}
             {successMsg && (
-              <div className="bg-emerald-50 border border-emerald-100 text-emerald-600 p-3 rounded-xl text-xs flex items-center gap-2.5 font-bold">
+              <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/40 text-emerald-600 dark:text-emerald-400 p-3 rounded-xl text-xs flex items-center gap-2.5 font-bold">
                 <Check className="w-4 h-4 shrink-0" />
                 <span>{successMsg}</span>
               </div>
@@ -579,47 +579,47 @@ export default function InventoryPage() {
 
             {/* Loading Indicator */}
             {loading ? (
-              <div className="py-16 text-center text-slate-450 flex flex-col items-center justify-center gap-3">
-                <Loader2 className="w-8 h-8 text-[#128C7E] animate-spin" />
+              <div className="py-16 text-center text-slate-450 dark:text-slate-500 flex flex-col items-center justify-center gap-3">
+                <Loader2 className="w-8 h-8 text-[#128C7E] dark:text-emerald-400 animate-spin" />
                 <p className="text-xs font-semibold">جاري تحميل المخزون...</p>
               </div>
             ) : filteredTrackedProducts.length > 0 ? (
               
               /* Desktop and Mobile Responsive Table/List */
-              <div className="overflow-x-auto border border-slate-150 rounded-2xl">
+              <div className="overflow-x-auto border border-slate-150 dark:border-slate-800 rounded-2xl">
                 <table className="w-full text-right border-collapse">
                   <thead>
-                    <tr className="bg-slate-50 text-[10px] text-slate-500 font-bold border-b border-slate-150">
+                    <tr className="bg-slate-50 dark:bg-slate-800/60 text-[10px] text-slate-500 dark:text-slate-400 font-bold border-b border-slate-150 dark:border-slate-800">
                       <th className="p-3">المنتج</th>
                       <th className="p-3 text-center">القسم</th>
                       <th className="p-3 text-center min-w-44">الكمية (صناديق)</th>
                       <th className="p-3 text-center">الإجراءات</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-150 text-xs">
+                  <tbody className="divide-y divide-slate-150 dark:divide-slate-800 text-xs">
                     {filteredTrackedProducts.map((prod) => {
                       const isEditing = editingStockId === prod.id;
                       const isActionLoading = actionLoadingId === prod.id;
                       
                       return (
-                        <tr key={prod.id} className="hover:bg-slate-50/50 transition-colors">
+                        <tr key={prod.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
                           
                           {/* Product Info */}
                           <td className="p-3">
                             <div className="flex items-center gap-3">
                               {prod.image_url ? (
-                                <img src={prod.image_url} alt="" className="w-10 h-10 rounded-xl object-cover border border-slate-200 shrink-0" />
+                                <img src={prod.image_url} alt="" className="w-10 h-10 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0" />
                               ) : (
-                                <ShoppingBag className="w-10 h-10 p-2 bg-slate-50 text-slate-400 border border-slate-200 rounded-xl shrink-0" />
+                                <ShoppingBag className="w-10 h-10 p-2 bg-slate-50 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700 rounded-xl shrink-0" />
                               )}
-                              <span className="font-bold text-slate-800 leading-tight block truncate max-w-44 sm:max-w-64" title={prod.name}>
+                              <span className="font-bold text-slate-800 dark:text-slate-100 leading-tight block truncate max-w-44 sm:max-w-64" title={prod.name}>
                                 {prod.name}
                               </span>
                             </div>
                           </td>
 
                           {/* Category */}
-                          <td className="p-3 text-center text-[11px] text-slate-500 font-bold">
+                          <td className="p-3 text-center text-[11px] text-slate-500 dark:text-slate-400 font-bold">
                             {prod.categories?.name || 'بدون قسم'}
                           </td>
 
@@ -633,7 +633,7 @@ export default function InventoryPage() {
                                     type="number"
                                     value={editingStockValue}
                                     onChange={(e) => setEditingStockValue(e.target.value)}
-                                    className="w-16 bg-white border border-slate-300 outline-none rounded-lg px-2 py-1 text-center font-bold text-xs"
+                                    className="w-16 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 outline-none rounded-lg px-2 py-1 text-center font-bold text-xs text-slate-800 dark:text-slate-100"
                                     autoFocus
                                   />
                                   <button
@@ -646,7 +646,7 @@ export default function InventoryPage() {
                                   </button>
                                   <button
                                     onClick={() => setEditingStockId(null)}
-                                    className="bg-slate-200 hover:bg-slate-350 text-slate-650 p-1.5 rounded-lg transition-all cursor-pointer"
+                                    className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-350 dark:hover:bg-slate-600 text-slate-650 dark:text-slate-300 p-1.5 rounded-lg transition-all cursor-pointer"
                                     title="إلغاء التعديل"
                                   >
                                     <X className="w-3.5 h-3.5" />
@@ -654,12 +654,12 @@ export default function InventoryPage() {
                                 </div>
                               ) : (
                                 /* Quick increment/decrement buttons mode */
-                                <div className="flex items-center gap-1.5 bg-slate-100 rounded-xl p-0.5 border border-slate-200/50">
+                                <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-xl p-0.5 border border-slate-200/50 dark:border-slate-700">
                                   {/* Decrement Button */}
                                   <button
                                     onClick={() => handleQuickAdjust(prod.id, -1)}
                                     disabled={isActionLoading}
-                                    className="bg-white hover:bg-rose-50 text-rose-600 w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all active:scale-90 border border-slate-200/40 hover:border-rose-100 shadow-2xs font-extrabold"
+                                    className="bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all active:scale-90 border border-slate-200/40 dark:border-slate-700 hover:border-rose-100 dark:hover:border-rose-800 shadow-2xs font-extrabold"
                                     title="تنقيص 1 صندوق"
                                   >
                                     <Minus className="w-3 h-3" />
@@ -671,10 +671,10 @@ export default function InventoryPage() {
                                       setEditingStockId(prod.id);
                                       setEditingStockValue(String(prod.inventory_stock));
                                     }}
-                                    className={`px-3 text-center min-w-12 font-mono font-black text-sm select-none cursor-pointer hover:bg-white hover:shadow-2xs rounded-lg py-1 transition-all ${
+                                    className={`px-3 text-center min-w-12 font-mono font-black text-sm select-none cursor-pointer hover:bg-white dark:hover:bg-slate-700 hover:shadow-2xs rounded-lg py-1 transition-all ${
                                       (prod.inventory_stock ?? 0) <= 0 
-                                        ? 'text-rose-600 bg-rose-50 border border-rose-100/30' 
-                                        : 'text-slate-800'
+                                        ? 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 border border-rose-100/30 dark:border-rose-900/50' 
+                                        : 'text-slate-800 dark:text-slate-100'
                                     }`}
                                     title="اضغط لتعديل الرقم يدوياً"
                                   >
@@ -685,7 +685,7 @@ export default function InventoryPage() {
                                   <button
                                     onClick={() => handleQuickAdjust(prod.id, 1)}
                                     disabled={isActionLoading}
-                                    className="bg-white hover:bg-emerald-50 text-emerald-600 w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all active:scale-90 border border-slate-200/40 hover:border-emerald-100 shadow-2xs font-extrabold"
+                                    className="bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all active:scale-90 border border-slate-200/40 dark:border-slate-700 hover:border-emerald-100 dark:hover:border-emerald-800 shadow-2xs font-extrabold"
                                     title="زيادة 1 صندوق"
                                   >
                                     <Plus className="w-3 h-3" />
@@ -714,14 +714,14 @@ export default function InventoryPage() {
               </div>
             ) : (
               /* Empty list state */
-              <div className="bg-slate-50 border border-dashed border-slate-200 rounded-3xl p-12 text-center space-y-4">
-                <div className="bg-slate-200/50 p-4 rounded-full inline-block text-slate-400">
+              <div className="bg-slate-50 dark:bg-slate-850/40 border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-12 text-center space-y-4">
+                <div className="bg-slate-200/50 dark:bg-slate-800 p-4 rounded-full inline-block text-slate-400 dark:text-slate-500">
                   <Boxes className="w-10 h-10" />
                 </div>
                 
                 <div className="space-y-1">
-                  <h3 className="text-sm font-bold text-slate-700">لا يوجد منتجات متتبعة حالياً</h3>
-                  <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+                  <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">لا يوجد منتجات متتبعة حالياً</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
                     قائمة المخزون فارغة. للبدء بمراقبة المخزون، ابحث عن المنتجات من خلال حقل البحث الجانبي باليمين وقم بإضافتها.
                   </p>
                 </div>

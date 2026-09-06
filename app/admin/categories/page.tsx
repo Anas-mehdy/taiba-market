@@ -215,34 +215,34 @@ export default function AdminCategories() {
 
       {/* Header Info */}
       <div>
-        <h1 className="text-xl font-bold text-slate-800">إدارة أقسام الكتالوج</h1>
-        <p className="text-xs text-slate-500 mt-1">أضف أو احذف الأقسام لتصنيف المواد الغذائية في المتجر (مثل: بسكويت، معلبات، مشروبات)</p>
+        <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">إدارة أقسام الكتالوج</h1>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">أضف أو احذف الأقسام لتصنيف المواد الغذائية في المتجر (مثل: بسكويت، معلبات، مشروبات)</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
         {/* Create Form */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-5 space-y-4 shadow-sm">
-          <div className="flex items-center gap-2.5 pb-2.5 border-b border-slate-100">
-            <Folder className="w-5 h-5 text-emerald-600" />
-            <h2 className="text-sm font-bold text-slate-800">إضافة قسم جديد</h2>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 space-y-4 shadow-sm">
+          <div className="flex items-center gap-2.5 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+            <Folder className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">إضافة قسم جديد</h2>
           </div>
 
           <form onSubmit={handleAddCategory} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-600">اسم القسم</label>
+              <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">اسم القسم</label>
               <input
                 type="text"
                 required
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 placeholder="أدخل اسم القسم (مثال: أجبان وألبان)"
-                className="w-full bg-slate-50 border border-slate-200 outline-none rounded-xl px-4 py-3 text-sm text-slate-850 placeholder-slate-400 focus:bg-white focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-right"
+                className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 outline-none rounded-xl px-4 py-3 text-sm text-slate-850 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-800 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all text-right"
                 disabled={submitting}
               />
             </div>
 
             {errorMsg && (
-              <div className="bg-rose-500/10 border border-rose-500/20 text-rose-800 p-3 rounded-xl text-xs font-semibold leading-relaxed">
+              <div className="bg-rose-500/10 border border-rose-500/20 text-rose-800 dark:text-rose-300 p-3 rounded-xl text-xs font-semibold leading-relaxed">
                 {errorMsg}
               </div>
             )}
@@ -250,7 +250,7 @@ export default function AdminCategories() {
             <button
               type="submit"
               disabled={submitting || !newCategoryName.trim()}
-              className="w-full bg-emerald-650 hover:bg-emerald-700 disabled:bg-slate-100 disabled:text-slate-450 text-white font-bold py-3 px-4 rounded-xl text-sm flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
+              className="w-full bg-emerald-650 hover:bg-emerald-700 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-450 dark:disabled:text-slate-600 text-white font-bold py-3 px-4 rounded-xl text-sm flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
               style={{ backgroundColor: '#128C7E' }}
             >
               {submitting ? (
@@ -264,19 +264,19 @@ export default function AdminCategories() {
         </div>
 
         {/* Categories List */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-5 md:col-span-2 space-y-4 shadow-sm">
-          <div className="flex items-center gap-2.5 pb-2.5 border-b border-slate-100">
-            <Folder className="w-5 h-5 text-emerald-600" />
-            <h2 className="text-sm font-bold text-slate-800">الأقسام الحالية ({categories.length})</h2>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 md:col-span-2 space-y-4 shadow-sm">
+          <div className="flex items-center gap-2.5 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+            <Folder className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">الأقسام الحالية ({categories.length})</h2>
           </div>
 
           {loading ? (
-            <div className="py-10 text-center text-slate-500 flex flex-col items-center justify-center gap-3">
-              <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+            <div className="py-10 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center justify-center gap-3">
+              <Loader2 className="w-8 h-8 animate-spin text-emerald-600 dark:text-emerald-400" />
               <p className="text-xs font-bold">جاري تحميل الأقسام...</p>
             </div>
           ) : categories.length > 0 ? (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
               {categories.map((category) => (
                 <div 
                   key={category.id} 
@@ -285,26 +285,26 @@ export default function AdminCategories() {
                   onDragOver={(e) => handleDragOver(e, category.id)}
                   onDragEnd={handleDragEnd}
                   onDrop={(e) => handleDrop(e, category.id)}
-                  className={`py-3 flex items-center justify-between gap-4 transition-all cursor-grab active:cursor-grabbing hover:bg-slate-50/50 px-2 rounded-xl ${
-                    draggingId === category.id ? 'opacity-40 bg-slate-105' : ''
+                  className={`py-3 flex items-center justify-between gap-4 transition-all cursor-grab active:cursor-grabbing hover:bg-slate-50/50 dark:hover:bg-slate-800/50 px-2 rounded-xl ${
+                    draggingId === category.id ? 'opacity-40 bg-slate-105 dark:bg-slate-800' : ''
                   } ${
-                    dragOverId === category.id ? 'border-b-2 border-emerald-500 bg-emerald-500/5' : ''
+                    dragOverId === category.id ? 'border-b-2 border-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10' : ''
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-slate-400 hover:text-slate-600 cursor-grab active:cursor-grabbing shrink-0 p-1" title="اسحب لإعادة الترتيب">
+                    <span className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 cursor-grab active:cursor-grabbing shrink-0 p-1" title="اسحب لإعادة الترتيب">
                       <GripVertical className="w-4 h-4" />
                     </span>
-                    <div className="bg-slate-50 p-2 rounded-xl text-slate-600 border border-slate-200">
-                      <Folder className="w-4.5 h-4.5 text-emerald-600" />
+                    <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-xl text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                      <Folder className="w-4.5 h-4.5 text-emerald-600 dark:text-emerald-400" />
                     </div>
-                    <span className="text-sm font-bold text-slate-800">{category.name}</span>
+                    <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{category.name}</span>
                   </div>
 
                   <button
                     onClick={() => handleDeleteCategory(category.id, category.name)}
                     disabled={deletingId === category.id}
-                    className="p-2 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-500 hover:text-rose-600 rounded-xl transition-all cursor-pointer"
+                    className="p-2 bg-slate-50 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-slate-200 dark:border-slate-700 hover:border-rose-200 dark:hover:border-rose-900/50 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl transition-all cursor-pointer"
                   >
                     {deletingId === category.id ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -317,9 +317,9 @@ export default function AdminCategories() {
             </div>
           ) : (
             <div className="text-center py-12 space-y-2">
-              <Folder className="w-10 h-10 text-slate-400 mx-auto" />
-              <h3 className="text-sm font-bold text-slate-700">لا يوجد أقسام مضافة بعد</h3>
-              <p className="text-xs text-slate-500">قم بإضافة قسمك الأول باستخدام النموذج الجانبي لتصنيف المنتجات.</p>
+              <Folder className="w-10 h-10 text-slate-400 dark:text-slate-600 mx-auto" />
+              <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">لا يوجد أقسام مضافة بعد</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">قم بإضافة قسمك الأول باستخدام النموذج الجانبي لتصنيف المنتجات.</p>
             </div>
           )}
         </div>

@@ -9,6 +9,7 @@ import {
   ArrowLeft, Tag, Gift, Maximize2, X, Phone, Flame, ChevronLeft,
   Clock, CheckCircle2, AlertCircle, Layers
 } from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle';
 
 interface DailyOffer {
   id: string;
@@ -161,7 +162,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen bg-slate-50 font-sans pb-20">
+    <div className="flex-1 flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-20 transition-colors duration-200">
       
       {/* Demo Warning Banner */}
       {usingMockData && (
@@ -172,7 +173,7 @@ export default function HomePage() {
       )}
 
       {/* Main App Header */}
-      <header className="sticky top-0 bg-[#075E54] text-white px-4 py-3.5 shadow-md z-40 shrink-0">
+      <header className="sticky top-0 bg-[#075E54] dark:bg-[#053d36] text-white px-4 py-3.5 shadow-md z-40 shrink-0 border-b border-teal-800/30">
         <div className="max-w-md mx-auto flex items-center justify-between gap-3">
           
           {/* Logo & Title */}
@@ -183,39 +184,42 @@ export default function HomePage() {
             </div>
             <div className="min-w-0">
               <h1 className="text-base font-black tracking-tight truncate leading-tight">{storeName}</h1>
-              <p className="text-[10px] text-teal-100 font-medium truncate mt-0.5">بقالية ومواد غذائية • عروض يومية وتوصيل سريع</p>
+              <p className="text-[10px] text-teal-100 dark:text-teal-200 font-medium truncate mt-0.5">بقالية ومواد غذائية • عروض يومية وتوصيل سريع</p>
             </div>
           </div>
 
-          {/* Similar Store Inquiries Link */}
-          <div className="text-left text-[11px] sm:text-xs text-teal-100 font-medium shrink-0 leading-tight">
-            <span>هل تريد متجراً مشابهاً؟ </span>
-            <a
-              href={`https://wa.me/905350215375?text=${encodeURIComponent('مرحبا، أريد متجر مشابه لمتجر ماركت طيبة')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-amber-300 hover:text-amber-200 font-bold underline underline-offset-2 transition-colors whitespace-nowrap"
-            >
-              تواصل معنا
-            </a>
+          {/* Header Actions: Theme Toggle & Inquiries */}
+          <div className="flex items-center gap-2 shrink-0">
+            <ThemeToggle className="bg-white/10 hover:bg-white/20 text-teal-100 hover:text-white border-teal-600/40" />
+            
+            <div className="text-left text-[11px] sm:text-xs text-teal-100 dark:text-teal-200 font-medium shrink-0 leading-tight">
+              <a
+                href={`https://wa.me/905350215375?text=${encodeURIComponent('مرحبا، أريد متجر مشابه لمتجر ماركت طيبة')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-300 hover:text-amber-200 font-bold underline underline-offset-2 transition-colors whitespace-nowrap"
+              >
+                تواصل معنا
+              </a>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Search & Action Bar */}
-      <section className="bg-white border-b border-slate-200 py-3 px-4 sticky top-[62px] z-30 shadow-xs">
+      <section className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-3 px-4 sticky top-[62px] z-30 shadow-xs transition-colors duration-200">
         <div className="max-w-md mx-auto space-y-2.5">
           
           {/* Search Trigger Link to Products */}
           <Link
             href="/products"
-            className="w-full bg-slate-100 hover:bg-slate-200/80 border border-slate-200/60 rounded-2xl px-4 py-2.5 flex items-center justify-between text-xs text-slate-400 font-medium transition-all group"
+            className="w-full bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200/80 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 rounded-2xl px-4 py-2.5 flex items-center justify-between text-xs text-slate-400 dark:text-slate-400 font-medium transition-all group"
           >
             <div className="flex items-center gap-2">
-              <Search className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 transition-colors" />
+              <Search className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
               <span>ابحث عن أي منتج في الماركت...</span>
             </div>
-            <span className="text-[10px] bg-[#128C7E]/10 text-[#075E54] font-bold px-2 py-0.5 rounded-lg">
+            <span className="text-[10px] bg-[#128C7E]/10 dark:bg-[#128C7E]/25 text-[#075E54] dark:text-emerald-300 font-bold px-2 py-0.5 rounded-lg">
               فتح الكتالوج &larr;
             </span>
           </Link>
@@ -224,16 +228,16 @@ export default function HomePage() {
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-0.5 snap-x">
             <Link
               href="/products"
-              className="bg-emerald-50 text-[#075E54] border border-emerald-200/80 hover:bg-emerald-100 font-bold px-3 py-1 rounded-full text-[11px] whitespace-nowrap shrink-0 snap-start flex items-center gap-1 transition-all"
+              className="bg-emerald-50 dark:bg-emerald-950/40 text-[#075E54] dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 font-bold px-3 py-1 rounded-full text-[11px] whitespace-nowrap shrink-0 snap-start flex items-center gap-1 transition-all"
             >
-              <Sparkles className="w-3 h-3 text-[#128C7E]" />
+              <Sparkles className="w-3 h-3 text-[#128C7E] dark:text-emerald-400" />
               <span>كافة الأصناف</span>
             </Link>
             {categories.map((cat) => (
               <Link
                 key={cat.id}
                 href={`/products?category=${cat.id}`}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1 rounded-full text-[11px] whitespace-nowrap shrink-0 snap-start transition-all"
+                className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 font-semibold px-3 py-1 rounded-full text-[11px] whitespace-nowrap shrink-0 snap-start transition-all border border-transparent dark:border-slate-700/50"
               >
                 {cat.name}
               </Link>
@@ -247,20 +251,20 @@ export default function HomePage() {
         <div className="max-w-md mx-auto space-y-5">
           
           {/* Hero Section Title */}
-          <div className="flex items-center justify-between pb-1 border-b border-slate-200/80">
+          <div className="flex items-center justify-between pb-1 border-b border-slate-200/80 dark:border-slate-800">
             <div className="flex items-center gap-2">
-              <div className="bg-amber-500/10 p-1.5 rounded-xl text-amber-600">
+              <div className="bg-amber-500/10 dark:bg-amber-500/20 p-1.5 rounded-xl text-amber-600 dark:text-amber-400">
                 <Flame className="w-4 h-4 fill-amber-500" />
               </div>
               <div>
-                <h2 className="text-sm font-black text-slate-850 leading-tight">عروض وتخفيضات اليوم</h2>
-                <p className="text-[10px] text-slate-400 font-medium">اضغط على أي صورة لتكبير العرض وتفاصيله</p>
+                <h2 className="text-sm font-black text-slate-850 dark:text-slate-100 leading-tight">عروض وتخفيضات اليوم</h2>
+                <p className="text-[10px] text-slate-400 dark:text-slate-400 font-medium">اضغط على أي صورة لتكبير العرض وتفاصيله</p>
               </div>
             </div>
 
             <Link
               href="/products"
-              className="text-[11px] font-bold text-[#128C7E] hover:text-[#075E54] flex items-center gap-0.5 transition-colors"
+              className="text-[11px] font-bold text-[#128C7E] dark:text-emerald-400 hover:text-[#075E54] dark:hover:text-emerald-300 flex items-center gap-0.5 transition-colors"
             >
               <span>طلب مباشر</span>
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -271,9 +275,9 @@ export default function HomePage() {
           {loading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white rounded-3xl p-3 border border-slate-100 shadow-xs space-y-3 animate-pulse">
-                  <div className="w-full aspect-[16/9] bg-slate-200 rounded-2xl" />
-                  <div className="h-4 bg-slate-200 rounded w-3/4" />
+                <div key={i} className="bg-white dark:bg-slate-900 rounded-3xl p-3 border border-slate-100 dark:border-slate-800 shadow-xs space-y-3 animate-pulse">
+                  <div className="w-full aspect-[16/9] bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+                  <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4" />
                 </div>
               ))}
             </div>
@@ -282,12 +286,12 @@ export default function HomePage() {
               {banners.map((banner, index) => (
                 <div
                   key={banner.id || index}
-                  className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden hover:shadow-md transition-all duration-200 group"
+                  className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden hover:shadow-md dark:hover:shadow-slate-950/50 transition-all duration-200 group"
                 >
                   {/* Banner Image Container */}
                   <div
                     onClick={() => openImagePreview(banner.image_url)}
-                    className="w-full aspect-[16/9] bg-slate-100 relative cursor-zoom-in overflow-hidden"
+                    className="w-full aspect-[16/9] bg-slate-100 dark:bg-slate-800 relative cursor-zoom-in overflow-hidden"
                   >
                     <img
                       src={banner.image_url}
@@ -309,13 +313,13 @@ export default function HomePage() {
                   </div>
 
                   {/* Banner Title & Quick Action */}
-                  <div className="p-3.5 flex items-center justify-between gap-3">
+                  <div className="p-3.5 flex items-center justify-between gap-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800/80">
                     {banner.title && banner.title !== 'عرض اليوم' ? (
-                      <h3 className="text-xs font-bold text-slate-800 line-clamp-2 leading-relaxed flex-1 text-right">
+                      <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 line-clamp-2 leading-relaxed flex-1 text-right">
                         {banner.title}
                       </h3>
                     ) : (
-                      <div className="text-[11px] font-bold text-slate-600 flex items-center gap-1.5">
+                      <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                         <Gift className="w-3.5 h-3.5 text-amber-500" />
                         <span>عرض اليوم الترويجي</span>
                       </div>
@@ -333,13 +337,13 @@ export default function HomePage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 px-4 bg-white rounded-3xl border border-slate-100 space-y-3">
-              <ShoppingBag className="w-12 h-12 text-slate-300 mx-auto" />
-              <h3 className="text-sm font-bold text-slate-600">لا توجد عروض منشورة اليوم</h3>
+            <div className="text-center py-16 px-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 space-y-3">
+              <ShoppingBag className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto" />
+              <h3 className="text-sm font-bold text-slate-600 dark:text-slate-300">لا توجد عروض منشورة اليوم</h3>
               <p className="text-xs text-slate-400">يمكنك تصفح جميع المنتجات المتاحة من خلال الكتالوج.</p>
               <Link
                 href="/products"
-                className="inline-flex items-center gap-1.5 bg-[#075E54] text-white px-5 py-2.5 rounded-2xl text-xs font-bold shadow-md hover:bg-[#128C7E] transition-all"
+                className="inline-flex items-center gap-1.5 bg-[#075E54] dark:bg-[#0a6d61] text-white px-5 py-2.5 rounded-2xl text-xs font-bold shadow-md hover:bg-[#128C7E] transition-all"
               >
                 <span>تصفح المنتجات</span>
                 <ChevronLeft className="w-3.5 h-3.5" />
