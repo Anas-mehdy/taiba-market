@@ -10,8 +10,8 @@ export default function BottomNav() {
   const pathname = usePathname();
   const { totalQuantity } = useCart();
 
-  // Hide bottom nav on admin routes
-  if (pathname?.startsWith('/admin')) {
+  // Hide bottom nav on admin routes and access gate
+  if (pathname?.startsWith('/admin') || pathname === '/access') {
     return null;
   }
 

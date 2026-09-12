@@ -105,7 +105,10 @@ VALUES
     ('whatsapp_number', '905000000000'),
     ('store_name', 'ماركت طيبة'),
     ('store_address', 'الماركت المركزي'),
-    ('store_note', 'أهلاً بكم في ماركت طيبة - جودة وتوفير كل يوم')
+    ('store_note', 'أهلاً بكم في ماركت طيبة - جودة وتوفير كل يوم'),
+    ('store_pin_enabled', 'false'),
+    ('store_pin_code', '1234'),
+    ('store_pin_version', '1')
 ON CONFLICT (key) DO NOTHING;
 
 -- ----------------------------------------------------
