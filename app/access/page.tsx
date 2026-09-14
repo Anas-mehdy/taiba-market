@@ -32,7 +32,7 @@ function AccessGateContent() {
   const [errorMsg, setErrorMsg] = useState('');
   const [success, setSuccess] = useState(false);
   const [storeInfo, setStoreInfo] = useState<{ whatsappNumber: string; storeName: string }>({
-    whatsappNumber: '905421511879',
+    whatsappNumber: '',
     storeName: 'ماركت طيبة',
   });
 
