@@ -31,6 +31,7 @@ function AccessGateContent() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [success, setSuccess] = useState(false);
+  const [storeInfoStatus, setStoreInfoStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [storeInfo, setStoreInfo] = useState<{ whatsappNumber: string; storeName: string }>({
     whatsappNumber: '',
     storeName: 'ماركت طيبة',
@@ -38,24 +39,35 @@ function AccessGateContent() {
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch store WhatsApp number for direct support button
+  // Fetch the current store WhatsApp number before enabling the contact button.
+  // Never fall back to a copied/static number if this request fails.
   useEffect(() => {
     async function fetchInfo() {
       try {
-        const res = await fetch('/api/store/auth/pin-info');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.whatsappNumber) {
-            setStoreInfo({
-              whatsappNumber: data.whatsappNumber,
-              storeName: data.storeName || 'ماركت طيبة',
-            });
-          }
+        setStoreInfoStatus('loading');
+        const res = await fetch('/api/store/auth/pin-info', { cache: 'no-store' });
+        if (!res.ok) {
+          throw new Error(`Failed to load store info (${res.status})`);
         }
+
+        const data = await res.json();
+        const whatsappNumber = String(data.whatsappNumber || '').replace(/\D/g, '');
+
+        if (!whatsappNumber) {
+          throw new Error('Store WhatsApp number is missing');
+        }
+
+        setStoreInfo({
+          whatsappNumber,
+          storeName: data.storeName || 'ماركت طيبة',
+        });
+        setStoreInfoStatus('ready');
       } catch (err) {
         console.error('Failed to load store info:', err);
+        setStoreInfoStatus('error');
       }
     }
+
     fetchInfo();
     inputRef.current?.focus();
   }, []);
@@ -76,7 +88,6 @@ function AccessGateContent() {
   const handleKeypadBackspace = () => {
     if (loading || success) return;
     setPin((prev) => prev.slice(0, -1));
-    if (errorMsg) setErrorMsg('');
   };
 
   const handleKeypadClear = () => {
@@ -120,9 +131,12 @@ function AccessGateContent() {
     }
   };
 
-  const whatsappLink = `https://wa.me/${storeInfo.whatsappNumber}?text=${encodeURIComponent(
-    `السلام عليكم، أنا زبون لدى ${storeInfo.storeName} وأود الحصول على الرمز السري للدخول إلى المتجر.`
-  )}`;
+  const whatsappReady = storeInfoStatus === 'ready' && Boolean(storeInfo.whatsappNumber);
+  const whatsappLink = whatsappReady
+    ? `https://wa.me/${storeInfo.whatsappNumber}?text=${encodeURIComponent(
+        `السلام عليكم، أنا زبون لدى ${storeInfo.storeName} وأود الحصول على الرمز السري للدخول إلى المتجر.`
+      )}`
+    : '#';
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-between p-4 sm:p-6 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans relative overflow-hidden transition-colors duration-200" dir="rtl">
@@ -273,12 +287,32 @@ function AccessGateContent() {
 
           <a
             href={whatsappLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 bg-emerald-50/70 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 px-4 py-2.5 rounded-xl border border-emerald-200/60 dark:border-emerald-800/60 transition-all w-full"
+            target={whatsappReady ? '_blank' : undefined}
+            rel={whatsappReady ? 'noopener noreferrer' : undefined}
+            aria-disabled={!whatsappReady}
+            onClick={(e) => {
+              if (!whatsappReady) e.preventDefault();
+            }}
+            className={`inline-flex items-center justify-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl border transition-all w-full ${
+              whatsappReady
+                ? 'text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 bg-emerald-50/70 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border-emerald-200/60 dark:border-emerald-800/60 cursor-pointer'
+                : 'text-slate-400 dark:text-slate-500 bg-slate-100/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 cursor-not-allowed'
+            }`}
           >
-            <MessageCircle className="w-4 h-4" />
-            <span>طلب الرمز السري عبر واتساب</span>
+            {storeInfoStatus === 'loading' ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : storeInfoStatus === 'error' ? (
+              <AlertCircle className="w-4 h-4" />
+            ) : (
+              <MessageCircle className="w-4 h-4" />
+            )}
+            <span>
+              {storeInfoStatus === 'loading'
+                ? 'جاري تحميل رقم الواتساب...'
+                : storeInfoStatus === 'error'
+                  ? 'تعذر تحميل رقم الواتساب، أعد تحميل الصفحة'
+                  : 'طلب الرمز السري عبر واتساب'}
+            </span>
           </a>
         </div>
       </main>
