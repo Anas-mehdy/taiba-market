@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Plus, Trash2, Folder, Loader2, AlertCircle, GripVertical } from 'lucide-react';
+import { Plus, Trash2, Folder, Loader2, AlertCircle, GripVertical, Save, ListStart, CheckCircle2 } from 'lucide-react';
 
 interface Category {
   id: string;
@@ -32,6 +32,11 @@ export default function AdminCategories() {
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [savingOrder, setSavingOrder] = useState(false);
 
+  // Storefront "All" view preference
+  const [firstAllCategoryId, setFirstAllCategoryId] = useState('');
+  const [savingFirstAll, setSavingFirstAll] = useState(false);
+  const [firstAllStatus, setFirstAllStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
   const fetchCategories = async () => {
     try {
       setLoading(true);
@@ -49,11 +54,20 @@ export default function AdminCategories() {
         .order('name', { ascending: true });
 
       if (error) throw error;
+
+      const { data: firstCategorySetting } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'all_view_first_category_id')
+        .maybeSingle();
+
       setCategories(data || []);
+      setFirstAllCategoryId(firstCategorySetting?.value || '');
       setUsingMockData(false);
     } catch (err) {
       console.warn('Could not fetch categories from database. Loading preview mode.', err);
       setCategories(MOCK_CATEGORIES);
+      setFirstAllCategoryId('');
       setUsingMockData(true);
     } finally {
       setLoading(false);
@@ -135,6 +149,33 @@ export default function AdminCategories() {
     }
   };
 
+  const handleSaveFirstAllCategory = async () => {
+    setSavingFirstAll(true);
+    setFirstAllStatus('idle');
+
+    try {
+      const isUrlConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
+
+      if (isUrlConfigured) {
+        const { error } = await supabase
+          .from('settings')
+          .upsert({
+            key: 'all_view_first_category_id',
+            value: firstAllCategoryId
+          });
+
+        if (error) throw error;
+      }
+
+      setFirstAllStatus('success');
+    } catch (err) {
+      console.error('Failed to save first category for All view:', err);
+      setFirstAllStatus('error');
+    } finally {
+      setSavingFirstAll(false);
+    }
+  };
+
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCategoryName.trim()) return;
@@ -195,6 +236,16 @@ export default function AdminCategories() {
 
       // Remove from state
       setCategories((prev) => prev.filter((cat) => cat.id !== id));
+
+      // Reset the "All" view preference if its selected category was deleted
+      if (firstAllCategoryId === id) {
+        if (isUrlConfigured) {
+          await supabase
+            .from('settings')
+            .upsert({ key: 'all_view_first_category_id', value: '' });
+        }
+        setFirstAllCategoryId('');
+      }
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || 'حدث خطأ أثناء حذف القسم.');
@@ -217,6 +268,66 @@ export default function AdminCategories() {
       <div>
         <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">إدارة أقسام الكتالوج</h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">أضف أو احذف الأقسام لتصنيف المواد الغذائية في المتجر (مثل: بسكويت، معلبات، مشروبات)</p>
+      </div>
+
+      {/* Storefront All-view first category */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-end gap-4">
+          <div className="flex-1 space-y-2">
+            <div className="flex items-center gap-2.5">
+              <ListStart className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">أول قسم عند اختيار «الكل»</h2>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              اختر القسم الذي تريد عرضه أولاً في كتالوج المنتجات عندما يكون الزبون على «الكل». هذا الإعداد لا يغيّر ترتيب أزرار الأقسام ولا ترتيبها العام.
+            </p>
+
+            <select
+              value={firstAllCategoryId}
+              onChange={(e) => {
+                setFirstAllCategoryId(e.target.value);
+                setFirstAllStatus('idle');
+              }}
+              disabled={loading || savingFirstAll}
+              className="w-full md:max-w-md bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 outline-none rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:border-[#128C7E] focus:ring-1 focus:ring-[#128C7E] transition-all"
+            >
+              <option value="">حسب ترتيب الأقسام الحالي</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+
+            {firstAllStatus === 'success' && (
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>تم حفظ القسم الأول لعرض «الكل».</span>
+              </div>
+            )}
+
+            {firstAllStatus === 'error' && (
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-700 dark:text-rose-400">
+                <AlertCircle className="w-4 h-4" />
+                <span>تعذر حفظ الإعداد. حاول مرة أخرى.</span>
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSaveFirstAllCategory}
+            disabled={loading || savingFirstAll}
+            className="bg-[#128C7E] hover:bg-[#075E54] disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 text-white font-bold py-3 px-5 rounded-xl text-sm flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer md:min-w-32"
+          >
+            {savingFirstAll ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            <span>حفظ</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
