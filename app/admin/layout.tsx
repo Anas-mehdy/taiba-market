@@ -9,6 +9,7 @@ import {
   Store, Menu, X, User, TrendingUp, Users, Boxes, Sparkles, Image as ImageIcon
 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
+import AdminOrderNotifications from '@/components/AdminOrderNotifications';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -182,6 +183,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
           
           <div className="flex items-center gap-1.5 sm:gap-2 mr-auto lg:mr-0">
+            <AdminOrderNotifications />
             <ThemeToggle className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700" />
 
             <Link
