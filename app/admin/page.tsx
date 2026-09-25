@@ -102,6 +102,7 @@ export default function AdminDashboard() {
   const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
   const [excludedAggregatedItems, setExcludedAggregatedItems] = useState<Record<string, boolean>>({});
   const [aggregationExpanded, setAggregationExpanded] = useState(true);
+  const focusedOrderHandledRef = React.useRef<string | null>(null);
 
   // States for adding custom products not in the store
   const [showCustomAddForm, setShowCustomAddForm] = useState<{[orderId: string]: boolean}>({});
@@ -258,9 +259,11 @@ export default function AdminDashboard() {
     }
   ];
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (options: { silent?: boolean } = {}) => {
+    const silent = options.silent === true;
+
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const isUrlConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
       
       if (!isUrlConfigured) {
@@ -438,13 +441,44 @@ export default function AdminDashboard() {
       };
       setLastSoldPrices(mockPricesMap);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  // Refresh the dashboard silently whenever the global admin notifier detects a new order.
+  useEffect(() => {
+    const handleNewOrder = () => {
+      void fetchOrders({ silent: true });
+    };
+
+    window.addEventListener('tayba:new-order', handleNewOrder);
+    return () => window.removeEventListener('tayba:new-order', handleNewOrder);
+  }, []);
+
+  // If an order notification was clicked, expand and scroll to that exact order after data loads.
+  useEffect(() => {
+    if (loading || typeof window === 'undefined') return;
+
+    const focusedOrderId = new URLSearchParams(window.location.search).get('focusOrder');
+    if (!focusedOrderId || focusedOrderHandledRef.current === focusedOrderId) return;
+    if (!orders.some((order) => order.id === focusedOrderId)) return;
+
+    focusedOrderHandledRef.current = focusedOrderId;
+    setExpandedOrders((prev) => ({ ...prev, [focusedOrderId]: true }));
+
+    const timer = window.setTimeout(() => {
+      document.getElementById(`order-${focusedOrderId}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }, 180);
+
+    return () => window.clearTimeout(timer);
+  }, [loading, orders]);
 
   const calculateStats = (activeOrders: Order[], currentProducts?: any[]) => {
     // Only calculate stats for active orders (excluding postponed ones)
@@ -1318,7 +1352,8 @@ export default function AdminDashboard() {
             {activeOrdersList.map((order) => (
               <div 
                 key={order.id}
-                className="bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/90 dark:border-slate-700/80 rounded-2xl p-3 sm:p-5 space-y-3.5 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-2xs"
+                id={`order-${order.id}`}
+                className="bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/90 dark:border-slate-700/80 rounded-2xl p-3 sm:p-5 space-y-3.5 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-2xs scroll-mt-24"
               >
                 {/* Order Header Info */}
                 <div className={`space-y-2.5 ${expandedOrders[order.id] ? 'pb-3 border-b border-slate-200 dark:border-slate-700' : ''}`}>
