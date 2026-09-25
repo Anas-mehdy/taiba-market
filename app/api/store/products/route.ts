@@ -23,10 +23,22 @@ export async function GET(request: NextRequest) {
 
     if (prodError) throw prodError;
 
+    // 3. Fetch storefront preference for the first category shown in "All"
+    const { data: firstCategorySetting, error: settingError } = await supabaseAdmin
+      .from('settings')
+      .select('value')
+      .eq('key', 'all_view_first_category_id')
+      .maybeSingle();
+
+    if (settingError) {
+      console.warn('Could not load all-view first category preference:', settingError);
+    }
+
     return NextResponse.json({
       categories: categories || [],
       products: products || [],
-      showPrices: true
+      showPrices: true,
+      allViewFirstCategoryId: firstCategorySetting?.value || null
     });
   } catch (err: any) {
     console.error('Error in store products API:', err);
