@@ -90,6 +90,7 @@ function ProductsContent() {
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [usingMockData, setUsingMockData] = useState(false);
   const [activePreviewImage, setActivePreviewImage] = useState<string | null>(null);
+  const [allViewFirstCategoryId, setAllViewFirstCategoryId] = useState<string | null>(null);
 
   // Sync category from URL param if changed
   useEffect(() => {
@@ -132,6 +133,7 @@ function ProductsContent() {
           const data = await res.json();
           setCategories(data.categories || []);
           setProducts(data.products || []);
+          setAllViewFirstCategoryId(data.allViewFirstCategoryId || null);
           setUsingMockData(false);
           return;
         }
@@ -143,14 +145,21 @@ function ProductsContent() {
 
         const { data: catData } = await supabase.from('categories').select('*').order('sort_order', { ascending: true });
         const { data: prodData } = await supabase.from('products').select('*').order('sort_order', { ascending: true });
+        const { data: firstCategorySetting } = await supabase
+          .from('settings')
+          .select('value')
+          .eq('key', 'all_view_first_category_id')
+          .maybeSingle();
 
         setCategories(catData || []);
         setProducts(prodData || []);
+        setAllViewFirstCategoryId(firstCategorySetting?.value || null);
         setUsingMockData(false);
       } catch (err) {
         console.warn('Loading demonstration grocery catalog.', err);
         setCategories(MOCK_CATEGORIES);
         setProducts(MOCK_PRODUCTS);
+        setAllViewFirstCategoryId(null);
         setUsingMockData(true);
       } finally {
         setLoading(false);
@@ -290,7 +299,17 @@ function ProductsContent() {
                 return cat ? [{ category: cat, products: catProducts }] : [];
               }
               
-              return categories.map(cat => {
+              const orderedCategories = [...categories];
+
+              if (allViewFirstCategoryId) {
+                const preferredIndex = orderedCategories.findIndex(cat => cat.id === allViewFirstCategoryId);
+                if (preferredIndex > 0) {
+                  const [preferredCategory] = orderedCategories.splice(preferredIndex, 1);
+                  orderedCategories.unshift(preferredCategory);
+                }
+              }
+
+              return orderedCategories.map(cat => {
                 const catProducts = filteredProducts.filter(p => p.category_id === cat.id);
                 return { category: cat, products: catProducts };
               }).filter(group => group.products.length > 0);
